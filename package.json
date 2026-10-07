@@ -1,0 +1,35 @@
+{
+  "name": "brics",
+  "private": true,
+  "description": "BRICS — Brick Chimney ERP & Accounting (TVAM KEY SOFTWARE PRIVATE LIMITED)",
+  "packageManager": "pnpm@12.4.2",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "status": "node scripts/sync-status.mjs",
+    "db:up": "docker compose -f infra/docker-compose.yml up -d",
+    "db:down": "docker compose -f infra/docker-compose.yml down",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@brics/config": "workspace:*",
+    "@commitlint/cli": "^20.0.0",
+    "@commitlint/config-conventional": "^20.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.0.0",
+    "prettier": "^3.6.0",
+    "turbo": "^2.11.7"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,mjs,json,md,css,yml,yaml}": "prettier --write --ignore-unknown"
+  },
+  "prettier": "@brics/config/prettier"
+}

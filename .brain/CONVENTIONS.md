@@ -67,4 +67,4 @@
 ## Errors & security
 - Throw domain exceptions (`BusinessRuleException(code)`); filter maps to HTTP. Error codes `MODULE_REASON` (`STOCK_INSUFFICIENT`).
 - Passwords argon2/bcrypt; JWT access 15 min, refresh 30 days rotating; RBAC guard on every route (`@RequirePermissions()`).
-- Secrets only in env; update `.env.example` with every new variable.
+- Secrets only in env; one env file per app — update `backend/.env.example`, `web/.env.example` or `mobile/env/dev.example.json` with every new variable. No root .env.

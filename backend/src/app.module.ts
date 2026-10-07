@@ -1,0 +1,38 @@
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { LoggerModule } from 'nestjs-pino';
+import { resolve } from 'node:path';
+import { type Env, validateEnv } from './config/env';
+import { buildTypeOrmOptions } from './config/typeorm.config';
+import { HealthModule } from './modules/health/health.module';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: [resolve(__dirname, '../.env')],
+      validate: validateEnv,
+    }),
+    LoggerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService<Env, true>) => ({
+        pinoHttp: {
+          level: config.get('LOG_LEVEL', { infer: true }),
+          transport:
+            config.get('NODE_ENV', { infer: true }) === 'development'
+              ? { target: 'pino-pretty', options: { singleLine: true } }
+              : undefined,
+          redact: ['req.headers.authorization', 'req.headers.cookie'],
+        },
+      }),
+    }),
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService<Env, true>) =>
+        buildTypeOrmOptions(config.get('DATABASE_URL', { infer: true }), config.get('DATABASE_SSL', { infer: true })),
+    }),
+    HealthModule,
+  ],
+})
+export class AppModule {}

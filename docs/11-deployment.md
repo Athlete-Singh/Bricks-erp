@@ -8,7 +8,7 @@
 | Mobile | Android APK / Play Store (P12) | `flutter build apk --release --dart-define=API_BASE_URL=…`. iOS needs the client's Apple account (excluded fee). |
 
 ## Environments
-`local` (docker-compose) → `staging` (preview) → `production`. Every variable is in `.env.example`.
+`local` (docker-compose) → `staging` (preview) → `production`. Variables: `backend/.env.example` (set in Render), `web/.env.example` (set in Vercel), `mobile/env/dev.example.json` (passed at build).
 
 ## Backup & restore (ADM-09, P13)
 Supabase scheduled backups + a documented restore drill (restore into staging, run smoke tests). Written in P13.

@@ -11,14 +11,34 @@
 
 Authoring machine at P0 (2026-10-07): Node 24.12, pnpm 12.4, Docker 29, no Flutter. The build machine must have Flutter.
 
+## Environment files: one per app
+| App | Template (committed) | Your copy (git-ignored) | Production |
+|---|---|---|---|
+| Backend | `backend/.env.example` | `backend/.env` | Render → Environment |
+| Web | `web/.env.example` | `web/.env.local` | Vercel → Environment Variables |
+| Mobile | `mobile/env/dev.example.json` | `mobile/env/dev.json` | `--dart-define-from-file=env/prod.json` at build |
+
 ## First run
 ```bash
-cp .env.example .env              # adjust if needed
+cp backend/.env.example backend/.env      # API: database, JWT, port, CORS
+cp web/.env.example web/.env.local        # web: NEXT_PUBLIC_API_URL
+cp mobile/env/dev.example.json mobile/env/dev.json   # mobile: API_BASE_URL
 pnpm install
 docker compose -f infra/docker-compose.yml up -d   # Postgres 16 on :5432
 pnpm --filter @brics/backend dev  # http://localhost:4000/api/v1/health, Swagger /api/docs
 pnpm --filter @brics/web dev      # http://localhost:3000
 ```
+
+## No Docker? Use any PostgreSQL
+Docker is optional. The backend only reads `DATABASE_URL`, so any PostgreSQL 16+ works.
+
+| Option | `backend/.env` |
+|---|---|
+| Docker (default) | nothing to change |
+| PostgreSQL installed locally | `DATABASE_URL=postgres://<user>:<password>@localhost:5432/brics` (create `brics` and `brics_test` once: `CREATE DATABASE brics; CREATE DATABASE brics_test;`) |
+| Free Supabase project (weak laptop) | `DATABASE_URL=<Session pooler URL>`, `DATABASE_SSL=true`. Use a **separate dev project, never production**. Tests need their own project (`TEST_DATABASE_URL`), or leave e2e to CI. |
+
+Whatever the option, tables are created only by `pnpm --filter @brics/backend migration:run`, never by hand.
 
 ## Mobile (first time on a machine with Flutter)
 The source in `mobile/` was written without the platform folders. Run once:
@@ -42,6 +62,6 @@ flutter run   # API URL: --dart-define=API_BASE_URL=http://10.0.2.2:4000/api/v1 
 
 ## Common errors
 - **`ECONNREFUSED 5432`**: Postgres isn't running. Start it with docker compose.
-- **Health returns `db: down`**: check `DATABASE_URL` in `.env`.
+- **Health returns `db: down`**: check `DATABASE_URL` in `backend/.env`.
 - **pnpm "ignored build scripts"**: approve them with `pnpm approve-builds`, or add the package to `onlyBuiltDependencies` in `pnpm-workspace.yaml`.
 - **Flutter `uri_does_not_exist` for `*.g.dart`**: run `dart run build_runner build -d`.

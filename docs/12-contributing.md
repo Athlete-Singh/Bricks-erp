@@ -11,7 +11,7 @@
 - [ ] Tests added (mandatory for posting / stock / GST)
 - [ ] `pnpm lint typecheck test build` green; `flutter analyze` + `flutter test` green
 - [ ] Migration generated and reviewed (if schema changed)
-- [ ] `.env.example` updated (if new env)
+- [ ] The app's `.env.example` updated (if new env): `backend/`, `web/` or `mobile/env/`
 - [ ] `.brain/FEATURES.md` statuses + `PROGRESS.md` Resume here + `CHANGELOG.md` updated
 - [ ] `.brain/modules`, `API_INDEX`, `DB_SCHEMA` updated
 - [ ] `docs/13-roadmap-and-status.md` + `docs/modules/*` updated

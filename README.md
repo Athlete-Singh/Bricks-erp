@@ -11,7 +11,8 @@ Production → labour & Sardar → inventory → purchases → GST sales → dis
 
 ## Quick start
 ```bash
-cp .env.example .env
+cp backend/.env.example backend/.env
+cp web/.env.example web/.env.local
 pnpm install
 docker compose -f infra/docker-compose.yml up -d
 pnpm --filter @brics/backend dev     # http://localhost:4000/api/v1/health

@@ -1,0 +1,16 @@
+{
+  "extends": "@brics/config/tsconfig.base.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node10",
+    "outDir": "dist",
+    "baseUrl": "./",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "strictPropertyInitialization": false,
+    "isolatedModules": false,
+    "declaration": false,
+    "types": ["node", "jest"]
+  },
+  "include": ["src", "test"]
+}

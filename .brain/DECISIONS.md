@@ -32,3 +32,12 @@ Decision: customers, suppliers, Sardars, transporters, employees, others in one 
 
 **ADR-009 — Money as strings over JSON — 2026-10-07**
 Decision: API sends/receives money as decimal strings. Why: no float rounding in JS/Dart.
+
+**ADR-010 — Backend stack versions: NestJS 11, TypeORM 0.3, TypeScript 5.9 — 2026-10-07**
+Decision: NestJS 11 (CommonJS) + TypeORM 0.3.31 + TS ~5.9 + Jest 30 / ts-jest. Why: NestJS 12 is ESM-only (Jest ESM is experimental/fragile); ts-jest needs TS < 7; TS 6 changes defaults. Revisit (Nest 12, TypeORM 1, TS 6+) after CP1 — tech-debt item.
+
+**ADR-011 — One env file per app — 2026-10-07**
+Decision: `backend/.env`, `web/.env.local`, `mobile/env/dev.json` (each with a committed example). No root .env. Why: matches deployment (Render / Vercel / app build each own their variables); web never sees backend secrets.
+
+**ADR-012 — pnpm build-script allow-list — 2026-10-07**
+Decision: `allowBuilds` in `pnpm-workspace.yaml` — allow esbuild, @parcel/watcher, unrs-resolver; deny @scarf/scarf (telemetry). New packages with install scripts must be added explicitly.

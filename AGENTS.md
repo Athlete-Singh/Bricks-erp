@@ -54,7 +54,7 @@
 12. Mobile: screen → provider → repository → Drift + dio; offline-first with sync queue; widgets from `core/widgets`; strings in l10n.
 13. Anything used twice becomes a component/widget.
 14. Tests mandatory for posting, stock, GST and tenancy logic.
-15. TS strict, no unexplained `any`; Dart analyzer clean; no dead/commented code; `.env.example` current.
+15. TS strict, no unexplained `any`; Dart analyzer clean; no dead/commented code; each app's `.env.example` current (`backend/`, `web/`, `mobile/env/`).
 
 ## Commands
 | Task | Command |
@@ -87,3 +87,14 @@
 
 ## Definition of done
 ☐ Code + tests · ☐ lint / typecheck / test / build green (+ flutter analyze/test) · ☐ FEATURES.md statuses updated + `pnpm status` run · ☐ PROGRESS "Resume here" updated · ☐ modules / API_INDEX / DB_SCHEMA brain files updated · ☐ `docs/modules/*` updated · ☐ CHANGELOG entry · ☐ committed.
+
+<!-- BEGIN:turborepo-agent-rules -->
+
+# This is NOT the Turborepo you know
+
+Turborepo configuration, task behavior, and CLI commands can vary between installed versions and may differ from your training data. Resolve the `turbo` package from this file's directory or relevant workspace; in monorepos, it may not be visible from the repository root. For example, run `node -p "require.resolve('turbo/package.json')"` from a workspace that depends on `turbo`.
+
+Read `docs/README.md` inside that installed package first, then read the relevant pages from its `docs/` directory before changing Turborepo configuration or commands. Heed deprecation notices. These bundled docs match the installed package version and are available without network access.
+
+This block is written and re-added by `turbo` before repository-scoped commands when an AI agent is detected. In the Turborepo source repository, its template is defined in `crates/turborepo-cli/src/cli/agent_guidance.rs`. Removing the managed block while updates are enabled means a later qualifying invocation will add it again. Set `"agentGuidance": false` in the root `turbo.json` or `turbo.jsonc` to opt out; this does not remove an existing block. Keep the block committed with your work to avoid an uncommitted change on the next agent invocation.
+<!-- END:turborepo-agent-rules -->

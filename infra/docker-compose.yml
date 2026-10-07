@@ -1,0 +1,22 @@
+# Local PostgreSQL 16 for BRICS. Usage: pnpm db:up / pnpm db:down
+name: brics
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: brics-postgres
+    environment:
+      POSTGRES_USER: brics
+      POSTGRES_PASSWORD: brics
+      POSTGRES_DB: brics
+    ports:
+      - '5432:5432'
+    volumes:
+      - brics-pgdata:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U brics -d brics']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+volumes:
+  brics-pgdata:
