@@ -1,7 +1,7 @@
 packages:
   - backend
-  - web
   - packages/*
+  # - web   # P0.3 paused half-way (config + tokens only, no pages yet). Re-enable when P0.3 resumes; see .brain/PROGRESS.md "Resume here".
 allowBuilds:
   '@parcel/watcher': true
   '@scarf/scarf': false

@@ -63,5 +63,5 @@ flutter run   # API URL: --dart-define=API_BASE_URL=http://10.0.2.2:4000/api/v1 
 ## Common errors
 - **`ECONNREFUSED 5432`**: Postgres isn't running. Start it with docker compose.
 - **Health returns `db: down`**: check `DATABASE_URL` in `backend/.env`.
-- **pnpm "ignored build scripts"**: approve them with `pnpm approve-builds`, or add the package to `onlyBuiltDependencies` in `pnpm-workspace.yaml`.
+- **pnpm "ignored build scripts"**: approve them with `pnpm approve-builds`, or add it under `allowBuilds` in `pnpm-workspace.yaml` (true = allow, false = deny).
 - **Flutter `uri_does_not_exist` for `*.g.dart`**: run `dart run build_runner build -d`.

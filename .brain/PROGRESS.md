@@ -1,24 +1,26 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** P0 done → **next: P1.1** · **CP1 features done:** 0 / 89 (0 %)
-Legend: ⬜ · 🟨 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
+**Client Phase:** CP1 (MVP) · **Current step:** P0.3 paused (web shell half-done) → **next: resume P0.3** · **CP1 features done:** 0 / 89 (0 %)
+Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
-- **Last green commit:** see `git log -1` (P0 foundation commit)
-- **Done last session:** P0.1–P0.5 — brain, docs, AI files, monorepo, backend/web scaffolds, mobile source scaffold, CI.
-- **Half-done:** P0.4 mobile — source written by hand (no Flutter SDK on the authoring machine). On the build machine run once:
-  `cd mobile && flutter create --org com.tvamkey --project-name brics_mobile --platforms=android,ios . && flutter pub get && dart run build_runner build -d && flutter gen-l10n && flutter analyze && flutter test` → fix anything → mark P0.4 ✅ and commit.
-- **Next step:** finish P0.4 gate on build machine (above), then **P1.1** backend core platform.
-- **Blockers:** none for backend/web. Mobile gate pending Flutter SDK on build machine.
+- **Last green commit:** `git log -1` → "chore(brain): pause after P0.2 …" (2026-10-07). Gate green: shared + backend build, lint, typecheck, unit tests, e2e (health against real Postgres).
+- **Done:**
+  - P0.1 ✅ git, PDFs → `docs/client-requirements/`, full brain (FEATURES 89 CP1 + 10 CP2), docs 01–13 + 16 module stubs, AGENTS/CLAUDE/GEMINI/Cursor/Copilot files, `pnpm status` generator.
+  - P0.2 ✅ pnpm + Turborepo root, `packages/config`, `packages/shared` (enums, ₹/date formatters, health schema, tests), `infra/docker-compose.yml` (Postgres 16 + `brics_test`), NestJS 11 backend: env validation (zod), Pino, Swagger `/api/docs`, `/api/v1/health` with DB check, envelope + error filter, base entities, Money utils, TypeORM data source + migration CLI (verified), unit + e2e tests. One env file per app (ADR-011).
+- **Half-done: P0.3 web.** Written: `web/package.json`, tsconfig, next/postcss/tailwind/eslint/vitest configs, `src/styles/tokens.css` + `globals.css`, `web/.env.example`. NOT written: `src/app/*` (layout, providers, placeholder dashboard), `components/ui` (Button, Card, Badge), `components/layout` (Sidebar, Topbar, PageHeader, KilnSwitcher), `lib/api-client.ts`, `lib/query-client.ts`, `lib/cn.ts`, `stores/ui-store.ts`, `features/system` (health API + hook → topbar status), tests. `web` is **commented out in `pnpm-workspace.yaml`** to keep the gate green.
+- **Next step (exact):** uncomment `- web` in `pnpm-workspace.yaml` → `pnpm install` → write the missing web files above → web gate (lint, typecheck, test, build) → set `/health` Web ✅ in API_INDEX → commit → P0.4.
+- **Then:** P0.4 mobile (write full Flutter source; on a machine with Flutter run `flutter create --org com.tvamkey --project-name brics_mobile --platforms=android,ios .`, `pub get`, `build_runner`, `gen-l10n`, analyze, test; add `mobile/env/dev.example.json`) → P0.5 (GitHub Actions CI with Postgres service, Husky pre-commit + commit-msg hooks: husky is installed but no hooks exist yet, final verify).
+- **Blockers:** none. Flutter SDK is needed on the build machine for P0.4.
 
 ## CP1 internal steps
 | Phase | Step | Scope | Status |
 |---|---|---|---|
 | P0 | P0.1 | Preflight, git, PDFs, brain, docs, AI files | ✅ |
 | P0 | P0.2 | Monorepo, docker-compose, backend scaffold + /health | ✅ |
-| P0 | P0.3 | Web scaffold, tokens, shell, Vitest | ✅ |
-| P0 | P0.4 | Mobile scaffold (source ✅; flutter create + analyze/test on build machine pending) | ⚠️ |
-| P0 | P0.5 | CI, Husky, commitlint, verify, tracking | ✅ |
+| P0 | P0.3 | Web scaffold, tokens, shell, Vitest (configs + tokens done; pages/components pending) | 🟨 |
+| P0 | P0.4 | Mobile scaffold: source, theme, widgets, router, Drift stub, l10n, env file, test | ⬜ |
+| P0 | P0.5 | CI, Husky hooks, commitlint, verify, tracking | ⬜ |
 | P1 | P1.1 | Backend: auth, tenancy guard, companies, kilns, FY, users, roles, audit | ⬜ |
 | P1 | P1.2 | Web: login, shell, DS primitives, company/kiln/user screens | ⬜ |
 | P1 | P1.3 | Mobile: login, widgets, router, Drift + sync skeleton | ⬜ |

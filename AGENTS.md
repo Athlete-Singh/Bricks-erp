@@ -36,7 +36,8 @@
 
 ## Brain update protocol (mandatory, every session)
 - **During:** architecture choice → ADR in `.brain/DECISIONS.md`. Advanced idea → FEATURES "CP2 candidates".
-- **End:** update `.brain/FEATURES.md` statuses (BE/Web/Mob/Tests/Status) → run **`pnpm status`** (regenerates the summary + `docs/13-roadmap-and-status.md`) → `PROGRESS.md` (step + Resume here) → `CHANGELOG.md` → touched `modules/*.md`, `API_INDEX.md`, `DB_SCHEMA.md`, `ACCOUNTING_RULES.md` → touched `docs/modules/*.md` → commit `docs(brain): …`.
+- **Wiring:** whenever an endpoint is planned/built/consumed, update its row in `.brain/API_INDEX.md` (BE / Web / Mob). Use 🧩 for "built but not connected" (API no app uses yet, or screen without a live API). Never leave a side unmarked.
+- **End:** update `.brain/FEATURES.md` statuses (BE/Web/Mob/Tests/Status) + API_INDEX wiring → run **`pnpm status`** (also lists wiring gaps) (regenerates the summary + `docs/13-roadmap-and-status.md`) → `PROGRESS.md` (step + Resume here) → `CHANGELOG.md` → touched `modules/*.md`, `API_INDEX.md`, `DB_SCHEMA.md`, `ACCOUNTING_RULES.md` → touched `docs/modules/*.md` → commit `docs(brain): …`.
 - Brain vs code disagree → **code is truth**, fix the brain. Respect the file size limits in 00_INDEX.
 
 ## Top rules (full list in `.brain/CONVENTIONS.md`)
@@ -86,7 +87,7 @@
 | Mobile reusable widget | `mobile/lib/core/widgets/` |
 
 ## Definition of done
-☐ Code + tests · ☐ lint / typecheck / test / build green (+ flutter analyze/test) · ☐ FEATURES.md statuses updated + `pnpm status` run · ☐ PROGRESS "Resume here" updated · ☐ modules / API_INDEX / DB_SCHEMA brain files updated · ☐ `docs/modules/*` updated · ☐ CHANGELOG entry · ☐ committed.
+☐ Code + tests · ☐ lint / typecheck / test / build green (+ flutter analyze/test) · ☐ FEATURES.md + API_INDEX wiring updated + `pnpm status` run · ☐ PROGRESS "Resume here" updated · ☐ modules / API_INDEX / DB_SCHEMA brain files updated · ☐ `docs/modules/*` updated · ☐ CHANGELOG entry · ☐ committed.
 
 <!-- BEGIN:turborepo-agent-rules -->
 

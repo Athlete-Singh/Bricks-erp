@@ -1,0 +1,16 @@
+{
+  "root": true,
+  "extends": ["next/core-web-vitals", "next/typescript", "prettier"],
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "error",
+    "no-console": "error",
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "CallExpression[callee.name='fetch']",
+        "message": "Use lib/api-client via features/<x>/api — no fetch in components."
+      }
+    ]
+  },
+  "overrides": [{ "files": ["src/lib/api-client.ts"], "rules": { "no-restricted-syntax": "off" } }]
+}

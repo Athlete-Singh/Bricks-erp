@@ -77,9 +77,9 @@ Use a task list so I can see progress. Parallel sub-agents (one per app) are all
 
 | Layer | Choice |
 |---|---|
-| Monorepo | pnpm workspaces + Turborepo (`backend`, `web`, `packages/*`). Flutter app in `mobile/` (Flutter tooling, not pnpm). |
+| Monorepo | pnpm workspaces + Turborepo (`backend`, `web`, `packages/*`). Flutter app in `mobile/` (Flutter tooling, not pnpm). pnpm blocks install scripts by default: allow-list them under `allowBuilds` in `pnpm-workspace.yaml` (ADR-012). |
 | Runtime | **Node.js current LTS (24.x)**; Node 20 is end-of-life. Pin in `.nvmrc` + `engines`. |
-| Backend | **NestJS** (modular), **TypeORM** with migrations, PostgreSQL 16, class-validator, Swagger/OpenAPI, Pino logging, JWT access + refresh tokens. |
+| Backend | **NestJS 11** (CommonJS; NestJS 12 is ESM-only, so move to it after CP1), **TypeORM 0.3** with migrations, **TypeScript ~5.9** (ts-jest needs < 7), PostgreSQL 16, class-validator, Zod env validation, Swagger/OpenAPI, Pino logging, JWT access + refresh tokens. See ADR-010. |
 | Database | PostgreSQL (Supabase in prod, docker-compose locally). Multi-tenant: every business table has `company_id`, enforced server-side. UUID primary keys. |
 | Web | **Next.js 14 (App Router) + React 18 + TypeScript (strict) + Tailwind CSS** (fixed by the SOW). shadcn/ui-style primitives in our own `components/ui`. |
 | Web state | **TanStack Query** for server state + **Zustand** for small UI state. **Not Redux**: ~90% of ERP state is server data, which TanStack Query handles better. Record as ADR-002. |
@@ -87,6 +87,8 @@ Use a task list so I can see progress. Parallel sub-agents (one per app) are all
 | Mobile | **Flutter (latest stable) + Dart**, Riverpod (+ `riverpod_generator`), `go_router`, `dio`, `freezed` + `json_serializable`, **Drift (SQLite)** for offline storage + sync queue, `flutter_secure_storage`. Commit generated `*.g.dart` / `*.freezed.dart` files so a fresh clone always builds (ADR). |
 | PDFs | Server-side PDF generation for invoice and challan (choose a library in an ADR when P8 starts). |
 | Hosting | Backend on Render, Web on Vercel, DB on Supabase PostgreSQL. |
+| Env files | **One per app, no root `.env`** (ADR-011): `backend/.env` ← `backend/.env.example` (Render), `web/.env.local` ← `web/.env.example` (Vercel), `mobile/env/dev.json` ← `mobile/env/dev.example.json` (`--dart-define-from-file`). |
+| Local DB | Docker (`infra/docker-compose.yml`) **or** any PostgreSQL 16+ **or** a separate free Supabase dev project; the backend only needs `DATABASE_URL`. |
 | Testing | Jest (backend unit + e2e against a test DB), Vitest + Testing Library (web), Playwright (web e2e, from P13), `flutter_test` + mocktail. |
 | Quality | ESLint + Prettier, `very_good_analysis`, Husky + lint-staged, Conventional Commits, GitHub Actions CI. |
 
@@ -114,8 +116,8 @@ Bricks/
 │   └── config/                # shared eslint / tsconfig / prettier presets
 ├── infra/                     # docker-compose, env templates, deploy notes
 ├── scripts/                   # seed, reset-db, gen-api-client
-├── .env.example
 ├── .nvmrc, package.json, pnpm-workspace.yaml, turbo.json
+(env templates live in each app: backend/.env.example, web/.env.example, mobile/env/dev.example.json)
 ```
 
 ### Backend (`backend/src`)
@@ -165,18 +167,20 @@ Any AI or new developer should understand the project by reading **2–4 small f
 | `DECISIONS.md` | ADR log: `ADR-NNN — title — date — decision — why — alternatives`. | append-only |
 | `modules/<module>.md` | Per module: purpose, tables, endpoints, screens (web + mobile), postings, feature IDs covered, status, gaps. | ≤ 120 lines each |
 | `DB_SCHEMA.md` | Table → key columns → relations. | ≤ 250 lines |
-| `API_INDEX.md` | Every endpoint, one line, grouped by module. | one line each |
+| `API_INDEX.md` | **Endpoint + wiring tracker**: one row per endpoint `Method · Path · Purpose · Perm · Feature · Phase · BE · Web · Mob`, plus an auto-generated "wiring gaps" block (API ready but unused; screen waiting for API). | one row each |
 | `ACCOUNTING_RULES.md` | Posting matrix (event → Dr / Cr), voucher types, immutability, reversal, FY lock. | ≤ 150 lines |
 | `GLOSSARY.md` | Sardar, Pathera, green bricks, chamber, GRN, challan, HSN, GSTR-1/3B, contra, etc. | ≤ 100 lines |
 | `CHANGELOG.md` | Newest first: `YYYY-MM-DD — [area] — what changed — feature IDs`. | archive > 3 months to `archive/` |
 | `OPEN_QUESTIONS.md` | Decisions needed from me or the client. | — |
 
-**Status legend (use the same everywhere):** ⬜ Not started · 🟨 In progress · ✅ Done (built + tested + documented) · ⚠️ Partial / blocked (say why) · ⏭️ Deferred to CP2.
+**Status legend (use the same everywhere):** ⬜ Not started · 🟨 In progress · 🧩 Built but **not connected** (API that no app uses yet, or a screen without a live API) · ✅ Done (built + connected + tested + documented) · ⚠️ Partial / blocked (say why) · ⏭️ Deferred to CP2 · — not applicable.
+
+**Tracking per app:** FEATURES.md has `BE · Web · Mob · Tests` columns per feature; API_INDEX.md has `BE · Web · Mob` per endpoint. `pnpm status` (`scripts/sync-status.mjs`) validates the symbols and regenerates the summaries, per-app progress, wiring gaps and `docs/13-roadmap-and-status.md`. Anyone can see what's done, what's remaining and what's built but unused **without reading the code**.
 
 **Brain update protocol (put it in AGENTS.md; mandatory for every session, forever):**
 1. **Start:** read `AGENTS.md` → `.brain/00_INDEX.md` → `.brain/PROGRESS.md` (Resume here) → the `FEATURES.md` rows for this step → the relevant `modules/*.md`.
 2. **During:** architectural choice → add an ADR. Advanced idea → "CP2 candidates" in FEATURES.md, not code.
-3. **End (never skip):** update the `FEATURES.md` statuses → `PROGRESS.md` (step status + Resume here) → `CHANGELOG.md` → the touched `modules/*.md`, `API_INDEX.md`, `DB_SCHEMA.md` → `docs/13-roadmap-and-status.md` and the touched `docs/modules/*.md`. If the brain and the code disagree, the code is truth: fix the brain.
+3. **End (never skip):** update the `FEATURES.md` statuses (BE/Web/Mob/Tests/Status) → the `API_INDEX.md` wiring columns → run `pnpm status` → `PROGRESS.md` (step status + Resume here) → `CHANGELOG.md` → the touched `modules/*.md`, `API_INDEX.md`, `DB_SCHEMA.md` → `docs/13-roadmap-and-status.md` and the touched `docs/modules/*.md`. If the brain and the code disagree, the code is truth: fix the brain.
 4. Respect the size limits: summarise, don't append forever.
 
 ## 8. Human docs (`docs/`)
@@ -194,7 +198,7 @@ Readable Markdown with Mermaid diagrams where useful:
 - `08-accounting-engine.md`: double entry, chart of accounts, vouchers, posting matrix, GST handling.
 - `09-offline-sync.md`: sync design, conflicts, idempotency.
 - `10-testing.md`, `11-deployment.md`, `12-contributing.md`.
-- **`13-roadmap-and-status.md`**: the human view of the tracker. It has (a) a CP1 vs CP2 summary, (b) a per-module table with columns **Feature · CP · Phase · Backend · Web · Mobile · Tests · Status**, (c) "Implemented so far" and "Remaining for CP1" lists, and (d) a "% of CP1 done" line. Updated every session from `FEATURES.md`.
+- **`13-roadmap-and-status.md`**: the human view of the tracker, **generated by `pnpm status`** (never edited by hand). It has (a) a CP1 vs CP2 summary and % done, (b) progress per app, (c) backend ↔ web ↔ mobile wiring gaps, (d) "Implemented so far" / "In progress" / "Remaining for CP1" lists, and (e) a per-module table **Feature · CP · Phase · Backend · Web · Mobile · Tests · Status**.
 - `modules/`: one doc per module. In P0, create stubs with the planned scope and feature IDs from §11. Fill them as modules are built.
 
 ## 9. Design system & theme
@@ -237,7 +241,7 @@ Tokens live in one place per platform (`web/src/styles` + Tailwind config; `mobi
 **Quality**
 - TypeScript strict, no `any` without a comment. Dart analyzer clean.
 - Tests for every service with business logic. **Mandatory** for posting, stock and GST calculation.
-- Small files, single responsibility, no dead or commented-out code. Secrets only in env; `.env.example` kept current.
+- Small files, single responsibility, no dead or commented-out code. Secrets only in env; each app's env example kept current.
 
 ## 11. Feature Register: copy this into `.brain/FEATURES.md` (all ⬜ at start)
 
@@ -446,7 +450,7 @@ Each step = one session. Every step ends green and committed (§3). Mobile scree
 
 `AGENTS.md` (≤ 150 lines) must contain: one-paragraph summary; **CP vs internal phase explanation + the MVP depth rule**; stack table; repo map; read order; the brain update protocol (§7); the **session safety rules (§3)**; the top 15 rules from §10; install/run/test/lint commands per app; a "where to put new code" cheat-sheet; and the **definition of done**:
 
-> code + tests + lint/typecheck/build green + FEATURES.md status updated + PROGRESS "Resume here" updated + modules/API/DB brain files updated + `docs/13-roadmap-and-status.md` updated + CHANGELOG entry + committed.
+> code + tests + lint/typecheck/build green + FEATURES.md and API_INDEX wiring updated + `pnpm status` run + PROGRESS "Resume here" updated + modules/API/DB brain files updated + `docs/13-roadmap-and-status.md` updated + CHANGELOG entry + committed.
 
 `CLAUDE.md`, `GEMINI.md`, `.cursor/rules/brics.mdc` and `.github/copilot-instructions.md` only point to AGENTS.md (plus any tool-specific note).
 
@@ -463,7 +467,11 @@ Each step = one session. Every step ends green and committed (§3). Mobile scree
 9. Is inter-kiln stock transfer needed in CP1?
 10. Login by mobile number + OTP (needs an SMS gateway, a client cost) or password only?
 
-## 15. Finish this session with
+## 15. Phase 0 progress (update if this prompt is re-run)
+
+As of 2026-10-07: **P0.1 ✅, P0.2 ✅, P0.3 🟨 paused (configs + tokens only; `web` commented out of `pnpm-workspace.yaml`), P0.4 ⬜, P0.5 ⬜.** Do not redo finished steps. Continue from `.brain/PROGRESS.md` → "Resume here" using `BRICS_PHASE_PROMPT.md` with step `P0.3`.
+
+## 16. Finish this session with
 
 1. Verify: `pnpm install` works; backend starts and `/api/v1/health` returns OK; web shows the themed shell; `flutter analyze` is clean and the app shows a themed screen (or Flutter is logged as a blocker); CI files exist; everything is committed.
 2. Update `.brain/FEATURES.md`, `.brain/PROGRESS.md` (P0 ✅ or the exact step reached, Resume here filled, next = P1.1), `.brain/CHANGELOG.md`, `docs/13-roadmap-and-status.md`.

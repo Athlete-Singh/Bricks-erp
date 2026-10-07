@@ -1,87 +1,164 @@
 #!/usr/bin/env node
-// Regenerates the summary in .brain/FEATURES.md and the whole of docs/13-roadmap-and-status.md
-// from the FEATURES.md register. Run: `pnpm status` (no dependencies).
+// Regenerates, from .brain/FEATURES.md and .brain/API_INDEX.md:
+//   - the summary block in FEATURES.md
+//   - the wiring-gaps block in API_INDEX.md
+//   - the whole of docs/13-roadmap-and-status.md
+// Run: `pnpm status` (no dependencies). Fails on unknown status symbols so typos are caught.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const featuresPath = join(root, '.brain/FEATURES.md');
-const progressPath = join(root, '.brain/PROGRESS.md');
-const docPath = join(root, 'docs/13-roadmap-and-status.md');
+const paths = {
+  features: join(root, '.brain/FEATURES.md'),
+  api: join(root, '.brain/API_INDEX.md'),
+  progress: join(root, '.brain/PROGRESS.md'),
+  doc: join(root, 'docs/13-roadmap-and-status.md'),
+};
 
 const STATUSES = ['✅', '🟨', '⚠️', '⬜', '⏭️'];
-const ROW = /^\| ([A-Z]{2,3}-\d\d) \| (.+?) \| (CP\d) \| ([^|]+?) \| (\S+) \| (\S+) \| (\S+) \| (\S+) \| (\S+) \|(.*)\|$/;
+const APP_STATUSES = ['✅', '🟨', '🧩', '⚠️', '⬜', '⏭️', '—'];
+const APPS = [
+  ['be', 'Backend'],
+  ['web', 'Web'],
+  ['mob', 'Mobile'],
+  ['tests', 'Tests'],
+];
+const errors = [];
 
-const features = readFileSync(featuresPath, 'utf8');
-const lines = features.split('\n');
-
+// ── FEATURES.md ─────────────────────────────────────────────────────────────
+const FEATURE_ROW =
+  /^\| ([A-Z]{2,3}-\d\d) \| (.+?) \| (CP\d) \| ([^|]+?) \| (\S+) \| (\S+) \| (\S+) \| (\S+) \| (\S+) \|(.*)\|$/;
+const featuresText = readFileSync(paths.features, 'utf8');
 const modules = [];
-let current;
-for (const line of lines) {
+let currentModule;
+for (const line of featuresText.split('\n')) {
   const heading = line.match(/^### (.+)$/);
   if (heading) {
-    current = { title: heading[1], rows: [] };
-    modules.push(current);
+    currentModule = { title: heading[1], rows: [] };
+    modules.push(currentModule);
     continue;
   }
-  const m = line.match(ROW);
-  if (m && current) {
-    const [, id, feature, cp, phase, be, web, mob, tests, status, notes] = m;
-    current.rows.push({ id, feature, cp, phase, be, web, mob, tests, status, notes: notes.trim() });
+  const m = line.match(FEATURE_ROW);
+  if (!m || !currentModule) continue;
+  const [, id, feature, cp, phase, be, web, mob, tests, status, notes] = m;
+  const row = { id, feature, cp, phase, be, web, mob, tests, status, notes: notes.trim() };
+  if (!STATUSES.includes(status)) errors.push(`FEATURES ${id}: status "${status}" (use ${STATUSES.join(' ')})`);
+  for (const [key] of APPS) {
+    if (!APP_STATUSES.includes(row[key])) errors.push(`FEATURES ${id}: ${key} "${row[key]}" (use ${APP_STATUSES.join(' ')})`);
   }
+  currentModule.rows.push(row);
+}
+const features = modules.flatMap((mod) => mod.rows);
+
+// ── API_INDEX.md ────────────────────────────────────────────────────────────
+const API_ROW = /^\| (GET|POST|PUT|PATCH|DELETE) \| (\S+) \| (.+?) \| (.+?) \| (.+?) \| (.+?) \| (\S+) \| (\S+) \| (\S+) \|$/;
+const apiText = readFileSync(paths.api, 'utf8');
+const endpoints = [];
+for (const line of apiText.split('\n')) {
+  const m = line.match(API_ROW);
+  if (!m) continue;
+  const [, method, path, purpose, perm, feature, phase, be, web, mob] = m;
+  for (const [k, v] of Object.entries({ be, web, mob })) {
+    if (!APP_STATUSES.includes(v)) errors.push(`API_INDEX ${method} ${path}: ${k} "${v}"`);
+  }
+  endpoints.push({ method, path, purpose, perm, feature, phase, be, web, mob });
 }
 
-const all = modules.flatMap((mod) => mod.rows);
-const unknown = all.filter((r) => !STATUSES.includes(r.status));
-if (unknown.length) {
-  console.error(`Unknown status in: ${unknown.map((r) => r.id).join(', ')}. Use one of ${STATUSES.join(' ')}`);
+if (errors.length) {
+  console.error(`status: fix these first:\n  ${errors.join('\n  ')}`);
   process.exit(1);
 }
 
-const count = (cp) => {
-  const rows = all.filter((r) => r.cp === cp);
-  return { total: rows.length, ...Object.fromEntries(STATUSES.map((s) => [s, rows.filter((r) => r.status === s).length])) };
-};
-const cp1 = count('CP1');
-const cp2 = count('CP2');
+// ── Summaries ───────────────────────────────────────────────────────────────
+const countBy = (rows, key, symbols) => Object.fromEntries(symbols.map((s) => [s, rows.filter((r) => r[key] === s).length]));
+const cp1Rows = features.filter((r) => r.cp === 'CP1');
+const cp = (name) => ({ total: features.filter((r) => r.cp === name).length, ...countBy(features.filter((r) => r.cp === name), 'status', STATUSES) });
+const cp1 = cp('CP1');
+const cp2 = cp('CP2');
 const pct = cp1.total ? Math.round((cp1['✅'] / cp1.total) * 100) : 0;
-const summaryRow = (label, c) => `| ${label} | ${c.total} | ${c['✅']} | ${c['🟨']} | ${c['⚠️']} | ${c['⬜']} | ${c['⏭️']} |`;
+
 const summaryTable = [
   '| | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |',
   '|---|---|---|---|---|---|---|',
-  summaryRow('CP1 MVP', cp1),
-  summaryRow('CP2 Advanced', cp2),
+  ...[['CP1 MVP', cp1], ['CP2 Advanced', cp2]].map(
+    ([label, c]) => `| ${label} | ${c.total} | ${c['✅']} | ${c['🟨']} | ${c['⚠️']} | ${c['⬜']} | ${c['⏭️']} |`,
+  ),
 ].join('\n');
 
-// 1. Rewrite the summary block in FEATURES.md
-const updatedFeatures = features.replace(
-  /## Summary \(update every session\)\n[\s\S]*?\n\*\*CP1 done: [^\n]*\n/,
-  `## Summary (update every session)\n\n${summaryTable}\n\n**CP1 done: ${pct} %** (${cp1['✅']} of ${cp1.total} features ✅)\n`,
-);
-writeFileSync(featuresPath, updatedFeatures);
+const perAppTable = [
+  '| App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |',
+  '|---|---|---|---|---|---|---|',
+  ...APPS.map(([key, label]) => {
+    const applicable = cp1Rows.filter((r) => r[key] !== '—');
+    const c = countBy(applicable, key, APP_STATUSES);
+    return `| ${label} | ${applicable.length} | ${c['✅']} | ${c['🧩']} | ${c['🟨']} | ${c['⚠️']} | ${c['⬜']} |`;
+  }),
+].join('\n');
 
-// 2. Generate docs/13-roadmap-and-status.md
-const progress = readFileSync(progressPath, 'utf8');
+// ── Wiring gaps ─────────────────────────────────────────────────────────────
+const consumerPending = (s) => s === '⬜' || s === '🟨' || s === '🧩';
+const apiNotUsed = endpoints.filter((e) => e.be === '✅' && (consumerPending(e.web) || consumerPending(e.mob)));
+const uiWaitingForApi = endpoints.filter((e) => e.be !== '✅' && (e.web === '🧩' || e.mob === '🧩'));
+const featureNotConnected = cp1Rows.filter((r) => [r.be, r.web, r.mob].includes('🧩'));
+const who = (e) =>
+  [e.web, e.mob]
+    .map((s, i) => (consumerPending(s) ? `${i ? 'Mobile' : 'Web'} ${s}` : null))
+    .filter(Boolean)
+    .join(', ');
+
+const gapsMarkdown = `### Wiring gaps (auto-generated by \`pnpm status\`)
+
+**Backend API ready, but an app does not use it yet** (${apiNotUsed.length})
+${apiNotUsed.length ? apiNotUsed.map((e) => `- \`${e.method} ${e.path}\`: ${who(e)} _(${e.feature}, ${e.phase})_`).join('\n') : '- _none_'}
+
+**Screen built but the API is not ready / not connected** (${uiWaitingForApi.length})
+${uiWaitingForApi.length ? uiWaitingForApi.map((e) => `- \`${e.method} ${e.path}\`: BE ${e.be} · Web ${e.web} · Mob ${e.mob}`).join('\n') : '- _none_'}
+
+**Features with a part marked 🧩 (built but not connected)** (${featureNotConnected.length})
+${featureNotConnected.length ? featureNotConnected.map((r) => `- **${r.id}** ${r.feature}: BE ${r.be} · Web ${r.web} · Mob ${r.mob}`).join('\n') : '- _none_'}`;
+
+// ── Write FEATURES.md summary ───────────────────────────────────────────────
+writeFileSync(
+  paths.features,
+  featuresText.replace(
+    /## Summary \(update every session\)\n[\s\S]*?\n\*\*CP1 done: [^\n]*\n(?:\n### Per app[\s\S]*?\n(?=\n## ))?/,
+    `## Summary (update every session)\n\n${summaryTable}\n\n**CP1 done: ${pct} %** (${cp1['✅']} of ${cp1.total} features ✅)\n\n### Per app\n\n${perAppTable}\n`,
+  ),
+);
+
+// ── Write API_INDEX.md gaps block ───────────────────────────────────────────
+writeFileSync(
+  paths.api,
+  apiText.replace(
+    /<!-- wiring-gaps:start[^\n]*-->[\s\S]*?<!-- wiring-gaps:end -->/,
+    `<!-- wiring-gaps:start (generated by \`pnpm status\`, do not edit) -->\n${gapsMarkdown}\n<!-- wiring-gaps:end -->`,
+  ),
+);
+
+// ── Write docs/13 ───────────────────────────────────────────────────────────
+const progress = readFileSync(paths.progress, 'utf8');
 const currentLine = progress.split('\n').find((l) => l.startsWith('**Client Phase:**')) ?? '';
 const today = new Date().toISOString().slice(0, 10);
 const list = (rows) => (rows.length ? rows.map((r) => `- ${r.status} **${r.id}** ${r.feature} _(${r.phase})_`).join('\n') : '- _none yet_');
-
 const moduleTables = modules
   .filter((mod) => mod.rows.length)
-  .map((mod) => {
-    const body = mod.rows
-      .map((r) => `| ${r.id} | ${r.feature} | ${r.cp} | ${r.phase} | ${r.be} | ${r.web} | ${r.mob} | ${r.tests} | ${r.status} |`)
-      .join('\n');
-    return `### ${mod.title}\n\n| ID | Feature | CP | Phase | Backend | Web | Mobile | Tests | Status |\n|---|---|---|---|---|---|---|---|---|\n${body}`;
-  })
+  .map(
+    (mod) =>
+      `### ${mod.title}\n\n| ID | Feature | CP | Phase | Backend | Web | Mobile | Tests | Status |\n|---|---|---|---|---|---|---|---|---|\n` +
+      mod.rows.map((r) => `| ${r.id} | ${r.feature} | ${r.cp} | ${r.phase} | ${r.be} | ${r.web} | ${r.mob} | ${r.tests} | ${r.status} |`).join('\n'),
+  )
   .join('\n\n');
+const endpointTable = endpoints.length
+  ? `| Method | Path | Feature | Backend | Web | Mobile |\n|---|---|---|---|---|---|\n${endpoints.map((e) => `| ${e.method} | \`${e.path}\` | ${e.feature} | ${e.be} | ${e.web} | ${e.mob} |`).join('\n')}`
+  : '_No endpoints yet._';
 
-const cp1Rows = all.filter((r) => r.cp === 'CP1');
-const doc = `# 13 — Roadmap & status
+writeFileSync(
+  paths.doc,
+  `# 13 — Roadmap & status
 
-> **Generated by \`pnpm status\` from \`.brain/FEATURES.md\` — do not edit by hand.** Last generated: ${today}
-> Legend: ⬜ Not started · 🟨 In progress · ✅ Done (built + tested + documented) · ⚠️ Partial / blocked · ⏭️ Client Phase 2 · — not applicable
+> **Generated by \`pnpm status\` from \`.brain/FEATURES.md\` + \`.brain/API_INDEX.md\`. Do not edit by hand.** Last generated: ${today}
+> Legend: ⬜ Not started · 🟨 In progress · 🧩 Built but not connected · ✅ Done (built + connected + tested + documented) · ⚠️ Partial / blocked · ⏭️ Client Phase 2 · — not applicable
 
 ## Where we are
 ${currentLine}
@@ -90,11 +167,20 @@ ${currentLine}
 
 ${summaryTable}
 
+### Progress per app (CP1)
+${perAppTable}
+
 ## Client phases
 - **Client Phase 1, MVP:** SOW modules 1–12 at basic depth, so the client can run the daily business end to end. Built in internal steps P0 → P13.
 - **Client Phase 2, Advanced:** AI anomaly, IoT, and advanced extras (bank reconciliation, cheques, cash flow, profitability & leakage analytics, permission editor, backup UI). Built in A1 → A7 after CP1 sign-off.
 
 Step-by-step build plan: [\`.brain/PROGRESS.md\`](../.brain/PROGRESS.md).
+
+## Backend ↔ Web ↔ Mobile wiring
+${gapsMarkdown}
+
+#### All endpoints
+${endpointTable}
 
 ## Implemented so far (CP1)
 ${list(cp1Rows.filter((r) => r.status === '✅'))}
@@ -107,6 +193,9 @@ ${list(cp1Rows.filter((r) => r.status === '⬜'))}
 
 ## Feature status by module
 ${moduleTables}
-`;
-writeFileSync(docPath, doc);
-console.log(`status: CP1 ${cp1['✅']}/${cp1.total} done (${pct} %) → docs/13-roadmap-and-status.md updated`);
+`,
+);
+
+console.log(
+  `status: CP1 ${cp1['✅']}/${cp1.total} done (${pct} %) · wiring gaps: ${apiNotUsed.length} API unused, ${uiWaitingForApi.length} UI waiting → docs/13 updated`,
+);

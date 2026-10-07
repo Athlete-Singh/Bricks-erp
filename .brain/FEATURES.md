@@ -1,7 +1,8 @@
 # FEATURES — Requirement Register & Status
 
 > Source: BRICS_MASTER_PROMPT.md §11 (from the 3 client PDFs). One row per feature. Update **Status** at the end of every session.
-> Columns BE / Web / Mob / Tests = per-app progress (— = not applicable). **Status** = overall; ✅ only when every applicable column is ✅.
+> Columns BE / Web / Mob / Tests = per-app progress: ⬜ not started · 🟨 in progress · 🧩 built but **not connected** (UI without live API, or API no app uses yet) · ✅ done + connected · — not applicable.
+> **Status** = overall; ✅ only when every applicable column is ✅. Endpoint-level wiring lives in `API_INDEX.md`.
 > After editing, run `pnpm status` to regenerate `docs/13-roadmap-and-status.md` and the summary below.
 > Legend: ⬜ Not started · 🟨 In progress · ✅ Done (built+tested+documented) · ⚠️ Partial/blocked · ⏭️ Deferred to CP2
 > Rule: in CP1 build exactly this depth. Extra ideas → "CP2 candidates" at the bottom, not code.
@@ -14,6 +15,15 @@
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 
 **CP1 done: 0 %** (0 of 89 features ✅)
+
+### Per app
+
+| App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
+|---|---|---|---|---|---|---|
+| Backend | 86 | 0 | 0 | 0 | 0 | 86 |
+| Web | 85 | 0 | 0 | 0 | 0 | 85 |
+| Mobile | 9 | 0 | 0 | 0 | 0 | 9 |
+| Tests | 89 | 0 | 0 | 0 | 0 | 89 |
 
 ## Client Phase 1 — MVP
 
