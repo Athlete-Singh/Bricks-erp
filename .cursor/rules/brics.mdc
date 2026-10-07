@@ -1,0 +1,6 @@
+---
+description: BRICS ERP project rules
+alwaysApply: true
+---
+Read `AGENTS.md` at the repo root first. It is the single source of truth (rules, read order, commands, definition of done).
+Then read `.brain/00_INDEX.md` and `.brain/PROGRESS.md`. One step per session; finish green; update the brain and run `pnpm status`.

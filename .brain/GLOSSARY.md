@@ -1,0 +1,27 @@
+# GLOSSARY
+
+- **Bhatta / Kiln / Chimney** — brick kiln site; a company may run several. "Chimney" = chimney-type (e.g. Bull's trench) kiln.
+- **Chamber / Khunta** — section of the kiln where bricks are stacked and fired; firing moves chamber to chamber.
+- **Soil / Mitti** — clay raw material; prepared (mixed, soaked) before moulding.
+- **Pathera / Moulder** — worker who moulds raw (green) bricks by hand, paid per 1,000 bricks.
+- **Green / Kacchi bricks** — moulded, unfired bricks; dried in open yard before firing.
+- **Bharai (loading) / Nikasi (unloading)** — stacking green bricks into chambers / removing fired bricks; paid per 1,000.
+- **Jalai / Firing** — burning coal to fire bricks; fireman/jalaiwala.
+- **Sorting / Grades** — fired bricks sorted into classes (Awwal/1st class, Doyam/2nd, 3rd, Peela/under-burnt, Khanger/over-burnt, broken/rora).
+- **Sardar / Jamadar / Labour contractor** — heads a labour group, recruits workers, takes advances, settles at season end.
+- **Peshgi / Advance** — cash advance to Sardar/worker, recovered from wages.
+- **Season** — brick-making season (approx. Oct/Nov–Jun, stops in monsoon); settlements are seasonal.
+- **Rate per 1,000** — standard pricing/wage unit for bricks.
+- **GRN** — Goods Receipt Note: material received at kiln (coal, soil, diesel…).
+- **PO** — Purchase Order. **SO** — Sales Order.
+- **Challan / Delivery challan** — document travelling with the truck listing bricks dispatched.
+- **Tipper / Tractor-trolley / Truck** — vehicle types for bricks, soil, coal.
+- **GSTIN** — 15-char GST registration no.; first 2 digits = state code (used for place of supply).
+- **HSN / SAC** — codes for goods / services. Clay building bricks: usually HSN 6904 (6901 = siliceous/refractory) — confirm with client CA (OQ #2).
+- **CGST / SGST / IGST** — central/state GST (intra-state) / integrated GST (inter-state).
+- **GSTR-1** — outward supplies return. **GSTR-3B** — monthly summary return with tax paid.
+- **Voucher** — accounting document (receipt, payment, contra, journal, sales, purchase, credit/debit note).
+- **Contra** — cash↔bank or bank↔bank movement. **Day Book** — all vouchers of a day.
+- **Trial Balance** — all ledger balances, Σ Dr = Σ Cr. **FY** — financial year April–March, label `2026-27`.
+- **Lakh / Crore** — 1,00,000 / 1,00,00,000; Indian digit grouping.
+- **Sundry Debtors / Creditors** — customers owing us / suppliers we owe.
