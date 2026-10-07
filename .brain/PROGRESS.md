@@ -10,7 +10,14 @@ Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
   - P0.2 ✅ pnpm + Turborepo root, `packages/config`, `packages/shared` (enums, ₹/date formatters, health schema, tests), `infra/docker-compose.yml` (Postgres 16 + `brics_test`), NestJS 11 backend: env validation (zod), Pino, Swagger `/api/docs`, `/api/v1/health` with DB check, envelope + error filter, base entities, Money utils, TypeORM data source + migration CLI (verified), unit + e2e tests. One env file per app (ADR-011).
 - **Half-done: P0.3 web.** Written: `web/package.json`, tsconfig, next/postcss/tailwind/eslint/vitest configs, `src/styles/tokens.css` + `globals.css`, `web/.env.example`. NOT written: `src/app/*` (layout, providers, placeholder dashboard), `components/ui` (Button, Card, Badge), `components/layout` (Sidebar, Topbar, PageHeader, KilnSwitcher), `lib/api-client.ts`, `lib/query-client.ts`, `lib/cn.ts`, `stores/ui-store.ts`, `features/system` (health API + hook → topbar status), tests. `web` is **commented out in `pnpm-workspace.yaml`** to keep the gate green.
 - **Next step (exact):** uncomment `- web` in `pnpm-workspace.yaml` → `pnpm install` → write the missing web files above → web gate (lint, typecheck, test, build) → set `/health` Web ✅ in API_INDEX → commit → P0.4.
-- **Then:** P0.4 mobile (write full Flutter source; on a machine with Flutter run `flutter create --org com.tvamkey --project-name brics_mobile --platforms=android,ios .`, `pub get`, `build_runner`, `gen-l10n`, analyze, test; add `mobile/env/dev.example.json`) → P0.5 (GitHub Actions CI with Postgres service, Husky pre-commit + commit-msg hooks: husky is installed but no hooks exist yet, final verify).
+- **Then:** P0.5 (GitHub Actions CI with Postgres service, Husky pre-commit + commit-msg hooks: husky is installed but no hooks exist yet, final verify) → P1.1, P1.2 … (backend + web on this device).
+- **Work split (2026-10-07):** backend + web are built on device A (no Flutter). The Flutter app is built on device B. Each device uses its own Resume block. `git pull` before and `git push` after every session. Device B edits only the **Mob** columns in FEATURES/API_INDEX, then runs `pnpm status`.
+
+## ▶ Resume here: mobile (device B, with Flutter)
+- **State:** P0.4 🟨 *structure only*. `mobile/` has `pubspec.yaml` (no packages yet), `lib/main.dart` + `lib/app.dart` placeholder, `test/app_test.dart`, every `lib/core/*` and `lib/features/<auth|production|attendance|grn|dispatch|sync>/{data,domain,presentation}` folder (with .gitkeep), `env/dev.example.json`, and `mobile/README.md` with the setup commands.
+- **Next step (exact):** follow `mobile/README.md` "First time" (flutter create, pub add, analyze, test) → build the P0.4 scaffold (theme tokens from docs/05, core widgets, go_router, dio client, Drift stub, sync skeleton, l10n) → `flutter analyze` + `flutter test` green → P0.4 ✅ → commit + push. Then the mobile steps in order: P1.3 → P5.3 → P6.3 → P7.3 → P9.3 → P12.
+- **APIs waiting for mobile:** see the wiring gaps in `.brain/API_INDEX.md` (rows with Mob ⬜/🧩).
+- **Blockers:** none.
 - **Blockers:** none. Flutter SDK is needed on the build machine for P0.4.
 
 ## CP1 internal steps
@@ -19,7 +26,7 @@ Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 | P0 | P0.1 | Preflight, git, PDFs, brain, docs, AI files | ✅ |
 | P0 | P0.2 | Monorepo, docker-compose, backend scaffold + /health | ✅ |
 | P0 | P0.3 | Web scaffold, tokens, shell, Vitest (configs + tokens done; pages/components pending) | 🟨 |
-| P0 | P0.4 | Mobile scaffold: source, theme, widgets, router, Drift stub, l10n, env file, test | ⬜ |
+| P0 | P0.4 | Mobile scaffold: folder structure + placeholder app ✅ (device A); flutter create, packages, theme, widgets, router, Drift stub, l10n, analyze/test (device B) | 🟨 |
 | P0 | P0.5 | CI, Husky hooks, commitlint, verify, tracking | ⬜ |
 | P1 | P1.1 | Backend: auth, tenancy guard, companies, kilns, FY, users, roles, audit | ⬜ |
 | P1 | P1.2 | Web: login, shell, DS primitives, company/kiln/user screens | ⬜ |

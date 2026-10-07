@@ -1,0 +1,20 @@
+name: brics_mobile
+description: BRICS supervisor app — offline-first field app for production, attendance, GRN and dispatch.
+publish_to: 'none'
+version: 0.0.1+1
+
+environment:
+  sdk: ^3.5.0
+
+# Packages are added on the Flutter machine with `flutter pub add` (see mobile/README.md),
+# so versions resolve against the installed Flutter SDK.
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
