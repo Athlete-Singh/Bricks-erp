@@ -1,6 +1,19 @@
 # ACCOUNTING RULES — posting matrix
 
-Engine: `backend/src/accounting/PostingService` — `post(voucher, lines[], qr)`; asserts Σdebit = Σcredit > 0, FY open, period not locked; same transaction as the source document.
+Engine: `backend/src/accounting/posting.service.ts` — **built in P2.1b**. `post(manager, input)` asserts Σdebit = Σcredit > 0,
+every line one-sided and non-negative, the FY exists and is unlocked, and every ledger belongs to the company. It takes the
+caller's `EntityManager`, so the document and its journal commit together.
+
+Error codes it raises (all `BusinessRuleException` → 422): `JOURNAL_UNBALANCED` · `JOURNAL_TOO_FEW_LINES` · `JOURNAL_EMPTY_LINE`
+· `JOURNAL_LINE_BOTH_SIDES` · `JOURNAL_NEGATIVE_AMOUNT` · `JOURNAL_ZERO_VALUE` · `FY_NOT_FOUND` · `FY_LOCKED` ·
+`LEDGER_NOT_IN_COMPANY` · `LEDGER_INACTIVE` · `VOUCHER_TYPE_UNKNOWN` · `VOUCHER_ALREADY_REVERSED` · `VOUCHER_IS_A_REVERSAL`.
+
+Numbering: `PREFIX/FY/000001`, gapless per company + FY + type. A `voucher_sequences` row is taken with `SELECT … FOR UPDATE`
+rather than a Postgres sequence — a sequence hands out a number before commit, so a rollback would leave a hole, and GST
+invoice numbering cannot have holes. Verified under 8 concurrent posts.
+
+Reversal: `reverse(manager, …)` mirrors every line onto the opposite side, dates **today** (not back into a reported period),
+links `reversal_of_id`, and marks the original `reversed`. A reversal cannot itself be reversed.
 
 ## Voucher types
 Receipt (RCT) · Payment (PMT) · Contra (CNT) · Journal (JNL) · Sales (SAL) · Purchase (PUR) · Credit Note (CRN) · Debit Note (DBN). Numbering per company + FY + type: `SAL/2026-27/000123`.

@@ -204,3 +204,67 @@ export const setOpeningBalancesSchema = z.object({
   balances: z.array(openingBalanceSchema).min(1, 'Add at least one opening balance'),
 });
 export type SetOpeningBalancesDto = z.infer<typeof setOpeningBalancesSchema>;
+
+// ── Vouchers (ACC-02, ACC-03) ────────────────────────────────────────────────
+
+/** Manual voucher types. Sales/purchase/notes are posted by their documents. */
+export const MANUAL_VOUCHER_TYPES = ['receipt', 'payment', 'contra', 'journal'] as const;
+export type ManualVoucherType = (typeof MANUAL_VOUCHER_TYPES)[number];
+
+const amountString = z
+  .string()
+  .regex(/^\d{1,16}(\.\d{1,2})?$/, 'Enter an amount like 1250.00')
+  .optional();
+
+export const voucherLineSchema = z
+  .object({
+    ledgerId: z.string().uuid('Pick a ledger'),
+    debit: amountString,
+    credit: amountString,
+    partyId: z.string().uuid().nullish(),
+    siteId: z.string().uuid().nullish(),
+    narration: blankToNull(z.string().max(500)),
+  })
+  // Mirrors the CHECK constraint on voucher_lines, so the message is useful
+  // rather than a database error.
+  .refine((v) => Number(v.debit ?? 0) > 0 !== Number(v.credit ?? 0) > 0, {
+    message: 'Each line is a debit or a credit — enter exactly one',
+    path: ['debit'],
+  });
+export type VoucherLineDto = z.infer<typeof voucherLineSchema>;
+
+export const createVoucherSchema = z.object({
+  voucherType: z.enum(MANUAL_VOUCHER_TYPES),
+  voucherDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Pick a date'),
+  narration: blankToNull(z.string().max(1000)),
+  siteId: z.string().uuid().nullish(),
+  lines: z.array(voucherLineSchema).min(2, 'A voucher needs at least two lines'),
+});
+export type CreateVoucherDto = z.infer<typeof createVoucherSchema>;
+export type CreateVoucherInput = z.input<typeof createVoucherSchema>;
+
+export const reverseVoucherSchema = z.object({
+  voucherDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+  narration: blankToNull(z.string().max(1000)),
+});
+export type ReverseVoucherDto = z.infer<typeof reverseVoucherSchema>;
+
+export const voucherQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(25),
+  voucherType: z.string().min(1).optional(),
+  from: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+  to: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+  ledgerId: z.string().uuid().optional(),
+  status: z.enum(['posted', 'reversed']).optional(),
+});
+export type VoucherQueryDto = z.infer<typeof voucherQuerySchema>;
