@@ -11,19 +11,19 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 89 | 0 | 7 | 0 | 82 | 0 |
+| CP1 MVP | 101 | 0 | 7 | 1 | 93 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 
-**CP1 done: 0 %** (0 of 89 features ✅)
+**CP1 done: 0 %** (0 of 101 features ✅)
 
 ### Per app
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
-| Backend | 86 | 0 | 7 | 0 | 0 | 79 |
-| Web | 85 | 0 | 0 | 0 | 0 | 85 |
-| Mobile | 10 | 0 | 0 | 0 | 0 | 10 |
-| Tests | 89 | 7 | 0 | 0 | 0 | 82 |
+| Backend | 97 | 0 | 7 | 0 | 0 | 90 |
+| Web | 94 | 0 | 0 | 0 | 0 | 94 |
+| Mobile | 11 | 0 | 0 | 0 | 0 | 11 |
+| Tests | 101 | 7 | 0 | 0 | 0 | 94 |
 
 ## Client Phase 1 — MVP
 
@@ -73,7 +73,7 @@
 | LAB-03 | Wage-rate config: piece rate per 1,000 bricks by activity (making, loading, unloading) and daily wage | CP1 | P6 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | LAB-04 | Auto wage entries from production and loading counts | CP1 | P6 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | LAB-05 | Cash advances and loans to Sardar/workers (cash/bank/UPI) | CP1 | P6 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| LAB-06 | Deductions: advance recovery, loan instalment | CP1 | P6 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| LAB-06 | Deductions: advance recovery, loan instalment, **food/ration (khurak), fines and penalties** | CP1 | P6 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | LAB-07 | Wage payment and seasonal settlement statement (earned − advances − deductions = payable) | CP1 | P6 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | LAB-08 | Labour ledger and outstanding per Sardar/worker | CP1 | P6 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 
@@ -159,16 +159,41 @@
 | GST-04 | GSTR-1 register (B2B, B2C, HSN summary) with Excel export | CP1 | P10 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | GST-05 | GSTR-3B summary register | CP1 | P10 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | GST-06 | GST sales and purchase reports | CP1 | P10 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| GST-07 | GST reconciliation: books vs what was filed — GSTR-1 register against the sales register, GSTR-3B against the books, with the differences listed | CP1 | P10 | ⬜ | ⬜ | — | ⬜ | ⬜ | Proposal §1 names "delayed GST reconciliation" as a problem BRICS solves. GST-04/05 produce registers; nothing reconciles them |
+
+### M13 Leakage Control — the ROI module (Proposal §1 + §4, Functional Spec §21)
+
+> **Why this is CP1:** the client bought BRICS to stop leakage (Proposal §1) and the ₹3.5–6 L/season claim (§4) rests on it.
+> Every row below is a *report over data CP1 already captures* — no new tables, no new data entry. Each ships **with the module
+> that produces its data**, not bundled at the end, so the owner sees value from P5 onward. Moved out of CP2 (was ADV-05).
+
+| ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| LEK-01 | Brick yield variance: green moulded − (good + broken + rejects) per batch / chamber / Sardar gang, with an "unexplained" column | CP1 | P5 | ⬜ | ⬜ | — | ⬜ | ⬜ | Catches over-reported moulding counts (labour = 29% of cost) |
+| LEK-02 | Coal consumption per 1,000 bricks fired, compared batch-to-batch, kiln-to-kiln and month-to-month; outliers flagged | CP1 | P5 | ⬜ | ⬜ | — | ⬜ | ⬜ | Coal = 42% of cost. No weighbridge in CP1, so this is the only fuel control |
+| LEK-03 | Live Sardar advance exposure: advances drawn − wages earned to date, per Sardar; **warning shown at the moment a new advance is entered** | CP1 | P6 | ⬜ | ⬜ | — | ⬜ | ⬜ | Highest value / lowest effort. Season-end settlement is too late to act |
+| LEK-04 | Gate reconciliation: dispatched qty vs invoiced qty vs stock movement, with unmatched dispatches listed | CP1 | P9 | ⬜ | ⬜ | — | ⬜ | ⬜ | Catches trucks leaving without a bill |
+
+### M14 Sync & idempotency (backend only — no Flutter needed)
+
+> The mobile app is built later on another machine, but these backend decisions must be made **when each module is built**,
+> or every mobile-facing endpoint has to be reopened afterwards. See `CONVENTIONS.md` → "Mobile-used create endpoints".
+
+| ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| SYN-01 | `Idempotency-Key` header on every mobile-facing create endpoint + `idempotency_keys` table; a repeat with the same key returns the original result instead of creating a duplicate | CP1 | P5 | ⬜ | — | — | ⬜ | ⬜ | **Build with the first mobile-facing creates (P5), then keep it for P6/P7/P9.** Without it, offline retry = duplicate production entries |
+| SYN-02 | Delta pull endpoints (`?since=`) for the masters the app caches: kilns, parties, items, brick types, wage rates | CP1 | P5 | ⬜ | — | — | ⬜ | ⬜ | Keeps the first sync small on a field connection |
 
 ### M12 Supervisor Mobile App (SOW #12)
 
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| MOB-01 | Login, kiln selection, role-based home | CP1 | P1 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |  |
-| MOB-02 | Offline storage + sync queue + sync status badge (skeleton) | CP1 | P1 | — | — | ⬜ | ⬜ | ⬜ |  |
-| MOB-03 | Feature screens: production (P5), attendance (P6), GRN (P7), dispatch/delivery (P9) | CP1 | P5–P9 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |  |
-| MOB-04 | A full working day offline; syncs with no duplicates; conflict handling | CP1 | P12 | — | — | ⬜ | ⬜ | ⬜ |  |
-| MOB-05 | Android release APK | CP1 | P12 | — | — | ⬜ | ⬜ | ⬜ |  |
+| MOB-01 | Login, kiln selection, role-based home | CP1 | M1 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |  |
+| MOB-02 | Offline storage + sync queue + sync status badge (skeleton) | CP1 | M1 | — | — | ⬜ | ⬜ | ⬜ |  |
+| MOB-03 | Feature screens: production, attendance, GRN, dispatch/delivery | CP1 | M2–M5 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |  |
+| MOB-04 | A full working day offline; syncs with no duplicates; conflict handling | CP1 | M6 | — | — | ⬜ | ⬜ | ⬜ |  |
+| MOB-05 | Android release APK | CP1 | M6 | — | — | ⬜ | ⬜ | ⬜ |  |
+| MOB-06 | iOS build + TestFlight/App Store release | CP1 | M6 | — | — | ⬜ | ⬜ | ⬜ | **Contracted:** SOW §1 says "Cross-platform iOS & Android"; §3 excludes only the Apple $99/yr fee. Was wrongly filed under "CP2 candidates" |
 
 ### Basics from the Functional Spec needed to run the business (CP1, basic depth)
 
@@ -177,10 +202,13 @@
 | EXP-01 | Expense categories (labour, coal, diesel, electricity, vehicle, machinery, repairs, salary, food, rent, office, govt charges, bank charges, misc) | CP1 | P10 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | EXP-02 | Expense entry by kiln with payment mode Cash / Bank / UPI / Credit | CP1 | P10 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | CSH-01 | Opening/closing cash; cash receipts/payments; bank deposit, withdrawal and transfer (contra); bank charges; cheque no. / UPI ref on vouchers | CP1 | P10 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| DSH-01 | Owner dashboard answering the "Key Management Questions": production today/month/year, stock, sold/dispatched, receivables, payables, labour payable, coal/diesel used, cost per 1,000, gross margin | CP1 | P11 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| DSH-01 | Owner dashboard answering the "Key Management Questions": production today/month/year, stock, sold/dispatched, receivables, payables, labour payable, coal/diesel used, **expenses, estimated profit**, cost per 1,000, gross margin | CP1 | P11 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | DSH-02 | Monthly charts: production, sales, collection, expenses, fuel | CP1 | P11 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| CST-01 | Cost per 1,000 bricks by kiln and month (labour, coal, soil, electricity, loading, repairs, other) vs selling price → gross margin | CP1 | P11 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| CST-01 | Cost per 1,000 bricks by kiln, month **and brick type** (labour, coal, soil, electricity, loading, repairs, other) vs selling price → gross margin. Shown against the ₹4,100 benchmark from the Proposal §4 / Spec §22 | CP1 | P11 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | RPT-01 | Excel/PDF export for the main reports | CP1 | P11 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| RPT-02 | Daily operations report: one page per day — production, dispatch, sales, collection, expenses, coal used, labour present | CP1 | P11 | ⬜ | ⬜ | — | ⬜ | ⬜ | Functional Spec §19 `daily_reports`. The owner's "what happened today" sheet |
+| RPT-03 | Sales register by customer / brick type / period, with quantity, rate per 1,000, discount, GST and total | CP1 | P11 | ⬜ | ⬜ | — | ⬜ | ⬜ | Functional Spec §19 `sales_reports` |
+| RPT-04 | Labour registers: attendance register and wage register by Sardar / group / period | CP1 | P11 | ⬜ | ⬜ | — | ⬜ | ⬜ | Functional Spec §19 `labour_reports`. LAB-08 is the ledger, not the register |
 | ONB-01 | Go-live onboarding: CSV import of parties, items, opening balances and opening stock (not historical transactions; those are excluded in the SOW) | CP1 | P13 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 ## Client Phase 2 — Advanced (do NOT build in CP1)
 
@@ -199,20 +227,29 @@
 | ADV-01 | Bank reconciliation | CP2 | A1 | ⏭️ | ⏭️ | ⏭️ | ⏭️ | ⏭️ |  |
 | ADV-02 | Cheque lifecycle (issued/deposited/cleared/bounced, post-dated cheques) | CP2 | A1 | ⏭️ | ⏭️ | ⏭️ | ⏭️ | ⏭️ |  |
 | ADV-03 | Cash flow statement | CP2 | A1 | ⏭️ | ⏭️ | ⏭️ | ⏭️ | ⏭️ |  |
-| ADV-04 | Profitability comparisons by brick type and customer; "most profitable kiln/type/customer" analysis | CP2 | A3 | ⏭️ | ⏭️ | ⏭️ | ⏭️ | ⏭️ |  |
-| ADV-05 | Leakage reports (stock, cash, fuel variance) | CP2 | A3 | ⏭️ | ⏭️ | ⏭️ | ⏭️ | ⏭️ |  |
+| ADV-04 | "Most profitable customer" analysis and ranked comparisons | CP2 | A3 | ⏭️ | ⏭️ | ⏭️ | ⏭️ | ⏭️ | Kiln / month / **brick type** comparison moved into CP1's CST-01; customer-level profitability stays CP2 |
+| ADV-05 | Advanced leakage analytics: cross-module cash leakage, trend/seasonality, ranked alerts | CP2 | A3 | ⏭️ | ⏭️ | ⏭️ | ⏭️ | ⏭️ | **The core variance reports moved to CP1 as LEK-01…04.** What stays here is the analytics layer on top |
 | ADV-06 | Custom role/permission matrix editor | CP2 | A4 | ⏭️ | ⏭️ | ⏭️ | ⏭️ | ⏭️ |  |
 | ADV-07 | In-app backup/restore and full data export | CP2 | A4 | ⏭️ | ⏭️ | ⏭️ | ⏭️ | ⏭️ |  |
 
-## CP2 candidates (not in PDFs — need client approval + quote)
+### Implied by the SOW — needs a client decision before CP1 is locked
+
+| ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| NTF-01 | SMS/WhatsApp alerts (dispatch sent, payment received, advance limit crossed) via MSG91/Twilio | CP1 | P13 | ⬜ | ⬜ | — | ⬜ | ⚠️ | **Blocked on the client.** SOW §3 excludes the *gateway charges* "(paid directly to MSG91/Twilio)" — naming the vendors implies the integration itself is in scope. Was wrongly filed under "not in PDFs". See OPEN_QUESTIONS #14 |
+
+## CP2 candidates (genuinely not in any client PDF — need client approval + quote)
 
 - e-Invoice (IRN)
 - e-Way Bill
 - GSTR JSON upload format
-- SMS/WhatsApp alerts (gateway fees paid by the client per the SOW)
 - photo/signature proof of delivery
 - Hindi/regional languages
-- iOS App Store release (client pays the Apple fee)
 - GPS vehicle tracking
 - inter-kiln stock transfer
 - _(add new ideas found during the build here, with date + who suggested)_
+
+> **2026-10-08 — corrected.** "iOS App Store release" and "SMS/WhatsApp alerts" used to sit in this list under a heading that
+> says *not in PDFs*. Both **are** in `03-sow-srs.pdf` (§1 "Cross-platform iOS & Android"; §3 excluding only the gateway *fees*).
+> They are now MOB-06 and NTF-01 in CP1. Telling a client that contracted scope needs a fresh quote is how a dispute starts —
+> check this list against the PDFs before quoting from it.

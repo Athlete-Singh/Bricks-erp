@@ -14,35 +14,40 @@ You are continuing the BRICS ERP project. **Step for this session: `P_._`**
 Read `AGENTS.md` → `.brain/00_INDEX.md` → `.brain/PROGRESS.md` (especially "Resume here") → the `.brain/FEATURES.md` rows for this step's feature IDs → only the relevant `.brain/modules/*.md`. Open source files only when the step needs them.
 
 **2. Preflight: start from green**
+
 - Check `git status` is clean and you are on the last green commit from "Resume here".
-- Run the green gate for the apps this step touches (install, lint, typecheck, test, build; `flutter analyze` + `flutter test` for mobile).
+- Run the green gate for the apps this step touches. **P track (P0–P13, backend + web): JS gate only — `pnpm lint && pnpm typecheck && pnpm test && pnpm build` plus backend e2e. Flutter is not installed; never run `flutter analyze` / `flutter test` and never report `mobile/` as red.** M track (M0–M6, device B): also `dart run build_runner build -d && flutter analyze && flutter test`.
 - If anything is red **before** you start, fix that first, commit it as `fix: …`, and tell me. Do not build new features on a red base.
 - If a required tool is missing on this machine, tell me how to install it before you continue.
 
 **3. Scope check: Client Phase and depth**
+
 - State which Client Phase this step belongs to (**CP1 MVP** or **CP2 Advanced**) and list the feature IDs it covers.
 - **CP1 rule:** build exactly the depth written in FEATURES.md. Anything more advanced goes in FEATURES.md → "CP2 candidates", not into code. Correctness (balanced journals, stock formula, GST split, tenancy, audit) is never cut.
 - If the step looks too big for one session, propose a split (e.g. `P5.1a` / `P5.1b`) now.
 
 **4. Plan, then wait for my OK**
 Give a short plan:
+
 - **Backend:** entities, migration(s), endpoints, posting rules (Dr/Cr), stock effects.
 - **Web:** pages, components (reuse existing ones first; create shared components, never duplicate).
-- **Mobile:** screens, Drift tables, sync behaviour (only if the step includes mobile).
+- **Mobile:** screens, Drift tables, sync behaviour (**M track only** — P-track steps have no mobile part; what they owe mobile is `SYN-01` idempotency on create endpoints).
 - **Tests:** what is covered (mandatory for accounting, stock and GST logic).
 - **Questions:** anything ambiguous. Add them to `.brain/OPEN_QUESTIONS.md` too.
 
 Wait for my OK. (If I wrote "go" with the step ID, go straight ahead after showing the plan.)
 
 **5. Build in small, green, committed slices**
+
 - Follow `.brain/CONVENTIONS.md`. Parallel sub-agents per app are allowed; you own consistency.
 - After each slice (e.g. entity + migration, then service + tests, then controller, then UI), run the gate and **commit** (Conventional Commits).
 - Migrations are append-only. No `synchronize: true`. Dev servers run in the background only, and you stop them when done.
 
 **6. Final green gate**
-Everything this step touched must pass: lint, typecheck, tests, build, `flutter analyze`/`flutter test`. Start the backend once and check `/api/v1/health`. If something cannot be made green, revert or disable the unfinished part, keep the last green state, and record it as ⚠️ with the reason.
+Everything this step touched must pass: lint, typecheck, tests, build (+ `flutter analyze`/`flutter test` **only on the M track / device B**). Start the backend once and check `/api/v1/health`. If something cannot be made green, revert or disable the unfinished part, keep the last green state, and record it as ⚠️ with the reason.
 
 **7. Update tracking (never skip; this is how we know what's done and what's left)**
+
 - `.brain/FEATURES.md`: set each feature's per-app columns **BE · Web · Mob · Tests** and its overall **Status** (⬜ 🟨 🧩 ✅ ⚠️ ⏭️ —). Use 🧩 when a part is built but not connected (e.g. API done but the web/mobile screen is not using it yet). ✅ only if built + connected + tested + documented.
 - `.brain/API_INDEX.md`: one row per endpoint touched, with **BE · Web · Mob** wiring status. Add rows for planned endpoints too (BE ⬜).
 - Run **`pnpm status`**. It validates the symbols and regenerates the summaries, per-app progress, wiring gaps and `docs/13-roadmap-and-status.md`. Fix any error it prints.

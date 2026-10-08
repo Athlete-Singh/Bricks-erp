@@ -1,6 +1,6 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** P1.1b ✅ done → **next: P1.2** (web login page wired to auth API, company/kiln switcher, user/role management screens) · **CP1 features done:** 0 / 89 (0 %)
+**Client Phase:** CP1 (MVP) · **Current step:** P1.1b ✅ done → **next: P1.2** (web login page wired to auth API, company/kiln switcher, user/role management screens) · **CP1 features done:** 0 / 101 (0 %)
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
@@ -14,7 +14,7 @@ That creates the 9 roles, one company, one kiln and one Owner. The bootstrap ref
   - P0.1 ✅ git, PDFs, brain, docs 01–13, AI entry files, `pnpm status` generator.
   - P0.2 ✅ monorepo, shared package, docker-compose, NestJS 11 backend, `/health`, migrations, unit + e2e.
   - P0.3 ✅ web shell — app router, DS primitives (Button/Card/Badge/Input/Skeleton/EmptyState), layout (Sidebar/Topbar/PageHeader/KilnSwitcher), lib + stores, features/system health hook, 1 Vitest test.
-  - P0.4 🟨 mobile folder structure only (device A); full scaffold on device B.
+  - P0.4 ✅ mobile folder structure (all the P track owes mobile). The Flutter scaffold is **M0** on device B.
   - P0.5 ✅ CI workflow, Husky pre-commit + commit-msg, .prettierignore fix.
   - P1.1a ✅ backend auth & RBAC skeleton: 11 entities, JWT access+refresh, guards, CRUD controllers, migration, first tests.
   - P1.1b ✅ **repair of P1.1** — see "Why P1.1b existed" below. Tenant isolation, RBAC seed, audit trail, API contract, missing ADM endpoints, schema hardening. 31 unit + 22 e2e green.
@@ -41,40 +41,77 @@ all simply absent. `pnpm status` could not catch the wiring gap because its gene
 - **Work split (2026-10-07):** backend + web are built on device A (no Flutter). The Flutter app is built on device B. Each device uses its own Resume block. `git pull` before and `git push` after every session. Device B edits only the **Mob** columns in FEATURES/API_INDEX, then runs `pnpm status`.
 
 ## ▶ Resume here: mobile (device B, with Flutter)
-- **State:** P0.4 🟨 *structure only*. `mobile/` has `pubspec.yaml` (no packages yet), `lib/main.dart` + `lib/app.dart` placeholder, `test/app_test.dart`, every `lib/core/*` and `lib/features/<auth|production|attendance|grn|dispatch|sync>/{data,domain,presentation}` folder (with .gitkeep), `env/dev.example.json`, and `mobile/README.md` with the setup commands.
-- **Next step (exact):** follow `mobile/README.md` "First time" (flutter create, pub add, analyze, test) → build the P0.4 scaffold (theme tokens from docs/05, core widgets, go_router, dio client, Drift stub, sync skeleton, l10n) → `flutter analyze` + `flutter test` green → P0.4 ✅ → commit + push. Then the mobile steps in order: P1.3 → P5.3 → P6.3 → P7.3 → P9.3 → P12.
-- **APIs waiting for mobile:** see the wiring gaps in `.brain/API_INDEX.md` (rows with Mob ⬜/🧩).
-- **Blockers:** none.
-- **Blockers:** none. Flutter SDK is needed on the build machine for P0.4.
+- **State:** M0 not started. `mobile/` holds `pubspec.yaml` (no packages), `lib/main.dart` + `lib/app.dart` placeholders,
+  `test/app_test.dart`, the full `lib/core/*` and `lib/features/<auth|production|attendance|grn|dispatch|sync>/{data,domain,presentation}`
+  folder tree, `env/dev.example.json` and `mobile/README.md`.
+- **Flutter is NOT installed on device A and will not be.** Nothing in `mobile/` is built, analysed or tested there.
+- **Next step (exact):** M0 — follow `mobile/README.md` "First time" (`flutter create`, `flutter pub add`, analyze, test), then
+  build the scaffold: theme tokens from `docs/05-design-system.md`, core widgets, go_router, dio client, Drift stub, sync
+  skeleton, l10n → `flutter analyze` + `flutter test` green → commit + push. Then M1 → M6 in order.
+- **Before starting M2:** confirm `SYN-01` (`Idempotency-Key`) shipped in P5.1. Without it, offline retries create duplicates.
+- **APIs ready for mobile now:** `/auth/login`, `/auth/refresh`, `/auth/logout`, `/auth/me`, `/sites` — all tested, see `API_INDEX.md`.
+- **Blockers:** none, beyond needing a machine with the Flutter SDK.
 
 ## CP1 internal steps
+
+**Two independent tracks.** The **P track** (backend + web) runs on this machine. The **M track** (Flutter) runs on a machine
+with the Flutter SDK and starts only once the P track is far enough along — the app has no APIs to call before then.
+The P track is never blocked by the M track.
+
+### P track — backend + web (device A)
+
 | Phase | Step | Scope | Status |
 |---|---|---|---|
 | P0 | P0.1 | Preflight, git, PDFs, brain, docs, AI files | ✅ |
 | P0 | P0.2 | Monorepo, docker-compose, backend scaffold + /health | ✅ |
-| P0 | P0.3 | Web scaffold, tokens, shell, Vitest — app router, DS primitives, layout components, health hook | ✅ |
-| P0 | P0.4 | Mobile scaffold: folder structure + placeholder app ✅ (device A); flutter create, packages, theme, widgets, router, Drift stub, l10n, analyze/test (device B) | 🟨 |
+| P0 | P0.3 | Web scaffold, tokens, shell, Vitest | ✅ |
+| P0 | P0.4 | Mobile **folder structure only** (no Flutter needed) — the rest is M0 | ✅ |
 | P0 | P0.5 | CI, Husky hooks, commitlint, verify, tracking | ✅ |
-| P1 | P1.1a | Backend: auth, companies, kilns, FY, users, roles — entities, JWT, guards, CRUD | ✅ |
+| P1 | P1.1a | Backend auth, companies, kilns, FY, users, roles — entities, JWT, guards, CRUD | ✅ |
 | P1 | P1.1b | Backend repair: tenant isolation + tests, RBAC seed, audit trail, API contract, missing ADM endpoints, schema hardening | ✅ |
-| P1 | P1.2 | Web: login, shell, DS primitives, company/kiln/user screens | ⬜ |
-
-| P1 | P1.3 | Mobile: login, widgets, router, Drift + sync skeleton | ⬜ |
+| P1 | P1.2 | **Web: login, auth store, refresh-on-401, route guard, company/kiln switcher, user & role screens, audit viewer** | ⬜ |
 | P2 | P2.1 | Backend: CoA seed, groups, voucher types, PostingService, opening balances | ⬜ |
 | P2 | P2.2 | Web: voucher entry, Day Book, Ledger, Trial Balance | ⬜ |
-| P3 | P3.1 | Backend masters (parties+auto ledger, items, units, warehouses, brick types, vehicles, drivers, HSN/GST) | ⬜ |
+| P3 | P3.1 | Backend masters (parties + auto ledger, items, units, warehouses, brick types, vehicles, drivers, HSN/GST, wage rates) | ⬜ |
 | P3 | P3.2 | Web master screens + party ledger | ⬜ |
 | P4 | P4.1 | Backend StockService, opening stock, adjustments + tests | ⬜ |
 | P4 | P4.2 | Web stock screens + reports | ⬜ |
-| P5 | P5.1 / P5.2 / P5.3 | Production backend / web / mobile | ⬜ |
-| P6 | P6.1 / P6.2 / P6.3 | Labour backend / web / mobile attendance | ⬜ |
-| P7 | P7.1 / P7.2 / P7.3 | Purchases backend / web / mobile GRN | ⬜ |
-| P8 | P8.1 / P8.2 | Sales & GST backend (+PDF) / web | ⬜ |
-| P9 | P9.1 / P9.2 / P9.3 | Dispatch & transport backend / web / mobile | ⬜ |
-| P10 | P10.1 / P10.2 | Expenses, cash/bank, P&L/BS, GSTR registers backend / web | ⬜ |
-| P11 | P11.1 / P11.2 | Dashboard aggregates / web dashboard + exports | ⬜ |
-| P12 | P12.1 / P12.2 | Mobile offline hardening / APK release | ⬜ |
-| P13 | P13.1 / P13.2 / P13.3 | e2e+security / deploy+backups / onboarding+guide+UAT → **CP1 sign-off** | ⬜ |
+| P5 | P5.1 | Production backend + **LEK-01 brick yield variance** + **LEK-02 coal per 1,000** + **SYN-01/02 idempotency & delta pull** | ⬜ |
+| P5 | P5.2 | Web production entry + the two variance reports | ⬜ |
+| P6 | P6.1 | Labour backend + **LEK-03 live advance exposure, with the warning at advance entry** | ⬜ |
+| P6 | P6.2 | Web attendance, wages, advances, settlement + exposure screen | ⬜ |
+| P7 | P7.1 / P7.2 | Purchases backend / web (PO → GRN → bill → payment) | ⬜ |
+| P8 | P8.1 / P8.2 | Sales & GST backend (+ invoice PDF) / web | ⬜ |
+| P9 | P9.1 | Dispatch & transport backend + **LEK-04 gate reconciliation** | ⬜ |
+| P9 | P9.2 | Web dispatch, trips, vehicle profitability + gate report | ⬜ |
+| P10 | P10.1 / P10.2 | Expenses, cash/bank, P&L/BS, GSTR registers + **GST-07 reconciliation** — backend / web | ⬜ |
+| P11 | P11.1 | Dashboard aggregates + **CST-01 cost per 1,000 vs the ₹4,100 benchmark** | ⬜ |
+| P11 | P11.2 | Web dashboard, **RPT-02 daily report, RPT-03 sales register, RPT-04 labour registers**, exports | ⬜ |
+| P13 | P13.1 / P13.2 / P13.3 | e2e + security / deploy + backups / onboarding + guide + UAT → **CP1 sign-off** | ⬜ |
+
+### M track — Flutter supervisor app (device B, needs the Flutter SDK)
+
+**Start M1 once P1.2 is done** (the auth API it needs is already built and tested).
+Device B edits only the **Mob** columns in FEATURES/API_INDEX, then runs `pnpm status`.
+
+| Step | Scope | Needs from the P track | Status |
+|---|---|---|---|
+| M0 | `flutter create`, packages, theme tokens, core widgets, go_router, dio client, Drift stub, l10n, analyze + test green | — | ⬜ |
+| M1 | Login, kiln selection, role-based home, offline storage + sync queue skeleton (MOB-01/02) | P1.1b ✅ | ⬜ |
+| M2 | Production entry offline (PRD-06) | P5.1 **incl. SYN-01** | ⬜ |
+| M3 | Attendance offline (LAB-02) | P6.1 | ⬜ |
+| M4 | GRN offline (PUR-02) | P7.1 | ⬜ |
+| M5 | Dispatch + delivery acknowledgement (DSP-04) | P9.1 | ⬜ |
+| M6 | Offline hardening (MOB-04), Android APK (MOB-05), **iOS build (MOB-06)** | all of the above | ⬜ |
+
+> **Why M2–M5 must wait for `SYN-01`:** the app queues entries offline and resends them when the network returns. Without
+> `Idempotency-Key` on the create endpoints, every retry creates a **duplicate** production entry, GRN or dispatch. That is
+> backend work, buildable here without Flutter, and it is scheduled into P5.1 for exactly this reason.
+
+### Gate per track
+- **Device A (this machine):** `pnpm lint && pnpm typecheck && pnpm test && pnpm build` + `pnpm --filter @brics/backend test:e2e`.
+  **Do not run `flutter analyze` / `flutter test` here — the SDK is not installed and never will be.** `mobile/` is not touched by the P track.
+- **Device B:** the above **plus** `dart run build_runner build -d && flutter analyze && flutter test`.
 
 Exit criteria per phase: see BRICS_MASTER_PROMPT.md §12.
 
