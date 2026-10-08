@@ -7,3 +7,5 @@ coverage
 mobile
 docs/client-requirements
 *.pdf
+# Brain files use fixed-format markdown tables parsed by scripts/sync-status.mjs
+.brain
