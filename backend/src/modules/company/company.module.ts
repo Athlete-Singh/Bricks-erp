@@ -6,10 +6,12 @@ import { CompanyService } from './company.service';
 import { Company } from './entities/company.entity';
 import { FinancialYear } from './entities/financial-year.entity';
 import { Site } from './entities/site.entity';
+import { FinancialYearController } from './financial-year.controller';
+import { SiteController } from './site.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Company, Site, FinancialYear]), AuthModule],
-  controllers: [CompanyController],
+  controllers: [CompanyController, SiteController, FinancialYearController],
   providers: [CompanyService],
   exports: [CompanyService],
 })

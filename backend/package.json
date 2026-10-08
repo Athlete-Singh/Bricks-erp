@@ -15,7 +15,8 @@
     "migration:generate": "pnpm typeorm migration:generate",
     "migration:create": "typeorm-ts-node-commonjs migration:create",
     "migration:run": "pnpm typeorm migration:run",
-    "migration:revert": "pnpm typeorm migration:revert"
+    "migration:revert": "pnpm typeorm migration:revert",
+    "seed": "ts-node src/database/seeds/run-seed.ts"
   },
   "dependencies": {
     "@brics/shared": "workspace:*",

@@ -5,6 +5,8 @@ import { Company } from '../company/entities/company.entity';
 import { Site } from '../company/entities/site.entity';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { MembershipService } from './membership.service';
+import { RolesService } from './roles.service';
 import { Permission } from './entities/permission.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { RolePermission } from './entities/role-permission.entity';
@@ -29,7 +31,9 @@ import { User } from './entities/user.entity';
     JwtModule.register({}),
   ],
   controllers: [AuthController],
-  providers: [AuthService],
-  exports: [AuthService, JwtModule, TypeOrmModule],
+  providers: [AuthService, MembershipService, RolesService],
+  // No TypeOrmModule here: other modules must go through the exported services,
+  // never this module's repositories (CONVENTIONS.md, backend cross-module rule).
+  exports: [AuthService, MembershipService, RolesService, JwtModule],
 })
 export class AuthModule {}

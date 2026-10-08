@@ -1,4 +1,5 @@
 export * from './constants/roles';
+export * from './constants/permissions';
 export * from './constants/domain';
 export * from './format/inr';
 export * from './format/date';

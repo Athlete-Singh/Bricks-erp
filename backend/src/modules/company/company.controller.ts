@@ -1,82 +1,74 @@
 import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Put, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { createCompanySchema, createSiteSchema, updateCompanySchema } from '@brics/shared';
-import { CurrentCompany, RequirePermissions } from '../../common/decorators/auth.decorators';
+import {
+  createCompanySchema,
+  updateCompanySchema,
+  PERMISSIONS,
+  type CreateCompanyDto,
+  type UpdateCompanyDto,
+} from '@brics/shared';
+import { CurrentCompany, CurrentUser, RequirePermissions } from '../../common/decorators/auth.decorators';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
+import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { CompanyService } from './company.service';
 
-@ApiTags('Companies & Sites')
+// Handlers return the payload raw; ResponseEnvelopeInterceptor adds `{ data }`.
+@ApiTags('Companies')
 @Controller('companies')
 @UseGuards(JwtAuthGuard, RolesGuard, TenantGuard)
 @ApiBearerAuth()
 export class CompanyController {
   constructor(private companyService: CompanyService) {}
 
+  /** Bearer-only: returns just the caller's own companies, which the switcher needs. */
   @Get()
-  @RequirePermissions('company.view')
-  @ApiOperation({ summary: 'List all companies' })
-  async findAll() {
-    const data = await this.companyService.findAllCompanies();
-    return { data };
+  @ApiOperation({ summary: 'List the companies the signed-in user belongs to' })
+  async findAll(@CurrentUser('sub') userId: string, @CurrentUser('isSuperAdmin') isSuperAdmin: boolean) {
+    return this.companyService.findCompaniesForUser(userId, isSuperAdmin);
   }
 
   @Get('current')
-  @ApiOperation({ summary: 'Get current company details from JWT tenant context' })
-  async findCurrent(@CurrentCompany() companyId: string) {
-    const data = await this.companyService.findCompanyById(companyId);
-    return { data };
+  @ApiOperation({ summary: 'Get the active company from the JWT tenant context' })
+  async findCurrent(
+    @CurrentUser('sub') userId: string,
+    @CurrentCompany() companyId: string,
+    @CurrentUser('isSuperAdmin') isSuperAdmin: boolean,
+  ) {
+    return this.companyService.findCompanyForUser(userId, companyId, isSuperAdmin);
   }
 
   @Get(':id')
-  @RequirePermissions('company.view')
-  @ApiOperation({ summary: 'Get company by ID' })
-  async findOne(@Param('id', ParseUUIDPipe) id: string) {
-    const data = await this.companyService.findCompanyById(id);
-    return { data };
+  @RequirePermissions(PERMISSIONS.COMPANY_VIEW)
+  @ApiOperation({ summary: 'Get a company the user belongs to' })
+  async findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser('sub') userId: string,
+    @CurrentUser('isSuperAdmin') isSuperAdmin: boolean,
+  ) {
+    return this.companyService.findCompanyForUser(userId, id, isSuperAdmin);
   }
 
   @Post()
-  @RequirePermissions('company.manage')
-  @ApiOperation({ summary: 'Create a new company' })
-  async create(@Body() body: unknown) {
-    const dto = createCompanySchema.parse(body);
-    const data = await this.companyService.createCompany(dto);
-    return { data };
+  @RequirePermissions(PERMISSIONS.COMPANY_MANAGE)
+  @ApiOperation({ summary: 'Create a company (the creator becomes its Owner)' })
+  async create(
+    @CurrentUser('sub') userId: string,
+    @Body(new ZodValidationPipe(createCompanySchema)) dto: CreateCompanyDto,
+  ) {
+    return this.companyService.createCompany(userId, dto);
   }
 
   @Put(':id')
-  @RequirePermissions('company.manage')
-  @ApiOperation({ summary: 'Update company details' })
-  async update(@Param('id', ParseUUIDPipe) id: string, @Body() body: unknown) {
-    const dto = updateCompanySchema.parse(body);
-    const data = await this.companyService.updateCompany(id, dto);
-    return { data };
-  }
-
-  @Get(':companyId/sites')
-  @RequirePermissions('company.view')
-  @ApiOperation({ summary: 'List all sites/kilns for a company' })
-  async findSites(@Param('companyId', ParseUUIDPipe) companyId: string) {
-    const data = await this.companyService.findSitesByCompany(companyId);
-    return { data };
-  }
-
-  @Post(':companyId/sites')
-  @RequirePermissions('company.manage')
-  @ApiOperation({ summary: 'Create a new site/kiln for a company' })
-  async createSite(@Param('companyId', ParseUUIDPipe) companyId: string, @Body() body: unknown) {
-    const dto = createSiteSchema.parse(body);
-    const data = await this.companyService.createSite(companyId, dto);
-    return { data };
-  }
-
-  @Get(':companyId/financial-years')
-  @RequirePermissions('company.view')
-  @ApiOperation({ summary: 'List financial years for a company' })
-  async findFinancialYears(@Param('companyId', ParseUUIDPipe) companyId: string) {
-    const data = await this.companyService.findFinancialYears(companyId);
-    return { data };
+  @RequirePermissions(PERMISSIONS.COMPANY_MANAGE)
+  @ApiOperation({ summary: 'Update a company the user belongs to' })
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser('sub') userId: string,
+    @CurrentUser('isSuperAdmin') isSuperAdmin: boolean,
+    @Body(new ZodValidationPipe(updateCompanySchema)) dto: UpdateCompanyDto,
+  ) {
+    return this.companyService.updateCompany(userId, id, dto, isSuperAdmin);
   }
 }

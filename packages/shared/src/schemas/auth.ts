@@ -46,6 +46,39 @@ export const createUserSchema = z.object({
 });
 export type CreateUserDto = z.infer<typeof createUserSchema>;
 
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required'),
+  newPassword: z.string().min(6, 'New password must be at least 6 characters'),
+});
+export type ChangePasswordDto = z.infer<typeof changePasswordSchema>;
+
+export const switchCompanySchema = z.object({
+  companyId: z.string().uuid('A valid company id is required'),
+});
+export type SwitchCompanyDto = z.infer<typeof switchCompanySchema>;
+
+/** FY label is free text so Indian FYs read as "2026-27" (CONVENTIONS.md). */
+export const createFinancialYearSchema = z
+  .object({
+    name: z.string().min(4, 'Financial year name is required'),
+    startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'startDate must be YYYY-MM-DD'),
+    endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'endDate must be YYYY-MM-DD'),
+  })
+  .refine((v) => v.endDate > v.startDate, {
+    message: 'endDate must be after startDate',
+    path: ['endDate'],
+  });
+export type CreateFinancialYearDto = z.infer<typeof createFinancialYearSchema>;
+
+export const updateUserSchema = z.object({
+  name: z.string().min(2).optional(),
+  email: z.string().email().optional().nullable(),
+  roleCode: z.string().min(1).optional(),
+  siteIds: z.array(z.string().uuid()).optional(),
+  isActive: z.boolean().optional(),
+});
+export type UpdateUserDto = z.infer<typeof updateUserSchema>;
+
 export const authResponseSchema = z.object({
   accessToken: z.string(),
   refreshToken: z.string(),

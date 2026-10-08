@@ -2,48 +2,50 @@ import { Test, type TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { AuthService } from '../auth.service';
+import { MembershipService } from '../membership.service';
+import { RolesService } from '../roles.service';
 import { User } from '../entities/user.entity';
-import { Role } from '../entities/role.entity';
-import { Permission } from '../entities/permission.entity';
-import { RolePermission } from '../entities/role-permission.entity';
-import { UserCompany } from '../entities/user-company.entity';
-import { UserSite } from '../entities/user-site.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
 import { Company } from '../../company/entities/company.entity';
 import { Site } from '../../company/entities/site.entity';
 
-interface MockRepo {
-  find: jest.Mock;
-  findOne: jest.Mock;
-  findOneBy: jest.Mock;
-  create: jest.Mock;
-  save: jest.Mock;
-  update: jest.Mock;
-  findByIds: jest.Mock;
-}
+const COMPANY_ID = '11111111-1111-1111-1111-111111111111';
+const OTHER_COMPANY_ID = '22222222-2222-2222-2222-222222222222';
+const USER_ID = '33333333-3333-3333-3333-333333333333';
+const ROLE_ID = '44444444-4444-4444-4444-444444444444';
+
+const mockRepository = () => ({
+  find: jest.fn().mockResolvedValue([]),
+  findOne: jest.fn(),
+  findOneBy: jest.fn(),
+  create: jest.fn((dto: unknown) => dto),
+  save: jest.fn((dto: unknown) => Promise.resolve({ id: 'mock-uuid', ...(dto as object) })),
+  update: jest.fn(),
+  delete: jest.fn().mockResolvedValue({ affected: 0 }),
+});
 
 describe('AuthService', () => {
   let service: AuthService;
-  let userRepository: MockRepo;
-  let userCompanyRepo: MockRepo;
-  let companyRepository: MockRepo;
-  let roleRepository: MockRepo;
-  let rolePermissionRepo: MockRepo;
-  let userSiteRepo: MockRepo;
-  let siteRepository: MockRepo;
+  let userRepository: ReturnType<typeof mockRepository>;
+  let companyRepository: ReturnType<typeof mockRepository>;
+  let refreshTokenRepo: ReturnType<typeof mockRepository>;
+  let membership: jest.Mocked<Partial<MembershipService>>;
+  let roles: jest.Mocked<Partial<RolesService>>;
 
-  const mockRepository = (): MockRepo => ({
-    find: jest.fn(),
-    findOne: jest.fn(),
-    findOneBy: jest.fn(),
-    create: jest.fn((dto: unknown) => dto),
-    save: jest.fn((dto: unknown) => Promise.resolve({ id: 'mock-uuid', ...(dto as object) })),
-    update: jest.fn(),
-    findByIds: jest.fn(() => Promise.resolve([])),
-  });
+  const activeUser = async (overrides: Partial<User> = {}) =>
+    ({
+      id: USER_ID,
+      email: 'owner@kiln.test',
+      mobile: '9876543210',
+      name: 'Owner',
+      passwordHash: await bcrypt.hash('correct-horse', 10),
+      isActive: true,
+      isSuperAdmin: false,
+      ...overrides,
+    }) as User;
 
   const mockJwtService = {
     signAsync: jest.fn().mockResolvedValue('mock-token'),
@@ -62,25 +64,37 @@ describe('AuthService', () => {
 
   beforeEach(async () => {
     userRepository = mockRepository();
-    userCompanyRepo = mockRepository();
     companyRepository = mockRepository();
-    roleRepository = mockRepository();
-    rolePermissionRepo = mockRepository();
-    userSiteRepo = mockRepository();
-    siteRepository = mockRepository();
+    refreshTokenRepo = mockRepository();
+
+    membership = {
+      companyIdsFor: jest.fn().mockResolvedValue([COMPANY_ID]),
+      findMembership: jest.fn().mockResolvedValue({ userId: USER_ID, companyId: COMPANY_ID, roleId: ROLE_ID }),
+      siteIdsFor: jest.fn().mockResolvedValue([]),
+      assertMember: jest.fn().mockResolvedValue(undefined),
+    };
+    roles = {
+      findById: jest.fn().mockResolvedValue({ id: ROLE_ID, code: 'owner' }),
+      permissionCodesFor: jest.fn().mockResolvedValue(['company.view', 'company.manage']),
+    };
+
+    companyRepository.findOneBy.mockResolvedValue({
+      id: COMPANY_ID,
+      name: 'Shri Ram Bricks',
+      gstin: null,
+      stateCode: '09',
+      isActive: true,
+    });
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
         { provide: getRepositoryToken(User), useValue: userRepository },
         { provide: getRepositoryToken(Company), useValue: companyRepository },
-        { provide: getRepositoryToken(Site), useValue: siteRepository },
-        { provide: getRepositoryToken(Role), useValue: roleRepository },
-        { provide: getRepositoryToken(Permission), useValue: mockRepository() },
-        { provide: getRepositoryToken(RolePermission), useValue: rolePermissionRepo },
-        { provide: getRepositoryToken(UserCompany), useValue: userCompanyRepo },
-        { provide: getRepositoryToken(UserSite), useValue: userSiteRepo },
-        { provide: getRepositoryToken(RefreshToken), useValue: mockRepository() },
+        { provide: getRepositoryToken(Site), useValue: mockRepository() },
+        { provide: getRepositoryToken(RefreshToken), useValue: refreshTokenRepo },
+        { provide: MembershipService, useValue: membership },
+        { provide: RolesService, useValue: roles },
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfigService },
       ],
@@ -89,56 +103,197 @@ describe('AuthService', () => {
     service = module.get<AuthService>(AuthService);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
-
-  it('should throw UnauthorizedException if user not found on login', async () => {
-    userRepository.findOne.mockResolvedValue(null);
-
-    await expect(service.login({ emailOrMobile: 'admin@brics.in', password: 'password123' })).rejects.toThrow(
-      UnauthorizedException,
-    );
-  });
-
-  it('should successfully log in user with valid credentials', async () => {
-    const hashedPassword = await bcrypt.hash('password123', 10);
-    const mockUser = {
-      id: 'user-1',
-      email: 'admin@brics.in',
-      mobile: '9876543210',
-      name: 'Admin User',
-      passwordHash: hashedPassword,
-      isActive: true,
-      isSuperAdmin: false,
-    };
-    const mockCompany = {
-      id: 'company-1',
-      name: 'BRICS Kiln Ltd',
-      gstin: '09AABCU9603R1ZM',
-      stateCode: '09',
-      isActive: true,
-    };
-    const mockRole = { id: 'role-1', code: 'owner', name: 'Owner' };
-
-    userRepository.findOne.mockResolvedValue(mockUser);
-    userCompanyRepo.find.mockResolvedValue([
-      { userId: 'user-1', companyId: 'company-1', roleId: 'role-1', isDefault: true },
-    ]);
-    companyRepository.findOneBy.mockResolvedValue(mockCompany);
-    roleRepository.findOneBy.mockResolvedValue(mockRole);
-    rolePermissionRepo.find.mockResolvedValue([]);
-    userSiteRepo.find.mockResolvedValue([]);
-    siteRepository.find.mockResolvedValue([]);
-
-    const result = await service.login({
-      emailOrMobile: 'admin@brics.in',
-      password: 'password123',
+  describe('login', () => {
+    it('rejects an unknown email or mobile', async () => {
+      userRepository.findOne.mockResolvedValue(null);
+      await expect(service.login({ emailOrMobile: 'nobody@kiln.test', password: 'x' })).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
-    expect(result).toBeDefined();
-    expect(result.accessToken).toBe('mock-token');
-    expect(result.user.name).toBe('Admin User');
-    expect(result.company.name).toBe('BRICS Kiln Ltd');
+    it('rejects a wrong password with the same message as an unknown user', async () => {
+      userRepository.findOne.mockResolvedValue(await activeUser());
+      await expect(service.login({ emailOrMobile: 'owner@kiln.test', password: 'wrong-password' })).rejects.toThrow(
+        'Invalid email/mobile or password',
+      );
+    });
+
+    it('rejects an inactive user even with the right password', async () => {
+      userRepository.findOne.mockResolvedValue(await activeUser({ isActive: false }));
+      await expect(service.login({ emailOrMobile: 'owner@kiln.test', password: 'correct-horse' })).rejects.toThrow(
+        'User account is inactive',
+      );
+    });
+
+    it('returns tokens, company and the role permissions on valid credentials', async () => {
+      userRepository.findOne.mockResolvedValue(await activeUser());
+
+      const result = await service.login({ emailOrMobile: 'owner@kiln.test', password: 'correct-horse' });
+
+      expect(result.accessToken).toBe('mock-token');
+      expect(result.user.roleCode).toBe('owner');
+      expect(result.user.permissions).toEqual(['company.view', 'company.manage']);
+      expect(result.company.id).toBe(COMPANY_ID);
+      expect(refreshTokenRepo.save).toHaveBeenCalledTimes(1);
+    });
+
+    it('refuses a user who belongs to no company', async () => {
+      userRepository.findOne.mockResolvedValue(await activeUser());
+      membership.companyIdsFor = jest.fn().mockResolvedValue([]);
+
+      await expect(service.login({ emailOrMobile: 'owner@kiln.test', password: 'correct-horse' })).rejects.toThrow(
+        ForbiddenException,
+      );
+    });
+
+    it('fails instead of falling back to a role the user was never granted', async () => {
+      userRepository.findOne.mockResolvedValue(await activeUser());
+      roles.findById = jest.fn().mockResolvedValue(null);
+
+      await expect(service.login({ emailOrMobile: 'owner@kiln.test', password: 'correct-horse' })).rejects.toThrow(
+        ForbiddenException,
+      );
+    });
+
+    it('persists the refresh token hashed, never in plain text', async () => {
+      userRepository.findOne.mockResolvedValue(await activeUser());
+
+      const result = await service.login({ emailOrMobile: 'owner@kiln.test', password: 'correct-horse' });
+      const saved = refreshTokenRepo.save.mock.calls[0]?.[0] as { tokenHash: string };
+
+      expect(saved.tokenHash).not.toBe(result.refreshToken);
+      expect(await bcrypt.compare(result.refreshToken, saved.tokenHash)).toBe(true);
+    });
+
+    it('derives the stored expiry from JWT_REFRESH_TTL', async () => {
+      userRepository.findOne.mockResolvedValue(await activeUser());
+
+      await service.login({ emailOrMobile: 'owner@kiln.test', password: 'correct-horse' });
+      const saved = refreshTokenRepo.save.mock.calls[0]?.[0] as { expiresAt: Date };
+
+      const thirtyDays = 30 * 86_400_000;
+      expect(saved.expiresAt.getTime() - Date.now()).toBeGreaterThan(thirtyDays - 10_000);
+      expect(saved.expiresAt.getTime() - Date.now()).toBeLessThanOrEqual(thirtyDays);
+    });
+  });
+
+  describe('switchCompany (ADM-02)', () => {
+    it('refuses a company the user does not belong to', async () => {
+      userRepository.findOneBy.mockResolvedValue(await activeUser());
+      membership.assertMember = jest.fn().mockRejectedValue(new ForbiddenException());
+
+      await expect(service.switchCompany(USER_ID, { companyId: OTHER_COMPANY_ID })).rejects.toThrow(ForbiddenException);
+    });
+
+    it('issues a new session for a company the user belongs to', async () => {
+      userRepository.findOneBy.mockResolvedValue(await activeUser());
+
+      const result = await service.switchCompany(USER_ID, { companyId: COMPANY_ID });
+
+      expect(membership.assertMember).toHaveBeenCalledWith(USER_ID, COMPANY_ID, false);
+      expect(result.company.id).toBe(COMPANY_ID);
+      expect(result.accessToken).toBe('mock-token');
+    });
+  });
+
+  describe('refresh', () => {
+    it('rejects a token whose database row is revoked', async () => {
+      mockJwtService.verifyAsync.mockResolvedValue({ sub: USER_ID, companyId: COMPANY_ID, jti: 'row-1' });
+      userRepository.findOneBy.mockResolvedValue(await activeUser());
+      refreshTokenRepo.findOne.mockResolvedValue({
+        id: 'row-1',
+        userId: USER_ID,
+        tokenHash: await bcrypt.hash('some-token', 10),
+        isRevoked: true,
+        expiresAt: new Date(Date.now() + 86_400_000),
+      });
+
+      await expect(service.refresh({ refreshToken: 'some-token' })).rejects.toThrow('Invalid or revoked refresh token');
+    });
+
+    it('rejects a token whose row has passed its expiry', async () => {
+      mockJwtService.verifyAsync.mockResolvedValue({ sub: USER_ID, companyId: COMPANY_ID, jti: 'row-1' });
+      userRepository.findOneBy.mockResolvedValue(await activeUser());
+      refreshTokenRepo.findOne.mockResolvedValue({
+        id: 'row-1',
+        userId: USER_ID,
+        tokenHash: await bcrypt.hash('some-token', 10),
+        isRevoked: false,
+        expiresAt: new Date(Date.now() - 1_000),
+      });
+
+      await expect(service.refresh({ refreshToken: 'some-token' })).rejects.toThrow('Refresh token has expired');
+    });
+
+    it('rejects a row belonging to a different user', async () => {
+      mockJwtService.verifyAsync.mockResolvedValue({ sub: USER_ID, companyId: COMPANY_ID, jti: 'row-1' });
+      userRepository.findOneBy.mockResolvedValue(await activeUser());
+      refreshTokenRepo.findOne.mockResolvedValue({
+        id: 'row-1',
+        userId: 'someone-else',
+        tokenHash: await bcrypt.hash('some-token', 10),
+        isRevoked: false,
+        expiresAt: new Date(Date.now() + 86_400_000),
+      });
+
+      await expect(service.refresh({ refreshToken: 'some-token' })).rejects.toThrow('Invalid or revoked refresh token');
+    });
+
+    it('rotates: the presented token is revoked and a new pair is issued', async () => {
+      mockJwtService.verifyAsync.mockResolvedValue({ sub: USER_ID, companyId: COMPANY_ID, jti: 'row-1' });
+      userRepository.findOneBy.mockResolvedValue(await activeUser());
+      const row = {
+        id: 'row-1',
+        userId: USER_ID,
+        tokenHash: await bcrypt.hash('some-token', 10),
+        isRevoked: false,
+        expiresAt: new Date(Date.now() + 86_400_000),
+      };
+      refreshTokenRepo.findOne.mockResolvedValue(row);
+
+      const result = await service.refresh({ refreshToken: 'some-token' });
+
+      expect(row.isRevoked).toBe(true);
+      expect(result.accessToken).toBe('mock-token');
+      expect(result.refreshToken).toBe('mock-token');
+    });
+
+    it('looks the row up by id instead of scanning every active token', async () => {
+      mockJwtService.verifyAsync.mockResolvedValue({ sub: USER_ID, companyId: COMPANY_ID, jti: 'row-1' });
+      userRepository.findOneBy.mockResolvedValue(await activeUser());
+      refreshTokenRepo.findOne.mockResolvedValue(null);
+
+      await expect(service.refresh({ refreshToken: 'some-token' })).rejects.toThrow(UnauthorizedException);
+      expect(refreshTokenRepo.findOne).toHaveBeenCalledWith({ where: { id: 'row-1' } });
+      expect(refreshTokenRepo.find).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('changePassword (ADM-05)', () => {
+    it('rejects a wrong current password', async () => {
+      userRepository.findOneBy.mockResolvedValue(await activeUser());
+
+      await expect(
+        service.changePassword(USER_ID, { currentPassword: 'nope', newPassword: 'new-secret' }),
+      ).rejects.toThrow('Current password is incorrect');
+    });
+
+    it('rejects reusing the same password', async () => {
+      userRepository.findOneBy.mockResolvedValue(await activeUser());
+
+      await expect(
+        service.changePassword(USER_ID, { currentPassword: 'correct-horse', newPassword: 'correct-horse' }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('stores the new hash and revokes every existing session', async () => {
+      const user = await activeUser();
+      userRepository.findOneBy.mockResolvedValue(user);
+
+      await service.changePassword(USER_ID, { currentPassword: 'correct-horse', newPassword: 'new-secret' });
+
+      expect(await bcrypt.compare('new-secret', user.passwordHash)).toBe(true);
+      expect(refreshTokenRepo.update).toHaveBeenCalledWith({ userId: USER_ID, isRevoked: false }, { isRevoked: true });
+    });
   });
 });

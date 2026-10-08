@@ -1,7 +1,7 @@
 {
   "name": "brics",
   "private": true,
-  "description": "BRICS — Brick Chimney ERP & Accounting (TVAM KEY SOFTWARE PRIVATE LIMITED)",
+  "description": "BRICS \u2014 Brick Chimney ERP & Accounting (TVAM KEY SOFTWARE PRIVATE LIMITED)",
   "packageManager": "pnpm@12.4.2",
   "engines": {
     "node": ">=24"
@@ -15,6 +15,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "status": "node scripts/sync-status.mjs",
+    "seed": "pnpm --filter @brics/backend seed",
     "db:up": "docker compose -f infra/docker-compose.yml up -d",
     "db:down": "docker compose -f infra/docker-compose.yml down",
     "prepare": "husky"
