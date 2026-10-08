@@ -1,6 +1,12 @@
 # PROJECT — BRICS ERP
 
-**What:** ERP + double-entry accounting for brick kiln/chimney businesses, by TVAM KEY SOFTWARE PRIVATE LIMITED.
+**What:** ERP + double-entry accounting for brick kiln/chimney businesses.
+
+> **Ownership note (2026-10-08):** the three PDFs in `docs/client-requirements/` carry TVAM KEY SOFTWARE PRIVATE LIMITED's
+> branding because they were produced by them, but **TVAM Key is the intermediary who passed this work on — not the owner,
+> parent company or publisher of BRICS.** Do not describe BRICS as "by" them anywhere, and do not take their name for the
+> mobile package id, the app's branding or any copyright line. The PDFs themselves stay untouched; they are source documents.
+> Who owns and publishes the product is still unanswered — OPEN_QUESTIONS #12.
 **Core principle:** an operation recorded at the kiln auto-creates the stock movement AND the balanced journal, in one DB transaction. BRICS = single source of truth.
 **Client pain:** leakage, manual record manipulation, untracked Sardar advances, coal/diesel pilferage, late GST reconciliation. ROI pitch: save ₹3.5–6 L per season per kiln (5–8% leakage).
 **Scope docs:** `docs/client-requirements/` — 03-sow-srs.pdf is the contract.

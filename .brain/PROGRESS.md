@@ -1,6 +1,6 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** P1.2b ✅ done → **next: P1.2c** (web login page wired to auth API, company/kiln switcher, user/role management screens) · **CP1 features done:** 4 / 101 (4 %)
+**Client Phase:** CP1 (MVP) · **Current step:** P1.2c ✅ done → **next: P2.1** (accounting engine) (web login page wired to auth API, company/kiln switcher, user/role management screens) · **CP1 features done:** 6 / 101 (6 %)
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
@@ -19,9 +19,11 @@ That creates the 9 roles, one company, one kiln and one Owner. The bootstrap ref
   - P1.1a ✅ backend auth & RBAC skeleton: 11 entities, JWT access+refresh, guards, CRUD controllers, migration, first tests.
   - P1.2a ✅ web auth foundation: `api-client` (envelope unwrap, typed `ApiError`, single-flight 401→refresh→retry), token custody per ADR-016, auth store, login page, `AuthGuard`, sign-out. Verified in a real browser against the running API: login → dashboard, hard reload restores the session, sign-out clears both sides.
   - P1.2b ✅ web shell: user dropdown + change-password, company switcher, kiln switcher, permission-aware nav, and the company / kilns / financial-year screens. **ADM-01…04 are the first features to reach ✅.** Sidebar turned into a drawer below `md` — it was a 224 px rail on a 375 px phone, which broke the entry screens the new CONVENTIONS rule exists to protect.
+  - P1.2c ✅ web admin: users list + create + edit (role, kiln access, active), and the Owner's audit viewer with filters and paging. **ADM-05…07 complete — P1 is done on the web side.** Fixed a shared-schema bug that made every optional text field reject a blank value.
   - P1.1b ✅ **repair of P1.1** — see "Why P1.1b existed" below. Tenant isolation, RBAC seed, audit trail, API contract, missing ADM endpoints, schema hardening. 31 unit + 22 e2e green.
 - **Half-done:** none.
-- **Next step (exact):** P1.2c — admin screens. Users list on `GET /users` with create (`POST /users`) and edit (`PATCH /users/:id`, role + kiln access + active) using `GET /users/roles` for the role picker; audit log viewer on `GET /audit-logs` with entity/action/user/date filters and paging (it is the only endpoint returning `{data, meta}`, so `apiClient.getPaged` gets its first real use). Reuse `DataTable`, `Dialog`, `Select` and `Dropdown` from P1.2b. After that ADM-06 and ADM-07 reach ✅ and P1 is complete on the web side.
+- **Next step (exact):** **P2.1 — the accounting engine**, the spine every later module posts through. Chart of Accounts seed (Tally-style groups per `ACCOUNTING_RULES.md`), ledger groups, voucher types, `PostingService` writing a balanced journal **in the caller's transaction**, and opening balances. Tests are mandatory here (AGENTS rule 14): a journal that does not balance must be impossible, and the FY lock must be respected. Confirm OPEN_QUESTIONS #3 (Tally-style groups) before seeding.
+- **Carried into P2:** adopt `BusinessRuleException` with `MODULE_REASON` codes — it is defined and tested but still never thrown, and posting rules are where the client needs specific errors (`JOURNAL_UNBALANCED`, `FY_LOCKED`).
 - **Then:** P1.3 (mobile login + sync setup) → P2.1 (accounting engine) → …
 
 ### Why P1.1b existed (read before marking any step ✅)
@@ -75,7 +77,7 @@ The P track is never blocked by the M track.
 | P1 | P1.1b | Backend repair: tenant isolation + tests, RBAC seed, audit trail, API contract, missing ADM endpoints, schema hardening | ✅ |
 | P1 | P1.2a | **Web auth foundation:** api-client envelope + refresh-on-401, auth store, login page, route guard, logout | ✅ |
 | P1 | P1.2b | Web shell wiring: user menu, company switcher, kiln switcher, permission-aware nav, company/kilns/FY screens | ✅ |
-| P1 | P1.2c | Web admin: users & roles screens, audit log viewer, DataTable/Select/Dialog primitives | ⬜ |
+| P1 | P1.2c | Web admin: users & roles screens, audit log viewer, DataTable/Select/Dialog primitives | ✅ |
 | P2 | P2.1 | Backend: CoA seed, groups, voucher types, PostingService, opening balances | ⬜ |
 | P2 | P2.2 | Web: voucher entry, Day Book, Ledger, Trial Balance | ⬜ |
 | P3 | P3.1 | Backend masters (parties + auto ledger, items, units, warehouses, brick types, vehicles, drivers, HSN/GST, wage rates) | ⬜ |

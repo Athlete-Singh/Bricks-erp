@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { updateCompanySchema, type UpdateCompanyDto } from '@brics/shared';
+import { updateCompanySchema, type UpdateCompanyDto, type UpdateCompanyInput } from '@brics/shared';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,7 +22,8 @@ export function CompanyForm({ company, canEdit }: { company: Company; canEdit: b
     reset,
     setError,
     formState: { errors, isDirty },
-  } = useForm<UpdateCompanyDto>({
+    // Input vs output: blank optional fields normalise to null on submit.
+  } = useForm<UpdateCompanyInput, unknown, UpdateCompanyDto>({
     resolver: zodResolver(updateCompanySchema),
     values: {
       name: company.name,
@@ -37,7 +38,7 @@ export function CompanyForm({ company, canEdit }: { company: Company; canEdit: b
   useEffect(() => {
     if (!update.error) return;
     for (const [field, message] of Object.entries(fieldErrorsOf(update.error))) {
-      setError(field as keyof UpdateCompanyDto, { type: 'server', message });
+      setError(field as keyof UpdateCompanyInput, { type: 'server', message });
     }
   }, [update.error, setError]);
 

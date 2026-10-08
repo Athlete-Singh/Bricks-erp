@@ -2,6 +2,27 @@ import { z } from 'zod';
 import { ROLES } from '../constants/roles';
 import { SITE_TYPES } from '../constants/domain';
 
+/**
+ * An optional field a form may submit as an empty string.
+ *
+ * `z.string().email().optional()` rejects `""`, because an empty string is
+ * neither `undefined` nor `null` — so clearing an optional input failed
+ * validation instead of clearing the value. `""` becomes `null` here.
+ *
+ * `undefined` is deliberately left alone: on a PATCH, an absent key means
+ * "leave this field as it is", while `null` means "clear it". Collapsing the
+ * two would make every partial update wipe the field.
+ *
+ * Not `z.preprocess`, which types its input as `unknown` and breaks the
+ * React Hook Form resolver.
+ */
+function blankToNull<T extends z.ZodType<string>>(schema: T) {
+  return z
+    .union([z.literal(''), schema, z.null()])
+    .optional()
+    .transform((value) => (value === '' ? null : value));
+}
+
 export const loginSchema = z.object({
   emailOrMobile: z.string().min(1, 'Email or mobile is required'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
@@ -15,16 +36,17 @@ export type RefreshTokenDto = z.infer<typeof refreshTokenSchema>;
 
 export const createCompanySchema = z.object({
   name: z.string().min(2, 'Company name is required'),
-  gstin: z.string().length(15, 'GSTIN must be 15 characters').optional().nullable(),
-  pan: z.string().length(10, 'PAN must be 10 characters').optional().nullable(),
+  gstin: blankToNull(z.string().length(15, 'GSTIN must be 15 characters')),
+  pan: blankToNull(z.string().length(10, 'PAN must be 10 characters')),
   stateCode: z.string().length(2, 'State code must be 2 characters (e.g. 09 for UP)'),
-  address: z.string().optional().nullable(),
-  logoUrl: z.string().url().optional().nullable(),
+  address: blankToNull(z.string()),
+  logoUrl: blankToNull(z.string().url('Must be a valid URL')),
 });
 export type CreateCompanyDto = z.infer<typeof createCompanySchema>;
 
 export const updateCompanySchema = createCompanySchema.partial();
 export type UpdateCompanyDto = z.infer<typeof updateCompanySchema>;
+export type UpdateCompanyInput = z.input<typeof updateCompanySchema>;
 
 export const siteTypeEnum = z.enum(SITE_TYPES);
 
@@ -32,14 +54,14 @@ export const createSiteSchema = z.object({
   name: z.string().min(2, 'Site name is required'),
   code: z.string().min(1, 'Site code is required'),
   type: siteTypeEnum.default('kiln'),
-  address: z.string().optional().nullable(),
+  address: blankToNull(z.string()),
 });
 export type CreateSiteDto = z.infer<typeof createSiteSchema>;
 /** Before defaults are applied — what a form holds, where `type` may be unset. */
 export type CreateSiteInput = z.input<typeof createSiteSchema>;
 
 export const createUserSchema = z.object({
-  email: z.string().email().optional().nullable(),
+  email: blankToNull(z.string().email('Must be a valid email address')),
   mobile: z.string().min(10, 'Mobile must be at least 10 digits'),
   name: z.string().min(2, 'Full name is required'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
@@ -75,12 +97,14 @@ export type CreateFinancialYearDto = z.infer<typeof createFinancialYearSchema>;
 
 export const updateUserSchema = z.object({
   name: z.string().min(2).optional(),
-  email: z.string().email().optional().nullable(),
+  email: blankToNull(z.string().email('Must be a valid email address')),
   roleCode: z.string().min(1).optional(),
   siteIds: z.array(z.string().uuid()).optional(),
   isActive: z.boolean().optional(),
 });
 export type UpdateUserDto = z.infer<typeof updateUserSchema>;
+/** What the edit form holds, before blank-to-null normalisation. */
+export type UpdateUserInput = z.input<typeof updateUserSchema>;
 
 /** Filters for the Owner's audit-log viewer (ADM-07). */
 export const auditLogQuerySchema = z.object({

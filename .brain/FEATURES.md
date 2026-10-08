@@ -11,17 +11,17 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 101 | 4 | 3 | 1 | 93 | 0 |
+| CP1 MVP | 101 | 6 | 1 | 1 | 93 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 
-**CP1 done: 4 %** (4 of 101 features ✅)
+**CP1 done: 6 %** (6 of 101 features ✅)
 
 ### Per app
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
-| Backend | 97 | 5 | 2 | 0 | 0 | 90 |
-| Web | 94 | 5 | 0 | 0 | 0 | 89 |
+| Backend | 97 | 7 | 0 | 0 | 0 | 90 |
+| Web | 94 | 7 | 0 | 0 | 0 | 87 |
 | Mobile | 11 | 0 | 0 | 0 | 0 | 11 |
 | Tests | 101 | 7 | 0 | 0 | 0 | 94 |
 
@@ -36,8 +36,8 @@
 | ADM-03 | Multiple kilns/chimneys/sites per company (site type: kiln / branch / depot) + kiln switcher | CP1 | P1 | ✅ | ✅ | — | ✅ | ✅ | Kiln list/create at /settings/kilns + topbar kiln switcher writing `activeSiteId` |
 | ADM-04 | Financial years (April–March default): create, set active | CP1 | P1 | ✅ | ✅ | — | ✅ | ✅ | Create + set-active at /settings/financial-years; overlap rejected, one active FY enforced in the DB |
 | ADM-05 | Users: login (email or mobile + password), JWT access/refresh, logout, change password | CP1 | P1 | ✅ | ✅ | ⬜ | ✅ | 🟨 | Backend + web done (login, silent refresh, guard, logout, change-password). Mobile in M1 |
-| ADM-06 | 9 seeded roles with default permission sets; Owner assigns role + kiln access per user | CP1 | P1 | 🧩 | ⬜ | — | ✅ | 🟨 | 9 roles + permission sets seeded via `pnpm seed`; role/kiln reassignment on `PATCH /users/:id` |
-| ADM-07 | Audit log (who / what / when / before-after) on financial + stock data; simple viewer for Owner | CP1 | P1 | 🧩 | ⬜ | — | ✅ | 🟨 | AuditService writes on company/kiln/FY/user/auth changes; `GET /audit-logs` viewer |
+| ADM-06 | 9 seeded roles with default permission sets; Owner assigns role + kiln access per user | CP1 | P1 | ✅ | ✅ | — | ✅ | ✅ | 9 roles seeded; user create + role/kiln reassignment at /settings/users |
+| ADM-07 | Audit log (who / what / when / before-after) on financial + stock data; simple viewer for Owner | CP1 | P1 | ✅ | ✅ | — | ✅ | ✅ | AuditService writes on every company/kiln/FY/user/auth change; filtered, paged viewer at /audit-logs |
 
 
 | ADM-08 | Company bank accounts (as Bank ledgers) | CP1 | P2 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |

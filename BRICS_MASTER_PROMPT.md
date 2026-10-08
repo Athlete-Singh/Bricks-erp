@@ -18,7 +18,7 @@ You write code that a strong team would be proud to maintain for 10 years: clean
 
 ## 1. The project
 
-**BRICS** is an ERP + accounting platform for brick kiln/chimney businesses, built by **TVAM KEY SOFTWARE PRIVATE LIMITED**. It covers raw material → production (Soil → Brick Making → Drying → Firing → Sorting → Finished Stock) → labour & Sardar wages/advances → inventory → purchases → sales & GST invoicing → dispatch → transport → cash/bank → double-entry accounting → dashboard and cost per 1,000 bricks.
+**BRICS** is an ERP + accounting platform for brick kiln/chimney businesses. It covers raw material → production (Soil → Brick Making → Drying → Firing → Sorting → Finished Stock) → labour & Sardar wages/advances → inventory → purchases → sales & GST invoicing → dispatch → transport → cash/bank → double-entry accounting → dashboard and cost per 1,000 bricks.
 
 **Source of truth for scope:** the 3 PDFs in `docs/client-requirements/` (originally in the repo root). Read all three fully.
 
@@ -210,7 +210,7 @@ Readable Markdown with Mermaid diagrams where useful:
 
 ## 9. Design system & theme
 
-Based on the **TVAM KEY brand** (deep green + gold), refined for a calm, modern ERP:
+Deep green + gold, taken from the client brief and refined for a calm, modern ERP:
 
 - **Primary (brand green):** ~`#0B6B3A`, full 50–900 scale. **Accent (gold):** ~`#E3A21A`, 50–900, used sparingly.
 - **Neutrals:** slate/stone scale; background `#F8FAF9`; surfaces white. **Semantic:** success, warning, danger, info, all clearly distinct from the brand green.

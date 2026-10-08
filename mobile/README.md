@@ -10,7 +10,8 @@ Rules: `../AGENTS.md`, `../.brain/CONVENTIONS.md` (Mobile section). Tracker: `..
 ## First time, on a machine with Flutter (step M0)
 ```bash
 cd mobile
-flutter create --org com.tvamkey --project-name brics_mobile --platforms=android,ios .   # adds android/ ios/; keeps existing files
+flutter create --org com.brics --project-name brics_mobile --platforms=android,ios .   # adds android/ ios/; keeps existing files
+# NOTE: `--org` sets the package id and is painful to change after the first store upload. Confirm it first — OPEN_QUESTIONS #12.
 flutter pub add flutter_riverpod riverpod_annotation go_router dio freezed_annotation json_annotation \
   drift drift_flutter flutter_secure_storage connectivity_plus decimal intl uuid flutter_localizations:'{"sdk":"flutter"}'
 flutter pub add --dev build_runner riverpod_generator freezed json_serializable drift_dev mocktail very_good_analysis

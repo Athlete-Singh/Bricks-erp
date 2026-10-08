@@ -20,9 +20,10 @@ Decision: Node 24 LTS (pinned `.nvmrc`, `engines >=24`). Why: Node 20 is end-of-
 **ADR-005 — Tailwind CSS 3.4 with CSS-variable tokens — 2026-10-07**
 Decision: Tailwind 3.4 + `hsl(var(--token))` colours, `class` dark mode. Why: proven with Next 14 and shadcn-style primitives. Alternatives: Tailwind 4 (fine later; migration is cheap).
 
-**ADR-006 — Design tokens: TVAM green #0B6B3A + gold #E3A21A — 2026-10-07**
+**ADR-006 — Design tokens: deep green #0B6B3A + gold #E3A21A — 2026-10-07**
 Decision: primary green scale, gold accent (sparingly), slate neutrals, bg #F8FAF9, separate semantic success (#16A34A family, cooler) vs brand green. Values in `docs/05-design-system.md`, `web/src/styles/tokens.css`, `mobile/lib/core/theme/app_colors.dart`.
-Why: brand match from client PDFs; text on primary passes WCAG AA (white on #0B6B3A ≈ 6.6:1).
+Why: matches the palette in the client PDFs; text on primary passes WCAG AA (white on #0B6B3A ≈ 6.6:1).
+_(Attribution corrected 2026-10-08: the palette comes from the brief. The decision itself is unchanged.)_
 
 **ADR-007 — Commit Flutter generated code — 2026-10-07**
 Decision: commit `*.g.dart` / `*.freezed.dart`. Why: fresh clone and AI sessions build without a codegen step failing. Alternative: generate in CI only.

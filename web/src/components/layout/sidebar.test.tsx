@@ -1,11 +1,15 @@
-import { render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AuthResponseDto } from '@brics/shared';
 import { useAuthStore } from '@/stores/auth-store';
 import { useUiStore } from '@/stores/ui-store';
 import { Sidebar } from './sidebar';
 
 vi.mock('next/navigation', () => ({ usePathname: () => '/dashboard' }));
+
+const preventNavigation = (event: Event) => {
+  if ((event.target as HTMLElement)?.closest('a')) event.preventDefault();
+};
 
 const sessionWith = (permissions: string[], isSuperAdmin = false): AuthResponseDto => ({
   accessToken: 'a',
@@ -28,7 +32,12 @@ describe('Sidebar', () => {
     localStorage.clear();
     useAuthStore.getState().reset();
     useUiStore.setState({ sidebarOpen: true, mobileNavOpen: false });
+    // jsdom cannot navigate; without this it logs "Not implemented" and the
+    // suite intermittently failed.
+    document.addEventListener('click', preventNavigation);
   });
+
+  afterEach(() => document.removeEventListener('click', preventNavigation));
 
   it('hides Settings from a user without company.view', () => {
     useAuthStore.getState().setSession(sessionWith([]));
@@ -65,7 +74,13 @@ describe('Sidebar', () => {
     useUiStore.setState({ mobileNavOpen: true });
     render(<Sidebar />);
 
-    screen.getByRole('link', { name: /settings/i }).click();
+    // `preventDefault` keeps jsdom from attempting a real navigation, which it
+    // cannot do and which made this test flaky.
+    act(() => {
+      screen
+        .getByRole('link', { name: /settings/i })
+        .dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    });
 
     expect(useUiStore.getState().mobileNavOpen).toBe(false);
   });

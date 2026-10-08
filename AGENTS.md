@@ -67,19 +67,19 @@
 
 ## Commands
 
-| Task                                             | Command                                                                                               |
-| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| Install                                          | `pnpm install` (root) · M track also `cd mobile && flutter pub get`                                   |
-| DB                                               | `docker compose -f infra/docker-compose.yml up -d`                                                    |
-| Run API                                          | `pnpm --filter @brics/backend dev` → `http://localhost:4000/api/v1/health`, docs `/api/docs`          |
-| Run web                                          | `pnpm --filter @brics/web dev` → `http://localhost:3000`                                              |
-| Run mobile                                       | `cd mobile && flutter run --dart-define=API_BASE_URL=http://10.0.2.2:4000/api/v1`                     |
-| Gate (P track)                                   | `pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm --filter @brics/backend test:e2e`     |
-| Seed                                             | `pnpm seed` (9 roles; optional first Owner via `SEED_OWNER_*`)                                        |
-| Gate (M track — only where Flutter is installed) | `cd mobile && dart run build_runner build -d && flutter analyze && flutter test`                      |
-| Migrations                                       | `pnpm --filter @brics/backend migration:generate src/database/migrations/<Name>` · `migration:run`    |
-| Tracker                                          | `pnpm status`                                                                                         |
-| First Flutter setup                              | `cd mobile && flutter create --org com.tvamkey --project-name brics_mobile --platforms=android,ios .` |
+| Task                                             | Command                                                                                                                                   |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Install                                          | `pnpm install` (root) · M track also `cd mobile && flutter pub get`                                                                       |
+| DB                                               | `docker compose -f infra/docker-compose.yml up -d`                                                                                        |
+| Run API                                          | `pnpm --filter @brics/backend dev` → `http://localhost:4000/api/v1/health`, docs `/api/docs`                                              |
+| Run web                                          | `pnpm --filter @brics/web dev` → `http://localhost:3000`                                                                                  |
+| Run mobile                                       | `cd mobile && flutter run --dart-define=API_BASE_URL=http://10.0.2.2:4000/api/v1`                                                         |
+| Gate (P track)                                   | `pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm --filter @brics/backend test:e2e`                                         |
+| Seed                                             | `pnpm seed` (9 roles; optional first Owner via `SEED_OWNER_*`)                                                                            |
+| Gate (M track — only where Flutter is installed) | `cd mobile && dart run build_runner build -d && flutter analyze && flutter test`                                                          |
+| Migrations                                       | `pnpm --filter @brics/backend migration:generate src/database/migrations/<Name>` · `migration:run`                                        |
+| Tracker                                          | `pnpm status`                                                                                                                             |
+| First Flutter setup                              | `cd mobile && flutter create --org com.brics --project-name brics_mobile --platforms=android,ios .` (org id pending — OPEN_QUESTIONS #12) |
 
 ## Where to put new code
 

@@ -1,7 +1,7 @@
 {
   "name": "brics",
   "private": true,
-  "description": "BRICS \u2014 Brick Chimney ERP & Accounting (TVAM KEY SOFTWARE PRIVATE LIMITED)",
+  "description": "BRICS \u2014 Brick Chimney ERP & Accounting",
   "packageManager": "pnpm@12.4.2",
   "engines": {
     "node": ">=24"

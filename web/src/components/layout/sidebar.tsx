@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Flame,
   LayoutDashboard,
+  ScrollText,
   Settings,
   ShoppingCart,
   Truck,
@@ -38,6 +39,7 @@ const NAV: NavItem[] = [
   { label: 'Dispatch', href: '/dispatch', icon: Truck, comingIn: 'P9' },
   { label: 'Accounts', href: '/accounts', icon: BookOpen, comingIn: 'P2' },
   { label: 'Reports', href: '/reports', icon: BarChart2, comingIn: 'P11' },
+  { label: 'Audit log', href: '/audit-logs', icon: ScrollText, permissions: [PERMISSIONS.AUDIT_VIEW] },
   { label: 'Settings', href: '/settings', icon: Settings, permissions: [PERMISSIONS.COMPANY_VIEW] },
 ];
 

@@ -2,17 +2,22 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { PERMISSIONS } from '@brics/shared';
 import { PageHeader } from '@/components/layout/page-header';
+import { useSession } from '@/features/auth/use-auth';
 import { cn } from '@/lib/cn';
 
 const TABS = [
   { label: 'Company', href: '/settings/company' },
   { label: 'Kilns', href: '/settings/kilns' },
   { label: 'Financial years', href: '/settings/financial-years' },
+  { label: 'Users', href: '/settings/users', permissions: [PERMISSIONS.USERS_MANAGE] },
 ];
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { can } = useSession();
+  const tabs = TABS.filter((tab) => !tab.permissions || can(...tab.permissions));
 
   return (
     <div className="flex flex-col gap-5">
@@ -20,7 +25,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
 
       {/* Scrolls horizontally on a phone rather than wrapping into two rows. */}
       <nav className="-mx-1 flex gap-1 overflow-x-auto border-b border-border px-1" aria-label="Settings sections">
-        {TABS.map((tab) => {
+        {tabs.map((tab) => {
           const active = pathname.startsWith(tab.href);
           return (
             <Link
