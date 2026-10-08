@@ -1,20 +1,42 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** P1.1 ✅ done → **next: P1.2** (web login page wired to auth API, company/kiln switcher, user/role management screens) · **CP1 features done:** 0 / 89 (0 %)
+**Client Phase:** CP1 (MVP) · **Current step:** P1.1b ✅ done → **next: P1.2** (web login page wired to auth API, company/kiln switcher, user/role management screens) · **CP1 features done:** 0 / 89 (0 %)
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
-- **Last green commit:** `4b4be5f` — `chore(ci): add github actions ci, husky hooks` (2026-10-08). Gate green: shared + backend + web all lint ✓ typecheck ✓ test ✓. Hooks verified (commitlint rejects bad messages, lint-staged runs prettier).
+- **Last green commit:** `<p1.1b>` — `docs(brain): update tracking after P1.1b` (2026-10-08), branch `feat/p1.1b-tenancy-rbac` (**not yet merged to `main`**). Gate green: lint ✓ typecheck ✓ test ✓ build ✓, backend 31 unit + 22 e2e, migrations up **and** down verified, `pnpm seed` idempotent.
+- **Verified against a running API** (seeded DB, `node dist/main.js`): login returns a single-wrapped `{data}`, role `owner` with its 4 permission codes, the bootstrap company and kiln; `GET /users` contains no password hash; `GET /audit-logs` returns `{data, meta}` with the LOGIN entry; an invalid login body returns 400 `VALIDATION_FAILED` with per-field details.
+
+### First run on a fresh database
+`pnpm db:up` → `pnpm --filter @brics/backend migration:run` → set `SEED_OWNER_MOBILE` + `SEED_OWNER_PASSWORD` in `backend/.env` → `pnpm seed`.
+That creates the 9 roles, one company, one kiln and one Owner. The bootstrap refuses to run if any user already exists.
 - **Done:**
   - P0.1 ✅ git, PDFs, brain, docs 01–13, AI entry files, `pnpm status` generator.
   - P0.2 ✅ monorepo, shared package, docker-compose, NestJS 11 backend, `/health`, migrations, unit + e2e.
   - P0.3 ✅ web shell — app router, DS primitives (Button/Card/Badge/Input/Skeleton/EmptyState), layout (Sidebar/Topbar/PageHeader/KilnSwitcher), lib + stores, features/system health hook, 1 Vitest test.
   - P0.4 🟨 mobile folder structure only (device A); full scaffold on device B.
-  - P0.5 ✅ CI workflow (postgres service, node 24, build→migrate→lint→typecheck→test→e2e→build), Husky pre-commit (lint-staged) + commit-msg (commitlint), .prettierignore fix for .brain/.
-  - P1.1 ✅ backend auth & RBAC: entities (`companies`, `sites`, `financial_years`, `users`, `roles`, `permissions`, `role_permissions`, `user_companies`, `user_sites`, `refresh_tokens`, `audit_logs`), JWT auth (access 15m + refresh 30d), `TenantGuard`, `RolesGuard`, `JwtAuthGuard`, CRUD controllers & services, DB migration `1700000000000-AuthAndCompanyTables.ts`, unit tests.
+  - P0.5 ✅ CI workflow, Husky pre-commit + commit-msg, .prettierignore fix.
+  - P1.1a ✅ backend auth & RBAC skeleton: 11 entities, JWT access+refresh, guards, CRUD controllers, migration, first tests.
+  - P1.1b ✅ **repair of P1.1** — see "Why P1.1b existed" below. Tenant isolation, RBAC seed, audit trail, API contract, missing ADM endpoints, schema hardening. 31 unit + 22 e2e green.
 - **Half-done:** none.
-- **Next step (exact):** P1.2 — web login page wired to auth API (`POST /auth/login`), auth store (Zustand + local storage JWT), protected dashboard route guard, sidebar company/kiln selector integration, user/role management screens.
+- **Next step (exact):** P1.2 — web login page wired to `POST /auth/login`, auth store (Zustand + token storage), refresh-on-401 in `lib/api-client.ts` (the current one has no refresh path), protected dashboard route guard, company switcher on `POST /auth/switch-company`, kiln switcher on `GET /sites`, user & role management screens on `/users` + `/users/roles`, audit viewer on `/audit-logs`.
 - **Then:** P1.3 (mobile login + sync setup) → P2.1 (accounting engine) → …
+
+### Why P1.1b existed (read before marking any step ✅)
+P1.1 was committed as `BE ✅ / Tests ✅` for ADM-01…07, but an audit found the backend did not meet those requirements:
+cross-tenant read **and write** on six endpoints (`company_id` taken from the URL, never checked); `password_hash` returned by `GET /users`;
+every response double-wrapped `{data:{data}}`; Zod validation failures surfacing as 500; the 9 roles never seeded, so `RolesGuard` denied
+every permissioned route; the audit log a table with no writer; and ADM-02 switch-company, ADM-04 FY create/activate, ADM-05 change-password
+all simply absent. `pnpm status` could not catch the wiring gap because its generator ignored `BE 🧩`.
+**Lesson for every future step:** a column is ✅ only when a test proves it, not when the file exists. Tenancy and audit are in the
+"never cut correctness" list — give them an e2e test in the same step, as `backend/test/tenancy.e2e-spec.ts` now does.
+
+### Known gaps carried forward (not blocking P1.2)
+- List endpoints other than `/audit-logs` do not paginate; `CONVENTIONS.md` specifies `?page&limit` → `meta`.
+- Company/Site/FinancialYear responses are raw entities; only users go through a response DTO (`UserSummary`).
+- `BusinessRuleException` is defined and tested but never thrown — domain error codes (`MODULE_REASON`) are not adopted yet. Adopt from P2, where posting/stock rules need them.
+- `QueryFailedError` is not mapped in `AllExceptionsFilter`, so an unhandled DB constraint violation is a 500.
+- No request/correlation id in error responses, so a 500 cannot be traced to its Pino log line.
 
 - **Work split (2026-10-07):** backend + web are built on device A (no Flutter). The Flutter app is built on device B. Each device uses its own Resume block. `git pull` before and `git push` after every session. Device B edits only the **Mob** columns in FEATURES/API_INDEX, then runs `pnpm status`.
 
@@ -33,7 +55,8 @@ Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 | P0 | P0.3 | Web scaffold, tokens, shell, Vitest — app router, DS primitives, layout components, health hook | ✅ |
 | P0 | P0.4 | Mobile scaffold: folder structure + placeholder app ✅ (device A); flutter create, packages, theme, widgets, router, Drift stub, l10n, analyze/test (device B) | 🟨 |
 | P0 | P0.5 | CI, Husky hooks, commitlint, verify, tracking | ✅ |
-| P1 | P1.1 | Backend: auth, tenancy guard, companies, kilns, FY, users, roles, audit | ✅ |
+| P1 | P1.1a | Backend: auth, companies, kilns, FY, users, roles — entities, JWT, guards, CRUD | ✅ |
+| P1 | P1.1b | Backend repair: tenant isolation + tests, RBAC seed, audit trail, API contract, missing ADM endpoints, schema hardening | ✅ |
 | P1 | P1.2 | Web: login, shell, DS primitives, company/kiln/user screens | ⬜ |
 
 | P1 | P1.3 | Mobile: login, widgets, router, Drift + sync skeleton | ⬜ |
@@ -59,4 +82,6 @@ Exit criteria per phase: see BRICS_MASTER_PROMPT.md §12.
 A1 banking/accounting adv · A2 adv GST (if approved) · A3 profitability/leakage · A4 admin extras · A5 AI anomaly · A6 IoT · A7 approved extras — all ⏭️
 
 ## Splits recorded
-- _(none yet — record e.g. "P5.1 → P5.1a entities+stock, P5.1b postings" here)_
+- **P1.1 → P1.1a + P1.1b** (2026-10-08). P1.1a is the original backend auth/RBAC commit `54b2d13`. P1.1b is the repair: tenant isolation,
+  RBAC seed, audit trail, API contract and the ADM endpoints P1.1 never built. Split recorded because P1.1 had been marked ✅ while
+  ADM-02/04/05/06/07 were incomplete and tenancy was unenforced.

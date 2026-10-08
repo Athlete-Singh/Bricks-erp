@@ -214,6 +214,57 @@ describe('Tenant isolation (e2e)', () => {
     });
   });
 
+  describe('financial years (ADM-04)', () => {
+    let firstFyId: string;
+
+    it('creates the first financial year and makes it active', async () => {
+      const res = await asA('post', '/financial-years')
+        .send({ name: '2026-27', startDate: '2026-04-01', endDate: '2027-03-31' })
+        .expect(201);
+
+      firstFyId = res.body.data.id;
+      expect(res.body.data.isActive).toBe(true);
+      expect(res.body.data.companyId).toBe(companyA.id);
+    });
+
+    it('refuses a period overlapping an existing year', async () => {
+      await asA('post', '/financial-years')
+        .send({ name: 'overlap', startDate: '2027-01-01', endDate: '2027-06-30' })
+        .expect(400);
+    });
+
+    it('refuses endDate before startDate with a field error', async () => {
+      const res = await asA('post', '/financial-years')
+        .send({ name: 'backwards', startDate: '2028-04-01', endDate: '2027-03-31' })
+        .expect(400);
+
+      expect(res.body.error.code).toBe('VALIDATION_FAILED');
+    });
+
+    it('creates a later year inactive, then activates exactly one', async () => {
+      const created = await asA('post', '/financial-years')
+        .send({ name: '2027-28', startDate: '2027-04-01', endDate: '2028-03-31' })
+        .expect(201);
+      expect(created.body.data.isActive).toBe(false);
+
+      await asA('patch', `/financial-years/${created.body.data.id}/activate`).expect(200);
+
+      const list = await asA('get', '/financial-years').expect(200);
+      const active = (list.body.data as Array<{ id: string; isActive: boolean }>).filter((fy) => fy.isActive);
+
+      expect(active).toHaveLength(1);
+      expect(active[0]?.id).toBe(created.body.data.id);
+      expect(active[0]?.id).not.toBe(firstFyId);
+    });
+
+    it('does not expose another tenant financial years', async () => {
+      const res = await asA('get', '/financial-years').expect(200);
+      for (const fy of res.body.data as Array<{ companyId: string }>) {
+        expect(fy.companyId).toBe(companyA.id);
+      }
+    });
+  });
+
   describe('audit trail (ADM-07)', () => {
     it('records the login and is readable by the Owner, scoped to the tenant', async () => {
       const res = await asA('get', '/audit-logs?limit=50').expect(200);

@@ -45,14 +45,16 @@ for (const line of featuresText.split('\n')) {
   const row = { id, feature, cp, phase, be, web, mob, tests, status, notes: notes.trim() };
   if (!STATUSES.includes(status)) errors.push(`FEATURES ${id}: status "${status}" (use ${STATUSES.join(' ')})`);
   for (const [key] of APPS) {
-    if (!APP_STATUSES.includes(row[key])) errors.push(`FEATURES ${id}: ${key} "${row[key]}" (use ${APP_STATUSES.join(' ')})`);
+    if (!APP_STATUSES.includes(row[key]))
+      errors.push(`FEATURES ${id}: ${key} "${row[key]}" (use ${APP_STATUSES.join(' ')})`);
   }
   currentModule.rows.push(row);
 }
 const features = modules.flatMap((mod) => mod.rows);
 
 // ── API_INDEX.md ────────────────────────────────────────────────────────────
-const API_ROW = /^\| (GET|POST|PUT|PATCH|DELETE) \| (\S+) \| (.+?) \| (.+?) \| (.+?) \| (.+?) \| (\S+) \| (\S+) \| (\S+) \|$/;
+const API_ROW =
+  /^\| (GET|POST|PUT|PATCH|DELETE) \| (\S+) \| (.+?) \| (.+?) \| (.+?) \| (.+?) \| (\S+) \| (\S+) \| (\S+) \|$/;
 const apiText = readFileSync(paths.api, 'utf8');
 const endpoints = [];
 for (const line of apiText.split('\n')) {
@@ -71,9 +73,17 @@ if (errors.length) {
 }
 
 // ── Summaries ───────────────────────────────────────────────────────────────
-const countBy = (rows, key, symbols) => Object.fromEntries(symbols.map((s) => [s, rows.filter((r) => r[key] === s).length]));
+const countBy = (rows, key, symbols) =>
+  Object.fromEntries(symbols.map((s) => [s, rows.filter((r) => r[key] === s).length]));
 const cp1Rows = features.filter((r) => r.cp === 'CP1');
-const cp = (name) => ({ total: features.filter((r) => r.cp === name).length, ...countBy(features.filter((r) => r.cp === name), 'status', STATUSES) });
+const cp = (name) => ({
+  total: features.filter((r) => r.cp === name).length,
+  ...countBy(
+    features.filter((r) => r.cp === name),
+    'status',
+    STATUSES,
+  ),
+});
 const cp1 = cp('CP1');
 const cp2 = cp('CP2');
 const pct = cp1.total ? Math.round((cp1['✅'] / cp1.total) * 100) : 0;
@@ -81,9 +91,10 @@ const pct = cp1.total ? Math.round((cp1['✅'] / cp1.total) * 100) : 0;
 const summaryTable = [
   '| | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |',
   '|---|---|---|---|---|---|---|',
-  ...[['CP1 MVP', cp1], ['CP2 Advanced', cp2]].map(
-    ([label, c]) => `| ${label} | ${c.total} | ${c['✅']} | ${c['🟨']} | ${c['⚠️']} | ${c['⬜']} | ${c['⏭️']} |`,
-  ),
+  ...[
+    ['CP1 MVP', cp1],
+    ['CP2 Advanced', cp2],
+  ].map(([label, c]) => `| ${label} | ${c.total} | ${c['✅']} | ${c['🟨']} | ${c['⚠️']} | ${c['⬜']} | ${c['⏭️']} |`),
 ].join('\n');
 
 const perAppTable = [
@@ -98,8 +109,11 @@ const perAppTable = [
 
 // ── Wiring gaps ─────────────────────────────────────────────────────────────
 const consumerPending = (s) => s === '⬜' || s === '🟨' || s === '🧩';
-const apiNotUsed = endpoints.filter((e) => e.be === '✅' && (consumerPending(e.web) || consumerPending(e.mob)));
-const uiWaitingForApi = endpoints.filter((e) => e.be !== '✅' && (e.web === '🧩' || e.mob === '🧩'));
+// An endpoint counts as built whether it is wired to a consumer (✅) or not (🧩);
+// filtering on '✅' alone hid every freshly built, not-yet-consumed API.
+const apiBuilt = (s) => s === '✅' || s === '🧩';
+const apiNotUsed = endpoints.filter((e) => apiBuilt(e.be) && (consumerPending(e.web) || consumerPending(e.mob)));
+const uiWaitingForApi = endpoints.filter((e) => !apiBuilt(e.be) && (e.web === '🧩' || e.mob === '🧩'));
 const featureNotConnected = cp1Rows.filter((r) => [r.be, r.web, r.mob].includes('🧩'));
 const who = (e) =>
   [e.web, e.mob]
@@ -140,13 +154,19 @@ writeFileSync(
 const progress = readFileSync(paths.progress, 'utf8');
 const currentLine = progress.split('\n').find((l) => l.startsWith('**Client Phase:**')) ?? '';
 const today = new Date().toISOString().slice(0, 10);
-const list = (rows) => (rows.length ? rows.map((r) => `- ${r.status} **${r.id}** ${r.feature} _(${r.phase})_`).join('\n') : '- _none yet_');
+const list = (rows) =>
+  rows.length ? rows.map((r) => `- ${r.status} **${r.id}** ${r.feature} _(${r.phase})_`).join('\n') : '- _none yet_';
 const moduleTables = modules
   .filter((mod) => mod.rows.length)
   .map(
     (mod) =>
       `### ${mod.title}\n\n| ID | Feature | CP | Phase | Backend | Web | Mobile | Tests | Status |\n|---|---|---|---|---|---|---|---|---|\n` +
-      mod.rows.map((r) => `| ${r.id} | ${r.feature} | ${r.cp} | ${r.phase} | ${r.be} | ${r.web} | ${r.mob} | ${r.tests} | ${r.status} |`).join('\n'),
+      mod.rows
+        .map(
+          (r) =>
+            `| ${r.id} | ${r.feature} | ${r.cp} | ${r.phase} | ${r.be} | ${r.web} | ${r.mob} | ${r.tests} | ${r.status} |`,
+        )
+        .join('\n'),
   )
   .join('\n\n');
 const endpointTable = endpoints.length

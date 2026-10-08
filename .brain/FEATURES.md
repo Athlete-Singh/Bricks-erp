@@ -20,7 +20,7 @@
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
-| Backend | 86 | 7 | 0 | 0 | 0 | 79 |
+| Backend | 86 | 0 | 7 | 0 | 0 | 79 |
 | Web | 85 | 0 | 0 | 0 | 0 | 85 |
 | Mobile | 10 | 0 | 0 | 0 | 0 | 10 |
 | Tests | 89 | 7 | 0 | 0 | 0 | 82 |
@@ -31,13 +31,13 @@
 
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| ADM-01 | Company profile: name, address, state (for place of supply), GSTIN, PAN, logo | CP1 | P1 | ✅ | ⬜ | — | ✅ | 🟨 | Backend API & entities ready |
-| ADM-02 | Multiple companies under one login + company switcher | CP1 | P1 | ✅ | ⬜ | — | ✅ | 🟨 | Multi-company schema & endpoints ready |
-| ADM-03 | Multiple kilns/chimneys/sites per company (site type: kiln / branch / depot) + kiln switcher | CP1 | P1 | ✅ | ⬜ | — | ✅ | 🟨 | Site/Kiln entities & endpoints ready |
-| ADM-04 | Financial years (April–March default): create, set active | CP1 | P1 | ✅ | ⬜ | — | ✅ | 🟨 | Financial year schema & endpoints ready |
-| ADM-05 | Users: login (email or mobile + password), JWT access/refresh, logout, change password | CP1 | P1 | ✅ | ⬜ | ⬜ | ✅ | 🟨 | JWT auth + refresh + tenancy guard ready |
-| ADM-06 | 9 seeded roles with default permission sets; Owner assigns role + kiln access per user | CP1 | P1 | ✅ | ⬜ | — | ✅ | 🟨 | Roles, permissions & assignment endpoints ready |
-| ADM-07 | Audit log (who / what / when / before-after) on financial + stock data; simple viewer for Owner | CP1 | P1 | ✅ | ⬜ | — | ✅ | 🟨 | AuditLog entity & migration ready |
+| ADM-01 | Company profile: name, address, state (for place of supply), GSTIN, PAN, logo | CP1 | P1 | 🧩 | ⬜ | — | ✅ | 🟨 | Backend done (tenant-scoped, audited); web screens in P1.2 |
+| ADM-02 | Multiple companies under one login + company switcher | CP1 | P1 | 🧩 | ⬜ | — | ✅ | 🟨 | `POST /auth/switch-company` re-issues the session; web switcher in P1.2 |
+| ADM-03 | Multiple kilns/chimneys/sites per company (site type: kiln / branch / depot) + kiln switcher | CP1 | P1 | 🧩 | ⬜ | — | ✅ | 🟨 | `/sites` is JWT-scoped and returns only the user’s kilns; web switcher in P1.2 |
+| ADM-04 | Financial years (April–March default): create, set active | CP1 | P1 | 🧩 | ⬜ | — | ✅ | 🟨 | Create + activate, overlap rejected, one active FY enforced by a partial unique index |
+| ADM-05 | Users: login (email or mobile + password), JWT access/refresh, logout, change password | CP1 | P1 | 🧩 | ⬜ | ⬜ | ✅ | 🟨 | Login, rotating refresh, logout, change-password; web P1.2, mobile P1.3 |
+| ADM-06 | 9 seeded roles with default permission sets; Owner assigns role + kiln access per user | CP1 | P1 | 🧩 | ⬜ | — | ✅ | 🟨 | 9 roles + permission sets seeded via `pnpm seed`; role/kiln reassignment on `PATCH /users/:id` |
+| ADM-07 | Audit log (who / what / when / before-after) on financial + stock data; simple viewer for Owner | CP1 | P1 | 🧩 | ⬜ | — | ✅ | 🟨 | AuditService writes on company/kiln/FY/user/auth changes; `GET /audit-logs` viewer |
 
 
 | ADM-08 | Company bank accounts (as Bank ledgers) | CP1 | P2 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |

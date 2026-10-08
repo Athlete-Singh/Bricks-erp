@@ -14,3 +14,5 @@ Format: `#N — question — default we use until answered — needed by phase �
 10. Login: password only, or mobile OTP (needs SMS gateway, client cost)? — default: email/mobile + password — P1 — open
 11. Season vs FY: labour settlements are seasonal (Oct–Jun) but books are April–March. Settlement by date range OK? — default: settlement by date range, independent of FY — P6 — open
 12. Mobile package ID — default: `com.tvamkey.brics` — P12 — open
+13. Default permission set per role (ADM-06): which of the 9 roles may manage users, edit company settings and read the audit log? — default used in P1.1b: Owner & Super Admin get all four codes (company.view/manage, users.manage, audit.view); Accountant gets company.view + audit.view; Manager gets company.view + users.manage; Production Manager, Supervisor, Sales Executive and Store Keeper get company.view; Driver gets none. Editable in `packages/shared/src/constants/permissions.ts`, re-run `pnpm seed`. — P1 — open
+

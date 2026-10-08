@@ -19,4 +19,9 @@ Status: ⬜ planned · ✅ migrated. Update when migrations land.
 | System | idempotency_keys (key, company_id, response) · sync_logs | P1/P12 |
 
 ## Migrated
-_(none — P0 only sets up the data source and migrations folder)_
+| Migration | Tables / changes |
+|---|---|
+| `1700000000000-AuthAndCompanyTables` | `companies` · `sites` · `financial_years` · `users` · `roles` · `permissions` · `role_permissions` · `user_companies` · `user_sites` · `refresh_tokens` · `audit_logs` |
+| `1700000100000-AuthHardening` | indexes on every `company_id`/FK used by tenant reads · unique `(user_id, company_id)`, `(user_id, site_id)`, `(role_id, permission_id)` · unique `(company_id, code)` on live sites · partial unique "one active FY per company" · `roles` unique moved from `(code)` to `(code, company_id)` · `created_at` on `user_companies`, `user_sites`, `refresh_tokens` |
+
+Seed: `pnpm seed` fills `roles`, `permissions`, `role_permissions` (9 roles, idempotent).
