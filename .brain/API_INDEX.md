@@ -22,3 +22,19 @@ Add the row when you **plan** an endpoint (BE ⬜), and update it the moment any
 | Method | Path | Purpose | Perm | Feature | Phase | BE | Web | Mob |
 |---|---|---|---|---|---|---|---|---|
 | GET | /health | Liveness + DB check (`SELECT 1`), 503 if DB down | public | — | P0 | ✅ | ✅ | ⬜ |
+| POST | /auth/login | Authenticate user & issue tokens | public | ADM-05 | P1 | 🧩 | ⬜ | ⬜ |
+| POST | /auth/refresh | Issue new access & refresh token pair | public | ADM-05 | P1 | 🧩 | ⬜ | ⬜ |
+| POST | /auth/logout | Revoke refresh token | bearer | ADM-05 | P1 | 🧩 | ⬜ | ⬜ |
+| GET | /auth/me | Get current user profile and company claims | bearer | ADM-05 | P1 | 🧩 | ⬜ | ⬜ |
+| GET | /companies | List all companies | company.view | ADM-02 | P1 | 🧩 | ⬜ | — |
+| GET | /companies/current | Get active company from JWT context | bearer | ADM-01 | P1 | 🧩 | ⬜ | — |
+| GET | /companies/:id | Get company details by ID | company.view | ADM-01 | P1 | 🧩 | ⬜ | — |
+| POST | /companies | Create a new company | company.manage | ADM-01 | P1 | 🧩 | ⬜ | — |
+| PUT | /companies/:id | Update company profile | company.manage | ADM-01 | P1 | 🧩 | ⬜ | — |
+| GET | /companies/:companyId/sites | List all sites/kilns for a company | company.view | ADM-03 | P1 | 🧩 | ⬜ | — |
+| POST | /companies/:companyId/sites | Create a new site/kiln | company.manage | ADM-03 | P1 | 🧩 | ⬜ | — |
+| GET | /companies/:companyId/financial-years | List financial years for a company | company.view | ADM-04 | P1 | 🧩 | ⬜ | — |
+| GET | /users | List users for current company | users.manage | ADM-05 | P1 | 🧩 | ⬜ | — |
+| POST | /users | Create new user & assign roles/sites | users.manage | ADM-06 | P1 | 🧩 | ⬜ | — |
+| GET | /users/roles | List system roles | bearer | ADM-06 | P1 | 🧩 | ⬜ | — |
+

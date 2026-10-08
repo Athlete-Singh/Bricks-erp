@@ -5,23 +5,23 @@
 
 ## Where we are
 
-**Client Phase:** CP1 (MVP) · **Current step:** P0.5 ✅ done → **next: P1.1** (backend auth, RBAC, companies, kilns) · **CP1 features done:** 0 / 89 (0 %)
+**Client Phase:** CP1 (MVP) · **Current step:** P1.1 ✅ done → **next: P1.2** (web login page wired to auth API, company/kiln switcher, user/role management screens) · **CP1 features done:** 0 / 89 (0 %)
 
 **Client Phase 1 (MVP) progress: 0 %** (0 of 89 features done)
 
 |              | Total | ✅  | 🟨  | ⚠️  | ⬜  | ⏭️  |
 | ------------ | ----- | --- | --- | --- | --- | --- |
-| CP1 MVP      | 89    | 0   | 0   | 0   | 89  | 0   |
+| CP1 MVP      | 89    | 0   | 7   | 0   | 82  | 0   |
 | CP2 Advanced | 10    | 0   | 0   | 0   | 0   | 10  |
 
 ### Progress per app (CP1)
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 | ----------------------------------- | ---------- | ------- | ---------------- | -------------- | ---------- | -------------- |
-| Backend                             | 86         | 0       | 0                | 0              | 0          | 86             |
+| Backend                             | 86         | 7       | 0                | 0              | 0          | 79             |
 | Web                                 | 85         | 0       | 0                | 0              | 0          | 85             |
-| Mobile                              | 9          | 0       | 0                | 0              | 0          | 9              |
-| Tests                               | 89         | 0       | 0                | 0              | 0          | 89             |
+| Mobile                              | 10         | 0       | 0                | 0              | 0          | 10             |
+| Tests                               | 89         | 7       | 0                | 0              | 0          | 82             |
 
 ## Client phases
 
@@ -48,9 +48,24 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 
 #### All endpoints
 
-| Method | Path      | Feature | Backend | Web | Mobile |
-| ------ | --------- | ------- | ------- | --- | ------ |
-| GET    | `/health` | —       | ✅      | ✅  | ⬜     |
+| Method | Path                                    | Feature | Backend | Web | Mobile |
+| ------ | --------------------------------------- | ------- | ------- | --- | ------ |
+| GET    | `/health`                               | —       | ✅      | ✅  | ⬜     |
+| POST   | `/auth/login`                           | ADM-05  | 🧩      | ⬜  | ⬜     |
+| POST   | `/auth/refresh`                         | ADM-05  | 🧩      | ⬜  | ⬜     |
+| POST   | `/auth/logout`                          | ADM-05  | 🧩      | ⬜  | ⬜     |
+| GET    | `/auth/me`                              | ADM-05  | 🧩      | ⬜  | ⬜     |
+| GET    | `/companies`                            | ADM-02  | 🧩      | ⬜  | —      |
+| GET    | `/companies/current`                    | ADM-01  | 🧩      | ⬜  | —      |
+| GET    | `/companies/:id`                        | ADM-01  | 🧩      | ⬜  | —      |
+| POST   | `/companies`                            | ADM-01  | 🧩      | ⬜  | —      |
+| PUT    | `/companies/:id`                        | ADM-01  | 🧩      | ⬜  | —      |
+| GET    | `/companies/:companyId/sites`           | ADM-03  | 🧩      | ⬜  | —      |
+| POST   | `/companies/:companyId/sites`           | ADM-03  | 🧩      | ⬜  | —      |
+| GET    | `/companies/:companyId/financial-years` | ADM-04  | 🧩      | ⬜  | —      |
+| GET    | `/users`                                | ADM-05  | 🧩      | ⬜  | —      |
+| POST   | `/users`                                | ADM-06  | 🧩      | ⬜  | —      |
+| GET    | `/users/roles`                          | ADM-06  | 🧩      | ⬜  | —      |
 
 ## Implemented so far (CP1)
 
@@ -58,17 +73,16 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 
 ## In progress / partial (CP1)
 
-- _none yet_
+- 🟨 **ADM-01** Company profile: name, address, state (for place of supply), GSTIN, PAN, logo _(P1)_
+- 🟨 **ADM-02** Multiple companies under one login + company switcher _(P1)_
+- 🟨 **ADM-03** Multiple kilns/chimneys/sites per company (site type: kiln / branch / depot) + kiln switcher _(P1)_
+- 🟨 **ADM-04** Financial years (April–March default): create, set active _(P1)_
+- 🟨 **ADM-05** Users: login (email or mobile + password), JWT access/refresh, logout, change password _(P1)_
+- 🟨 **ADM-06** 9 seeded roles with default permission sets; Owner assigns role + kiln access per user _(P1)_
+- 🟨 **ADM-07** Audit log (who / what / when / before-after) on financial + stock data; simple viewer for Owner _(P1)_
 
 ## Remaining for CP1
 
-- ⬜ **ADM-01** Company profile: name, address, state (for place of supply), GSTIN, PAN, logo _(P1)_
-- ⬜ **ADM-02** Multiple companies under one login + company switcher _(P1)_
-- ⬜ **ADM-03** Multiple kilns/chimneys/sites per company (site type: kiln / branch / depot) + kiln switcher _(P1)_
-- ⬜ **ADM-04** Financial years (April–March default): create, set active _(P1)_
-- ⬜ **ADM-05** Users: login (email or mobile + password), JWT access/refresh, logout, change password _(P1)_
-- ⬜ **ADM-06** 9 seeded roles with default permission sets; Owner assigns role + kiln access per user _(P1)_
-- ⬜ **ADM-07** Audit log (who / what / when / before-after) on financial + stock data; simple viewer for Owner _(P1)_
 - ⬜ **ADM-08** Company bank accounts (as Bank ledgers) _(P2)_
 - ⬜ **ADM-09** Backups via managed DB (Supabase daily backups) + documented restore procedure _(P13)_
 - ⬜ **PTY-01** One party master with types: customer, supplier, Sardar/labour contractor, transporter, employee, other _(P3)_
@@ -158,13 +172,13 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 
 | ID     | Feature                                                                                         | CP  | Phase | Backend | Web | Mobile | Tests | Status |
 | ------ | ----------------------------------------------------------------------------------------------- | --- | ----- | ------- | --- | ------ | ----- | ------ |
-| ADM-01 | Company profile: name, address, state (for place of supply), GSTIN, PAN, logo                   | CP1 | P1    | ⬜      | ⬜  | —      | ⬜    | ⬜     |
-| ADM-02 | Multiple companies under one login + company switcher                                           | CP1 | P1    | ⬜      | ⬜  | —      | ⬜    | ⬜     |
-| ADM-03 | Multiple kilns/chimneys/sites per company (site type: kiln / branch / depot) + kiln switcher    | CP1 | P1    | ⬜      | ⬜  | —      | ⬜    | ⬜     |
-| ADM-04 | Financial years (April–March default): create, set active                                       | CP1 | P1    | ⬜      | ⬜  | —      | ⬜    | ⬜     |
-| ADM-05 | Users: login (email or mobile + password), JWT access/refresh, logout, change password          | CP1 | P1    | ⬜      | ⬜  | —      | ⬜    | ⬜     |
-| ADM-06 | 9 seeded roles with default permission sets; Owner assigns role + kiln access per user          | CP1 | P1    | ⬜      | ⬜  | —      | ⬜    | ⬜     |
-| ADM-07 | Audit log (who / what / when / before-after) on financial + stock data; simple viewer for Owner | CP1 | P1    | ⬜      | ⬜  | —      | ⬜    | ⬜     |
+| ADM-01 | Company profile: name, address, state (for place of supply), GSTIN, PAN, logo                   | CP1 | P1    | ✅      | ⬜  | —      | ✅    | 🟨     |
+| ADM-02 | Multiple companies under one login + company switcher                                           | CP1 | P1    | ✅      | ⬜  | —      | ✅    | 🟨     |
+| ADM-03 | Multiple kilns/chimneys/sites per company (site type: kiln / branch / depot) + kiln switcher    | CP1 | P1    | ✅      | ⬜  | —      | ✅    | 🟨     |
+| ADM-04 | Financial years (April–March default): create, set active                                       | CP1 | P1    | ✅      | ⬜  | —      | ✅    | 🟨     |
+| ADM-05 | Users: login (email or mobile + password), JWT access/refresh, logout, change password          | CP1 | P1    | ✅      | ⬜  | ⬜     | ✅    | 🟨     |
+| ADM-06 | 9 seeded roles with default permission sets; Owner assigns role + kiln access per user          | CP1 | P1    | ✅      | ⬜  | —      | ✅    | 🟨     |
+| ADM-07 | Audit log (who / what / when / before-after) on financial + stock data; simple viewer for Owner | CP1 | P1    | ✅      | ⬜  | —      | ✅    | 🟨     |
 | ADM-08 | Company bank accounts (as Bank ledgers)                                                         | CP1 | P2    | ⬜      | ⬜  | —      | ⬜    | ⬜     |
 | ADM-09 | Backups via managed DB (Supabase daily backups) + documented restore procedure                  | CP1 | P13   | ⬜      | —   | —      | ⬜    | ⬜     |
 

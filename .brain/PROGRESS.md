@@ -1,6 +1,6 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** P0.5 ✅ done → **next: P1.1** (backend auth, RBAC, companies, kilns) · **CP1 features done:** 0 / 89 (0 %)
+**Client Phase:** CP1 (MVP) · **Current step:** P1.1 ✅ done → **next: P1.2** (web login page wired to auth API, company/kiln switcher, user/role management screens) · **CP1 features done:** 0 / 89 (0 %)
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
@@ -11,9 +11,11 @@ Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
   - P0.3 ✅ web shell — app router, DS primitives (Button/Card/Badge/Input/Skeleton/EmptyState), layout (Sidebar/Topbar/PageHeader/KilnSwitcher), lib + stores, features/system health hook, 1 Vitest test.
   - P0.4 🟨 mobile folder structure only (device A); full scaffold on device B.
   - P0.5 ✅ CI workflow (postgres service, node 24, build→migrate→lint→typecheck→test→e2e→build), Husky pre-commit (lint-staged) + commit-msg (commitlint), .prettierignore fix for .brain/.
+  - P1.1 ✅ backend auth & RBAC: entities (`companies`, `sites`, `financial_years`, `users`, `roles`, `permissions`, `role_permissions`, `user_companies`, `user_sites`, `refresh_tokens`, `audit_logs`), JWT auth (access 15m + refresh 30d), `TenantGuard`, `RolesGuard`, `JwtAuthGuard`, CRUD controllers & services, DB migration `1700000000000-AuthAndCompanyTables.ts`, unit tests.
 - **Half-done:** none.
-- **Next step (exact):** P1.1 — backend auth + RBAC. Entities: `companies`, `kilns`, `financial_years`, `users`, `roles`, `permissions`, `audit_logs`. JWT auth (access 15m + refresh 30d). Guards: JwtAuthGuard, RolesGuard, TenantGuard (company_id from JWT). Endpoints: POST /auth/login, POST /auth/refresh, POST /auth/logout, CRUD /companies, /kilns, /users, /roles. Seed 9 roles (roles.ts). Migration. Unit + e2e tests. Commit.
-- **Then:** P1.2 (web login page wired to auth API, sidebar shows company/kiln, user/role management screens) → P2.1 (accounting engine) → …
+- **Next step (exact):** P1.2 — web login page wired to auth API (`POST /auth/login`), auth store (Zustand + local storage JWT), protected dashboard route guard, sidebar company/kiln selector integration, user/role management screens.
+- **Then:** P1.3 (mobile login + sync setup) → P2.1 (accounting engine) → …
+
 - **Work split (2026-10-07):** backend + web are built on device A (no Flutter). The Flutter app is built on device B. Each device uses its own Resume block. `git pull` before and `git push` after every session. Device B edits only the **Mob** columns in FEATURES/API_INDEX, then runs `pnpm status`.
 
 ## ▶ Resume here: mobile (device B, with Flutter)
@@ -31,8 +33,9 @@ Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 | P0 | P0.3 | Web scaffold, tokens, shell, Vitest — app router, DS primitives, layout components, health hook | ✅ |
 | P0 | P0.4 | Mobile scaffold: folder structure + placeholder app ✅ (device A); flutter create, packages, theme, widgets, router, Drift stub, l10n, analyze/test (device B) | 🟨 |
 | P0 | P0.5 | CI, Husky hooks, commitlint, verify, tracking | ✅ |
-| P1 | P1.1 | Backend: auth, tenancy guard, companies, kilns, FY, users, roles, audit | ⬜ |
+| P1 | P1.1 | Backend: auth, tenancy guard, companies, kilns, FY, users, roles, audit | ✅ |
 | P1 | P1.2 | Web: login, shell, DS primitives, company/kiln/user screens | ⬜ |
+
 | P1 | P1.3 | Mobile: login, widgets, router, Drift + sync skeleton | ⬜ |
 | P2 | P2.1 | Backend: CoA seed, groups, voucher types, PostingService, opening balances | ⬜ |
 | P2 | P2.2 | Web: voucher entry, Day Book, Ledger, Trial Balance | ⬜ |

@@ -3,7 +3,9 @@ module.exports = {
   moduleFileExtensions: ['js', 'json', 'ts'],
   rootDir: '.',
   testRegex: '.e2e-spec.ts$',
-  transform: { '^.+\\.ts$': 'ts-jest' },
+  transform: { '^.+\\.(t|j)s$': 'ts-jest' },
+  transformIgnorePatterns: ['/node_modules/(?!@nestjs/jwt)/'],
+
   testEnvironment: 'node',
   setupFiles: ['<rootDir>/setup-env.js'],
 };

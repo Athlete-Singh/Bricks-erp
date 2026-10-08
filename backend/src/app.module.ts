@@ -6,6 +6,9 @@ import { resolve } from 'node:path';
 import { type Env, validateEnv } from './config/env';
 import { buildTypeOrmOptions } from './config/typeorm.config';
 import { HealthModule } from './modules/health/health.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { CompanyModule } from './modules/company/company.module';
+import { UserModule } from './modules/user/user.module';
 
 @Module({
   imports: [
@@ -33,6 +36,9 @@ import { HealthModule } from './modules/health/health.module';
         buildTypeOrmOptions(config.get('DATABASE_URL', { infer: true }), config.get('DATABASE_SSL', { infer: true })),
     }),
     HealthModule,
+    AuthModule,
+    CompanyModule,
+    UserModule,
   ],
 })
 export class AppModule {}
