@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import dataSource from '../data-source';
 import { seedBootstrap } from './seed-bootstrap';
 import { runRbacSeed } from './seed-rbac';
+import { backfillChartOfAccounts } from './seed-chart-of-accounts';
 
 /* eslint-disable no-console -- reason: CLI script; the Nest logger is not running here */
 
@@ -14,6 +15,9 @@ async function main(): Promise<void> {
   try {
     const rbac = await runRbacSeed(dataSource);
     console.log(`✔ RBAC: ${rbac.roles} roles, ${rbac.permissions} permissions, ${rbac.grants} grants.`);
+
+    const chart = await backfillChartOfAccounts(dataSource);
+    console.log(`✔ Chart of accounts: ${chart.companiesSeeded} seeded, ${chart.companiesToppedUp} already had one.`);
 
     const ownerMobile = process.env.SEED_OWNER_MOBILE;
     const ownerPassword = process.env.SEED_OWNER_PASSWORD;

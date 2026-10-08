@@ -10,6 +10,8 @@ export const PERMISSIONS = {
   COMPANY_MANAGE: 'company.manage',
   USERS_MANAGE: 'users.manage',
   AUDIT_VIEW: 'audit.view',
+  ACCOUNTS_VIEW: 'accounts.view',
+  ACCOUNTS_MANAGE: 'accounts.manage',
 } as const;
 
 export type PermissionCode = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -47,6 +49,18 @@ export const PERMISSION_CATALOGUE: readonly PermissionDefinition[] = [
     module: 'audit',
     description: 'Read the audit trail of financial and stock changes',
   },
+  {
+    code: PERMISSIONS.ACCOUNTS_VIEW,
+    name: 'View accounts',
+    module: 'accounts',
+    description: 'Read the chart of accounts, ledgers, vouchers and the books',
+  },
+  {
+    code: PERMISSIONS.ACCOUNTS_MANAGE,
+    name: 'Manage accounts',
+    module: 'accounts',
+    description: 'Create ledgers, set opening balances and post vouchers',
+  },
 ] as const;
 
 export interface RoleDefinition {
@@ -71,6 +85,8 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.COMPANY_MANAGE,
       PERMISSIONS.USERS_MANAGE,
       PERMISSIONS.AUDIT_VIEW,
+      PERMISSIONS.ACCOUNTS_VIEW,
+      PERMISSIONS.ACCOUNTS_MANAGE,
     ],
   },
   {
@@ -82,19 +98,26 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.COMPANY_MANAGE,
       PERMISSIONS.USERS_MANAGE,
       PERMISSIONS.AUDIT_VIEW,
+      PERMISSIONS.ACCOUNTS_VIEW,
+      PERMISSIONS.ACCOUNTS_MANAGE,
     ],
   },
   {
     code: 'accountant',
     name: 'Accountant',
     description: 'Books, vouchers and GST',
-    permissions: [PERMISSIONS.COMPANY_VIEW, PERMISSIONS.AUDIT_VIEW],
+    permissions: [
+      PERMISSIONS.COMPANY_VIEW,
+      PERMISSIONS.AUDIT_VIEW,
+      PERMISSIONS.ACCOUNTS_VIEW,
+      PERMISSIONS.ACCOUNTS_MANAGE,
+    ],
   },
   {
     code: 'manager',
     name: 'Manager',
     description: 'Day-to-day operations across modules',
-    permissions: [PERMISSIONS.COMPANY_VIEW, PERMISSIONS.USERS_MANAGE],
+    permissions: [PERMISSIONS.COMPANY_VIEW, PERMISSIONS.USERS_MANAGE, PERMISSIONS.ACCOUNTS_VIEW],
   },
   {
     code: 'production_manager',

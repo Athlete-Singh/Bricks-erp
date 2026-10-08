@@ -1,6 +1,6 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** P1.2c ✅ done → **next: P2.1** (accounting engine) (web login page wired to auth API, company/kiln switcher, user/role management screens) · **CP1 features done:** 6 / 101 (6 %)
+**Client Phase:** CP1 (MVP) · **Current step:** P2.1a ✅ done → **next: P2.1b** (`PostingService` + manual vouchers) (web login page wired to auth API, company/kiln switcher, user/role management screens) · **CP1 features done:** 6 / 101 (6 %)
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
@@ -19,11 +19,12 @@ That creates the 9 roles, one company, one kiln and one Owner. The bootstrap ref
   - P1.1a ✅ backend auth & RBAC skeleton: 11 entities, JWT access+refresh, guards, CRUD controllers, migration, first tests.
   - P1.2a ✅ web auth foundation: `api-client` (envelope unwrap, typed `ApiError`, single-flight 401→refresh→retry), token custody per ADR-016, auth store, login page, `AuthGuard`, sign-out. Verified in a real browser against the running API: login → dashboard, hard reload restores the session, sign-out clears both sides.
   - P1.2b ✅ web shell: user dropdown + change-password, company switcher, kiln switcher, permission-aware nav, and the company / kilns / financial-year screens. **ADM-01…04 are the first features to reach ✅.** Sidebar turned into a drawer below `md` — it was a 224 px rail on a 375 px phone, which broke the entry screens the new CONVENTIONS rule exists to protect.
+  - P2.1a ✅ chart of accounts: 22 Tally-style groups, 28 ledgers, 8 voucher types, **seeded per company inside company creation** so a tenant cannot exist without somewhere to post. Opening balances (ACC-04) transactional, and honest about an unbalanced set rather than refusing it. Four DB CHECK constraints verified against Postgres. Backend tests 31 → 64.
   - P1.2c ✅ web admin: users list + create + edit (role, kiln access, active), and the Owner's audit viewer with filters and paging. **ADM-05…07 complete — P1 is done on the web side.** Fixed a shared-schema bug that made every optional text field reject a blank value.
   - P1.1b ✅ **repair of P1.1** — see "Why P1.1b existed" below. Tenant isolation, RBAC seed, audit trail, API contract, missing ADM endpoints, schema hardening. 31 unit + 22 e2e green.
 - **Half-done:** none.
-- **Next step (exact):** **P2.1 — the accounting engine**, the spine every later module posts through. Chart of Accounts seed (Tally-style groups per `ACCOUNTING_RULES.md`), ledger groups, voucher types, `PostingService` writing a balanced journal **in the caller's transaction**, and opening balances. Tests are mandatory here (AGENTS rule 14): a journal that does not balance must be impossible, and the FY lock must be respected. Confirm OPEN_QUESTIONS #3 (Tally-style groups) before seeding.
-- **Carried into P2:** adopt `BusinessRuleException` with `MODULE_REASON` codes — it is defined and tested but still never thrown, and posting rules are where the client needs specific errors (`JOURNAL_UNBALANCED`, `FY_LOCKED`).
+- **Next step (exact):** **P2.1b — `PostingService`**, the piece the whole product rests on. `post(manager, voucher, lines[])` asserting Σ debit = Σ credit > 0, the financial year open and the period unlocked, writing voucher + lines **in the caller's transaction**; voucher numbering `SAL/2026-27/000123` per company + FY + type, concurrency-safe; posted vouchers immutable with reversal instead of edit; then the manual vouchers (receipt, payment, contra, journal — ACC-03). Tests are mandatory (AGENTS rule 14): an unbalanced journal must be impossible, a locked FY must refuse, and concurrent posts must not collide on a number.
+- **Entities to add in P2.1b:** `vouchers` (type, number, date, fy_id, status, source_type, source_id, reversal_of) and `voucher_lines` (voucher_id, ledger_id, debit, credit, kiln_id, party_id) — see DB_SCHEMA.
 - **Then:** P1.3 (mobile login + sync setup) → P2.1 (accounting engine) → …
 
 ### Why P1.1b existed (read before marking any step ✅)
@@ -38,7 +39,7 @@ all simply absent. `pnpm status` could not catch the wiring gap because its gene
 ### Known gaps carried forward (not blocking P2)
 - List endpoints other than `/audit-logs` do not paginate; `CONVENTIONS.md` specifies `?page&limit` → `meta`.
 - Company/Site/FinancialYear responses are raw entities; only users go through a response DTO (`UserSummary`).
-- `BusinessRuleException` is defined and tested but never thrown — domain error codes (`MODULE_REASON`) are not adopted yet. Adopt from P2, where posting/stock rules need them.
+- ~~`BusinessRuleException` never thrown~~ — **adopted in P2.1a** (`LEDGER_SYSTEM_REQUIRED`, `LEDGER_SYSTEM_GROUP_FIXED`, verified returning 422). Keep using it for posting rules.
 - `QueryFailedError` is not mapped in `AllExceptionsFilter`, so an unhandled DB constraint violation is a 500.
 - No request/correlation id in error responses, so a 500 cannot be traced to its Pino log line.
 - **No "create company" screen.** `POST /companies` is built and tested but no UI calls it, so a second company can only be
@@ -84,7 +85,9 @@ The P track is never blocked by the M track.
 | P1 | P1.2a | **Web auth foundation:** api-client envelope + refresh-on-401, auth store, login page, route guard, logout | ✅ |
 | P1 | P1.2b | Web shell wiring: user menu, company switcher, kiln switcher, permission-aware nav, company/kilns/FY screens | ✅ |
 | P1 | P1.2c | Web admin: users & roles screens, audit log viewer, DataTable/Select/Dialog primitives | ✅ |
-| P2 | P2.1 | Backend: CoA seed, groups, voucher types, PostingService, opening balances | ⬜ |
+| P2 | P2.1a | **Backend: chart of accounts** — ledger groups, ledgers, voucher types, migration, per-company seed, opening balances (ACC-01, ACC-04) | ✅ |
+| P2 | P2.1b | Backend: `PostingService` (balanced, atomic, FY-checked, immutable + reversal) and manual vouchers — receipt, payment, contra, journal (ACC-02, ACC-03) | ⬜ |
+| P2 | P2.1c | Backend reports: Day Book, Ledger statement, Trial Balance (ACC-05) | ⬜ |
 | P2 | P2.2 | Web: voucher entry, Day Book, Ledger, Trial Balance | ⬜ |
 | P3 | P3.1 | Backend masters (parties + auto ledger, items, units, warehouses, brick types, vehicles, drivers, HSN/GST, wage rates) | ⬜ |
 | P3 | P3.2 | Web master screens + party ledger | ⬜ |
@@ -145,6 +148,8 @@ Exit criteria per phase: see BRICS_MASTER_PROMPT.md §12.
 A1 banking/accounting adv · A2 adv GST (if approved) · A3 profitability/leakage · A4 admin extras · A5 AI anomaly · A6 IoT · A7 approved extras — all ⏭️
 
 ## Splits recorded
+- **P2.1 → P2.1a + P2.1b + P2.1c** (2026-10-08). The chart of accounts, the posting engine and the reports are each a session's
+  work, and `PostingService` is the one piece the whole product rests on — it gets a step to itself so its tests are not rushed.
 - **P1.2 → P1.2a + P1.2b + P1.2c** (2026-10-08). One session could not cover auth plumbing, shell wiring and three admin
   screen sets. P1.2a is the foundation every later screen needs (envelope handling, token refresh, route guard).
 - **P1.1 → P1.1a + P1.1b** (2026-10-08). P1.1a is the original backend auth/RBAC commit `54b2d13`. P1.1b is the repair: tenant isolation,

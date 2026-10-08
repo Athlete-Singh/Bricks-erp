@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
 import type { CreateCompanyDto, CreateFinancialYearDto, CreateSiteDto, UpdateCompanyDto } from '@brics/shared';
 import { AuditService } from '../audit/audit.service';
+import { ChartOfAccountsService } from '../../accounting/chart-of-accounts.service';
 import { MembershipService } from '../auth/membership.service';
 import { RolesService } from '../auth/roles.service';
 import { Company } from './entities/company.entity';
@@ -23,6 +24,7 @@ export class CompanyService {
     private membership: MembershipService,
     private roles: RolesService,
     private audit: AuditService,
+    private chartOfAccounts: ChartOfAccountsService,
     private dataSource: DataSource,
   ) {}
 
@@ -61,6 +63,9 @@ export class CompanyService {
         }),
       );
       await this.membership.addMembership(userId, company.id, ownerRole.id, false, manager);
+      // In the same transaction: a company without a chart of accounts has
+      // nowhere to post, and would be a broken tenant from the first request.
+      await this.chartOfAccounts.seedForCompany(company.id, manager);
       await this.audit.record(
         {
           companyId: company.id,

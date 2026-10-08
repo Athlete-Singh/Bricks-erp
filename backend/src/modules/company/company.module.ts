@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AccountingModule } from '../../accounting/accounting.module';
 import { AuditModule } from '../audit/audit.module';
 import { AuthModule } from '../auth/auth.module';
 import { CompanyController } from './company.controller';
@@ -11,7 +12,7 @@ import { FinancialYearController } from './financial-year.controller';
 import { SiteController } from './site.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Company, Site, FinancialYear]), AuthModule, AuditModule],
+  imports: [TypeOrmModule.forFeature([Company, Site, FinancialYear]), AuthModule, AuditModule, AccountingModule],
   controllers: [CompanyController, SiteController, FinancialYearController],
   providers: [CompanyService],
   exports: [CompanyService],

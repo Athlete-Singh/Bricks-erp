@@ -1,5 +1,6 @@
 import * as bcrypt from 'bcryptjs';
 import type { EntityManager } from 'typeorm';
+import { seedChartForCompany } from '../../accounting/chart-of-accounts.seed';
 import { Company } from '../../modules/company/entities/company.entity';
 import { Site } from '../../modules/company/entities/site.entity';
 import { Role } from '../../modules/auth/entities/role.entity';
@@ -38,6 +39,10 @@ export async function seedBootstrap(manager: EntityManager, input: BootstrapInpu
 
   const companyRepo = manager.getRepository(Company);
   const company = await companyRepo.save(companyRepo.create({ name: input.companyName, stateCode: input.stateCode }));
+
+  // The same chart `CompanyService.createCompany` would have built — this path
+  // creates the company directly, so it has to do it too.
+  await seedChartForCompany(manager, company.id);
 
   const siteRepo = manager.getRepository(Site);
   await siteRepo.save(

@@ -10,6 +10,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { CompanyModule } from './modules/company/company.module';
 import { UserModule } from './modules/user/user.module';
 import { AuditModule } from './modules/audit/audit.module';
+import { AccountingModule } from './accounting/accounting.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { AuditModule } from './modules/audit/audit.module';
     CompanyModule,
     UserModule,
     AuditModule,
+    AccountingModule,
   ],
 })
 export class AppModule {}

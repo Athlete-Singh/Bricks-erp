@@ -156,3 +156,51 @@ export const authResponseSchema = z.object({
   ),
 });
 export type AuthResponseDto = z.infer<typeof authResponseSchema>;
+
+// ── Accounting (ACC-01, ACC-04) ──────────────────────────────────────────────
+
+export const createLedgerSchema = z.object({
+  name: z.string().min(2, 'Ledger name is required'),
+  groupId: z.string().uuid('Pick a group'),
+  code: blankToNull(z.string().max(50)),
+});
+export type CreateLedgerDto = z.infer<typeof createLedgerSchema>;
+export type CreateLedgerInput = z.input<typeof createLedgerSchema>;
+
+/** A money amount as a decimal string — never a float (CONVENTIONS). */
+const moneyString = z
+  .string()
+  .regex(/^\d{1,16}(\.\d{1,2})?$/, 'Enter an amount like 1250.00')
+  .default('0.00');
+
+export const updateLedgerSchema = z.object({
+  name: z.string().min(2).optional(),
+  groupId: z.string().uuid().optional(),
+  isActive: z.boolean().optional(),
+});
+export type UpdateLedgerDto = z.infer<typeof updateLedgerSchema>;
+
+/**
+ * Opening balance for one ledger (ACC-04). Debit and credit are separate rather
+ * than one signed number, so the books read the way an accountant writes them.
+ */
+export const openingBalanceSchema = z
+  .object({
+    ledgerId: z.string().uuid(),
+    openingDebit: moneyString,
+    openingCredit: moneyString,
+  })
+  // A ledger opens on one side only, the way it is written in a book. The same
+  // rule is a CHECK constraint on the table, so it holds even outside the API.
+  .refine((v) => Number(v.openingDebit) === 0 || Number(v.openingCredit) === 0, {
+    message: 'A ledger opens on one side only — enter a debit or a credit, not both',
+    path: ['openingCredit'],
+  });
+export type OpeningBalanceDto = z.infer<typeof openingBalanceSchema>;
+export type OpeningBalanceInput = z.input<typeof openingBalanceSchema>;
+
+export const setOpeningBalancesSchema = z.object({
+  financialYearId: z.string().uuid(),
+  balances: z.array(openingBalanceSchema).min(1, 'Add at least one opening balance'),
+});
+export type SetOpeningBalancesDto = z.infer<typeof setOpeningBalancesSchema>;

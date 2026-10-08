@@ -22,6 +22,7 @@ Status: ⬜ planned · ✅ migrated. Update when migrations land.
 | Migration | Tables / changes |
 |---|---|
 | `1700000000000-AuthAndCompanyTables` | `companies` · `sites` · `financial_years` · `users` · `roles` · `permissions` · `role_permissions` · `user_companies` · `user_sites` · `refresh_tokens` · `audit_logs` |
+| `1700000200000-ChartOfAccounts` | `ledger_groups` (company_id, code, parent_id, nature, is_direct) · `ledgers` (group_id, code, party_id?, opening_debit/credit, opening_financial_year_id) · `voucher_types` (code, prefix). Per company. CHECKs: nature in the four values · opening amounts non-negative · a ledger opens on **one side only**. Unique per company among live rows: group code, group name, ledger name, ledger code, voucher-type code; one ledger per party |
 | `1700000100000-AuthHardening` | indexes on every `company_id`/FK used by tenant reads · unique `(user_id, company_id)`, `(user_id, site_id)`, `(role_id, permission_id)` · unique `(company_id, code)` on live sites · partial unique "one active FY per company" · `roles` unique moved from `(code)` to `(code, company_id)` · `created_at` on `user_companies`, `user_sites`, `refresh_tokens` |
 
 Seed: `pnpm seed` fills `roles`, `permissions`, `role_permissions` (9 roles, idempotent).
