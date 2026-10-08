@@ -110,6 +110,17 @@ backend and web first. Whoever builds this track edits only the **Mob** columns 
 > `Idempotency-Key` on the create endpoints, every retry creates a **duplicate** production entry, GRN or dispatch. That is
 > backend work, buildable here without Flutter, and it is scheduled into P5.1 for exactly this reason.
 
+### Step exit criteria that are easy to miss
+A step is **not** ✅ until these are true. Check this list before marking any of them done.
+
+| Step | Must also be true |
+|---|---|
+| **P5.1** | `SYN-01` shipped: `idempotency_keys` table + the mechanism, **written in the same transaction as the business insert** (not after it), with a test proving a repeated `Idempotency-Key` returns the original result and creates no second row. `SYN-02` delta pull on the masters the app caches. **Without SYN-01, P5.1 is not done and M2 cannot start.** |
+| **P5.1 / P6.1 / P9.1** | The matching leakage report (`LEK-01`+`LEK-02` / `LEK-03` / `LEK-04`) ships **with** the module, not later. These are the client's ROI — see M13 in FEATURES.md. |
+| **P6.1** | `LEK-03`'s warning fires **at the moment a new advance is entered**, not only in a report. |
+| **any tenant-scoped module** | A cross-tenant refusal test in `backend/test/*.e2e-spec.ts`, as `tenancy.e2e-spec.ts` does. CONVENTIONS requires it. |
+| **any new create endpoint** | Decide explicitly whether the mobile app will ever call it. If yes, it needs `Idempotency-Key`. |
+
 ### Gate per track
 - **P track (here):** `pnpm lint && pnpm typecheck && pnpm test && pnpm build` + `pnpm --filter @brics/backend test:e2e`.
   **Do not run `flutter analyze` / `flutter test` here — the SDK is not installed.** `mobile/` is not touched by the P track and is never a blocker for it.
