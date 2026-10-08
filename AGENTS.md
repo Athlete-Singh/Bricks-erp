@@ -5,7 +5,7 @@
 ## Two kinds of phase: don't mix them up
 
 - **Client Phase (CP):** **CP1 = MVP** (SOW modules 1–12, basic depth, so the client runs the daily business) · **CP2 = Advanced** (AI anomaly, IoT, extras deferred in `.brain/FEATURES.md`).
-- **Internal step:** **P track** P0.1 … P13.3 = backend + web (CP1) · **M track** M0 … M6 = the Flutter app, built on a separate machine · A1 … A7 (CP2). **One step = one session.** List in `.brain/PROGRESS.md`.
+- **Internal step:** **P track** P0.1 … P13.3 = backend + web (CP1) · **M track** M0 … M6 = the Flutter app, built later wherever the Flutter SDK is available · A1 … A7 (CP2). **One step = one session.** List in `.brain/PROGRESS.md`.
 - **MVP depth rule:** in CP1 build exactly the depth in FEATURES.md. Advanced ideas → FEATURES "CP2 candidates", not code. Never cut correctness (balanced journals, stock formula, GST split, tenancy, audit).
 
 ## Stack
@@ -31,7 +31,7 @@
 1. Repo root = this folder. One step per session; if it's too big, split it (P5.1a/b) and record the split in PROGRESS.
 2. **Preflight:** tools present — P track needs node, pnpm, docker, git (**not flutter**); M track also needs flutter. `git status` clean; green gate passes **before** you start. If it's red, fix it first.
 3. **Green gate before finishing:** lint, typecheck, test, build. Never end red. Revert or disable unfinished parts instead.
-   **Per track:** the **P track** (backend + web) runs the JS gate only — Flutter is not installed on that machine, so never run or expect `flutter analyze` / `flutter test` there, and never treat `mobile/` as red. The **M track** (device B) additionally runs `dart run build_runner build -d && flutter analyze && flutter test`. Tracks are listed in `.brain/PROGRESS.md`.
+   **Per track:** the **P track** (backend + web) runs the JS gate only. Flutter is **not installed** in the current environment, so never run or expect `flutter analyze` / `flutter test`, and never report `mobile/` as red or blocked. The **M track** runs on whatever machine has the Flutter SDK and additionally runs `dart run build_runner build -d && flutter analyze && flutter test`. Tracks are listed in `.brain/PROGRESS.md`.
 4. **Checkpoint commits** after every green slice (Conventional Commits). Never commit secrets/.env.
 5. Pinned tooling, committed lockfiles, non-interactive CLI flags.
 6. Dev servers only in the background; stop them when done.
@@ -67,19 +67,19 @@
 
 ## Commands
 
-| Task                          | Command                                                                                               |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Install                       | `pnpm install` (root) · M track also `cd mobile && flutter pub get`                                   |
-| DB                            | `docker compose -f infra/docker-compose.yml up -d`                                                    |
-| Run API                       | `pnpm --filter @brics/backend dev` → `http://localhost:4000/api/v1/health`, docs `/api/docs`          |
-| Run web                       | `pnpm --filter @brics/web dev` → `http://localhost:3000`                                              |
-| Run mobile                    | `cd mobile && flutter run --dart-define=API_BASE_URL=http://10.0.2.2:4000/api/v1`                     |
-| Gate (P track)                | `pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm --filter @brics/backend test:e2e`     |
-| Seed                          | `pnpm seed` (9 roles; optional first Owner via `SEED_OWNER_*`)                                        |
-| Gate (M track, device B only) | `cd mobile && dart run build_runner build -d && flutter analyze && flutter test`                      |
-| Migrations                    | `pnpm --filter @brics/backend migration:generate src/database/migrations/<Name>` · `migration:run`    |
-| Tracker                       | `pnpm status`                                                                                         |
-| First Flutter setup           | `cd mobile && flutter create --org com.tvamkey --project-name brics_mobile --platforms=android,ios .` |
+| Task                                             | Command                                                                                               |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| Install                                          | `pnpm install` (root) · M track also `cd mobile && flutter pub get`                                   |
+| DB                                               | `docker compose -f infra/docker-compose.yml up -d`                                                    |
+| Run API                                          | `pnpm --filter @brics/backend dev` → `http://localhost:4000/api/v1/health`, docs `/api/docs`          |
+| Run web                                          | `pnpm --filter @brics/web dev` → `http://localhost:3000`                                              |
+| Run mobile                                       | `cd mobile && flutter run --dart-define=API_BASE_URL=http://10.0.2.2:4000/api/v1`                     |
+| Gate (P track)                                   | `pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm --filter @brics/backend test:e2e`     |
+| Seed                                             | `pnpm seed` (9 roles; optional first Owner via `SEED_OWNER_*`)                                        |
+| Gate (M track — only where Flutter is installed) | `cd mobile && dart run build_runner build -d && flutter analyze && flutter test`                      |
+| Migrations                                       | `pnpm --filter @brics/backend migration:generate src/database/migrations/<Name>` · `migration:run`    |
+| Tracker                                          | `pnpm status`                                                                                         |
+| First Flutter setup                              | `cd mobile && flutter create --org com.tvamkey --project-name brics_mobile --platforms=android,ios .` |
 
 ## Where to put new code
 

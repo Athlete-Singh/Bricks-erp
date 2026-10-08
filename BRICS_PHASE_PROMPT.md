@@ -16,7 +16,7 @@ Read `AGENTS.md` → `.brain/00_INDEX.md` → `.brain/PROGRESS.md` (especially "
 **2. Preflight: start from green**
 
 - Check `git status` is clean and you are on the last green commit from "Resume here".
-- Run the green gate for the apps this step touches. **P track (P0–P13, backend + web): JS gate only — `pnpm lint && pnpm typecheck && pnpm test && pnpm build` plus backend e2e. Flutter is not installed; never run `flutter analyze` / `flutter test` and never report `mobile/` as red.** M track (M0–M6, device B): also `dart run build_runner build -d && flutter analyze && flutter test`.
+- Run the green gate for the apps this step touches. **P track (P0–P13, backend + web): JS gate only — `pnpm lint && pnpm typecheck && pnpm test && pnpm build` plus backend e2e. Flutter is not installed; never run `flutter analyze` / `flutter test` and never report `mobile/` as red.** M track (M0–M6, only on a machine with the Flutter SDK): also `dart run build_runner build -d && flutter analyze && flutter test`.
 - If anything is red **before** you start, fix that first, commit it as `fix: …`, and tell me. Do not build new features on a red base.
 - If a required tool is missing on this machine, tell me how to install it before you continue.
 
@@ -44,7 +44,7 @@ Wait for my OK. (If I wrote "go" with the step ID, go straight ahead after showi
 - Migrations are append-only. No `synchronize: true`. Dev servers run in the background only, and you stop them when done.
 
 **6. Final green gate**
-Everything this step touched must pass: lint, typecheck, tests, build (+ `flutter analyze`/`flutter test` **only on the M track / device B**). Start the backend once and check `/api/v1/health`. If something cannot be made green, revert or disable the unfinished part, keep the last green state, and record it as ⚠️ with the reason.
+Everything this step touched must pass: lint, typecheck, tests, build (+ `flutter analyze`/`flutter test` **only on the M track, where Flutter is installed**). Start the backend once and check `/api/v1/health`. If something cannot be made green, revert or disable the unfinished part, keep the last green state, and record it as ⚠️ with the reason.
 
 **7. Update tracking (never skip; this is how we know what's done and what's left)**
 

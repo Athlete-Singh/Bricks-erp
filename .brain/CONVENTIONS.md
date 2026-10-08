@@ -28,11 +28,11 @@
 - Controllers thin: validate DTO → call service → return. Business logic only in services.
 - Cross-module calls only via the other module's exported service. Never import another module's repository/entity to write.
 - All entities extend `BaseEntity` (id uuid, timestamps, created_by, updated_by) and `TenantEntity` (+ `company_id`).
-- Tenant from JWT (`@CurrentTenant()`); repositories always filter `company_id`. Never read `company_id` from body/query.
+- Tenant from the JWT (`@CurrentCompany()`); repositories always filter `company_id`. **Never read `company_id` from the body, query or route param** — company-level routes assert membership via `MembershipService` (**ADR-013**). Covered by `backend/test/tenancy.e2e-spec.ts`; add a cross-tenant refusal test with every new tenant-scoped module.
 - Stock changes only via `StockService`; journals only via `PostingService`; both inside the caller's `QueryRunner`/transaction.
-- DTOs with class-validator; response envelope `{ data, meta? }`; errors `{ error: { code, message, details? } }` via global filter.
+- Request bodies validated by `ZodValidationPipe` against the schemas in `@brics/shared` (**ADR-014** — supersedes class-validator, so one schema serves the API and the web forms). Handlers **return the payload raw**; `ResponseEnvelopeInterceptor` wraps it as `{ data }`, or `{ data, meta }` when the service returns `Paginated`. Never return `{ data }` from a handler — that double-wraps. Errors `{ error: { code, message, details? } }` via the global filter; Zod failures are 400 `VALIDATION_FAILED` with `details: [{ field, message }]`.
 - List endpoints: `?page=1&limit=25&sort=-created_at&search=&filter[field]=` → `meta: { page, limit, total }`.
-- Mobile-used create endpoints accept `Idempotency-Key` header (client UUID); repeat → same result.
+- Mobile-used create endpoints accept `Idempotency-Key` header (client UUID); repeat → same result. **Tracked as `SYN-01`, due in P5.1** — the Flutter app is built later, so this is the one thing that must not be deferred with it: retrofitting it means reopening every create endpoint in P5/P6/P7/P9.
 - Migrations: `pnpm --filter backend migration:generate src/database/migrations/<Name>`; review SQL; never edit applied ones; no `synchronize`.
 - Config only via `ConfigService` typed config; env validated at boot.
 - Logging: inject `PinoLogger`; never `console.log`.

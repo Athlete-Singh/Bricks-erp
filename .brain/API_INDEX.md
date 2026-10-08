@@ -75,4 +75,10 @@ Add the row when you **plan** an endpoint (BE ⬜), and update it the moment any
 - **Tenancy:** no endpoint accepts a `company_id` from the client. Anything below a company reads it from the JWT; `/companies/:id` asserts membership. Proved by `backend/test/tenancy.e2e-spec.ts`.
 - **Envelope:** handlers return payloads raw; `ResponseEnvelopeInterceptor` adds `{ data }`, or `{ data, meta }` when a service returns `Paginated`.
 - **Errors:** `{ error: { code, message, details? } }`. Zod failures are `400 VALIDATION_FAILED` with a `details` array of `{ field, message }`.
+- **Idempotency (`SYN-01`, due in P5.1):** every create endpoint the mobile app will call must accept an `Idempotency-Key`
+  header (the client-generated row UUID) and return the original result on a repeat instead of inserting again. The app
+  resends queued entries when the network returns, so without this one retry = one duplicate production entry / GRN /
+  dispatch. Applies to the creates in P5, P6, P7 and P9. Add the column to this table (`Idem`) when those rows are added.
+- **Delta pull (`SYN-02`):** cached masters (kilns, parties, items, brick types, wage rates) need `?since=` so the app's
+  first sync is small on a field connection.
 - **Paging:** only `/audit-logs` so far. The other list endpoints still return plain arrays — see PROGRESS "Known gaps".

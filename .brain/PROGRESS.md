@@ -14,7 +14,7 @@ That creates the 9 roles, one company, one kiln and one Owner. The bootstrap ref
   - P0.1 ✅ git, PDFs, brain, docs 01–13, AI entry files, `pnpm status` generator.
   - P0.2 ✅ monorepo, shared package, docker-compose, NestJS 11 backend, `/health`, migrations, unit + e2e.
   - P0.3 ✅ web shell — app router, DS primitives (Button/Card/Badge/Input/Skeleton/EmptyState), layout (Sidebar/Topbar/PageHeader/KilnSwitcher), lib + stores, features/system health hook, 1 Vitest test.
-  - P0.4 ✅ mobile folder structure (all the P track owes mobile). The Flutter scaffold is **M0** on device B.
+  - P0.4 ✅ **closed** — mobile folder structure, placeholder app, widget test, `env/dev.example.json`, `mobile/README.md`. That was everything P0.4 could do without the Flutter SDK; **the rest of the original P0.4 (flutter create, packages, theme, widgets, router, Drift, l10n) is now step M0.** P0.4 is not pending — do not reopen it.
   - P0.5 ✅ CI workflow, Husky pre-commit + commit-msg, .prettierignore fix.
   - P1.1a ✅ backend auth & RBAC skeleton: 11 entities, JWT access+refresh, guards, CRUD controllers, migration, first tests.
   - P1.1b ✅ **repair of P1.1** — see "Why P1.1b existed" below. Tenant isolation, RBAC seed, audit trail, API contract, missing ADM endpoints, schema hardening. 31 unit + 22 e2e green.
@@ -38,19 +38,21 @@ all simply absent. `pnpm status` could not catch the wiring gap because its gene
 - `QueryFailedError` is not mapped in `AllExceptionsFilter`, so an unhandled DB constraint violation is a 500.
 - No request/correlation id in error responses, so a 500 cannot be traced to its Pino log line.
 
-- **Work split (2026-10-07):** backend + web are built on device A (no Flutter). The Flutter app is built on device B. Each device uses its own Resume block. `git pull` before and `git push` after every session. Device B edits only the **Mob** columns in FEATURES/API_INDEX, then runs `pnpm status`.
+- **Work split (updated 2026-10-08):** the **P track** (backend + web) is built here; the **M track** (Flutter app) is built later, wherever the Flutter SDK is available — another machine, or this one once Flutter is installed. **Backend and web come first either way.** Each track keeps its own Resume block below. Whoever builds the M track edits only the **Mob** columns in FEATURES/API_INDEX, then runs `pnpm status`.
 
-## ▶ Resume here: mobile (device B, with Flutter)
+## ▶ Resume here: M track — the Flutter app (needs the Flutter SDK)
 - **State:** M0 not started. `mobile/` holds `pubspec.yaml` (no packages), `lib/main.dart` + `lib/app.dart` placeholders,
   `test/app_test.dart`, the full `lib/core/*` and `lib/features/<auth|production|attendance|grn|dispatch|sync>/{data,domain,presentation}`
   folder tree, `env/dev.example.json` and `mobile/README.md`.
-- **Flutter is NOT installed on device A and will not be.** Nothing in `mobile/` is built, analysed or tested there.
+- **Flutter is not installed in the current environment.** Nothing in `mobile/` is built, analysed or tested here, and `mobile/` must never be reported as red or blocking.
+- **Where this runs:** any machine with the Flutter SDK. If no second machine turns up, install Flutter here — but only **after** the backend and web are substantially done, so the P track is never interrupted.
 - **Next step (exact):** M0 — follow `mobile/README.md` "First time" (`flutter create`, `flutter pub add`, analyze, test), then
   build the scaffold: theme tokens from `docs/05-design-system.md`, core widgets, go_router, dio client, Drift stub, sync
   skeleton, l10n → `flutter analyze` + `flutter test` green → commit + push. Then M1 → M6 in order.
-- **Before starting M2:** confirm `SYN-01` (`Idempotency-Key`) shipped in P5.1. Without it, offline retries create duplicates.
+- **Before starting M2:** confirm `SYN-01` (`Idempotency-Key`) shipped in P5.1. Without it, every offline retry creates a duplicate.
+- **What M0 is:** the half of the original P0.4 that needed Flutter. P0.4 itself is closed — see the Done list above.
 - **APIs ready for mobile now:** `/auth/login`, `/auth/refresh`, `/auth/logout`, `/auth/me`, `/sites` — all tested, see `API_INDEX.md`.
-- **Blockers:** none, beyond needing a machine with the Flutter SDK.
+- **Blockers:** none. The only prerequisite is a Flutter SDK, and nothing in the P track waits on it.
 
 ## CP1 internal steps
 
@@ -58,7 +60,7 @@ all simply absent. `pnpm status` could not catch the wiring gap because its gene
 with the Flutter SDK and starts only once the P track is far enough along — the app has no APIs to call before then.
 The P track is never blocked by the M track.
 
-### P track — backend + web (device A)
+### P track — backend + web (here; no Flutter needed)
 
 | Phase | Step | Scope | Status |
 |---|---|---|---|
@@ -89,14 +91,14 @@ The P track is never blocked by the M track.
 | P11 | P11.2 | Web dashboard, **RPT-02 daily report, RPT-03 sales register, RPT-04 labour registers**, exports | ⬜ |
 | P13 | P13.1 / P13.2 / P13.3 | e2e + security / deploy + backups / onboarding + guide + UAT → **CP1 sign-off** | ⬜ |
 
-### M track — Flutter supervisor app (device B, needs the Flutter SDK)
+### M track — Flutter supervisor app (later, wherever Flutter is installed)
 
-**Start M1 once P1.2 is done** (the auth API it needs is already built and tested).
-Device B edits only the **Mob** columns in FEATURES/API_INDEX, then runs `pnpm status`.
+**M1 can start as soon as P1.2 is done** (the auth API it needs is already built and tested) — but the plan is to finish the
+backend and web first. Whoever builds this track edits only the **Mob** columns in FEATURES/API_INDEX, then runs `pnpm status`.
 
 | Step | Scope | Needs from the P track | Status |
 |---|---|---|---|
-| M0 | `flutter create`, packages, theme tokens, core widgets, go_router, dio client, Drift stub, l10n, analyze + test green | — | ⬜ |
+| M0 | `flutter create`, packages, theme tokens, core widgets, go_router, dio client, Drift stub, l10n, analyze + test green — **this is the unfinished half of the old P0.4** | — | ⬜ |
 | M1 | Login, kiln selection, role-based home, offline storage + sync queue skeleton (MOB-01/02) | P1.1b ✅ | ⬜ |
 | M2 | Production entry offline (PRD-06) | P5.1 **incl. SYN-01** | ⬜ |
 | M3 | Attendance offline (LAB-02) | P6.1 | ⬜ |
@@ -109,9 +111,9 @@ Device B edits only the **Mob** columns in FEATURES/API_INDEX, then runs `pnpm s
 > backend work, buildable here without Flutter, and it is scheduled into P5.1 for exactly this reason.
 
 ### Gate per track
-- **Device A (this machine):** `pnpm lint && pnpm typecheck && pnpm test && pnpm build` + `pnpm --filter @brics/backend test:e2e`.
-  **Do not run `flutter analyze` / `flutter test` here — the SDK is not installed and never will be.** `mobile/` is not touched by the P track.
-- **Device B:** the above **plus** `dart run build_runner build -d && flutter analyze && flutter test`.
+- **P track (here):** `pnpm lint && pnpm typecheck && pnpm test && pnpm build` + `pnpm --filter @brics/backend test:e2e`.
+  **Do not run `flutter analyze` / `flutter test` here — the SDK is not installed.** `mobile/` is not touched by the P track and is never a blocker for it.
+- **M track (where Flutter is installed):** the above **plus** `dart run build_runner build -d && flutter analyze && flutter test`.
 
 Exit criteria per phase: see BRICS_MASTER_PROMPT.md §12.
 

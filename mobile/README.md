@@ -1,9 +1,13 @@
 # BRICS mobile (Flutter supervisor app)
 
-**Status:** folder structure only (P0.4 🟨). It was written on a machine without Flutter; finish P0.4 on a machine with Flutter.
+**Status:** folder structure only. **P0.4 is closed ✅** — it delivered everything that could be built without the Flutter SDK
+(this folder tree, the placeholder app, a widget test, `env/dev.example.json` and this README).
+
+**The rest is step `M0`.** The Flutter work is a separate track (`M0` → `M6`) in `.brain/PROGRESS.md`, run on whatever machine
+has the Flutter SDK. The backend and web track (`P0` → `P13`) is built first and never waits on this.
 Rules: `../AGENTS.md`, `../.brain/CONVENTIONS.md` (Mobile section). Tracker: `../.brain/PROGRESS.md` → "Resume here: mobile".
 
-## First time on the Flutter machine (P0.4)
+## First time, on a machine with Flutter (step M0)
 ```bash
 cd mobile
 flutter create --org com.tvamkey --project-name brics_mobile --platforms=android,ios .   # adds android/ ios/; keeps existing files
@@ -13,7 +17,7 @@ flutter pub add --dev build_runner riverpod_generator freezed json_serializable 
 cp env/dev.example.json env/dev.json
 flutter analyze && flutter test
 ```
-Then build the P0.4 scaffold (theme tokens, widgets, router, dio client, Drift stub, sync skeleton, l10n) per BRICS_MASTER_PROMPT.md §4 / §6, and commit the generated `*.g.dart` / `*.freezed.dart` files (ADR-007).
+Then build the M0 scaffold (theme tokens, widgets, router, dio client, Drift stub, sync skeleton, l10n) per BRICS_MASTER_PROMPT.md §4 / §6, and commit the generated `*.g.dart` / `*.freezed.dart` files (ADR-007).
 
 Run: `flutter run --dart-define-from-file=env/dev.json`
 

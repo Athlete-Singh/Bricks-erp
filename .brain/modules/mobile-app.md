@@ -28,12 +28,16 @@ None directly — server posts on sync.
 -
 
 ## Build track (added 2026-10-08)
-The Flutter app is **not** built on the backend/web machine — no Flutter SDK there, and none will be installed.
-Steps **M0 → M6** in `PROGRESS.md` run on a separate machine. The P track is never blocked by it.
+The Flutter app is built **after** the backend and web, as steps **M0 → M6** in `PROGRESS.md`, on whatever machine has the
+Flutter SDK. The P track (backend + web) never waits on it and `mobile/` is never a blocker there.
+
+**M0 is the unfinished half of P0.4.** P0.4 is closed — it delivered the folder tree, placeholder app, widget test and
+`env/dev.example.json`, which was everything possible without the SDK. `flutter create`, packages, theme, core widgets,
+go_router, dio, Drift and l10n moved to M0.
 
 | Step | Scope | Waits for |
 |---|---|---|
-| M0 | `flutter create`, packages, theme, core widgets, go_router, dio, Drift stub, l10n | — |
+| M0 | `flutter create`, packages, theme, core widgets, go_router, dio, Drift stub, l10n *(was the rest of P0.4)* | — |
 | M1 | Login, kiln select, sync-queue skeleton | P1.1b ✅ (APIs ready now) |
 | M2 | Production entry offline | P5.1 **incl. SYN-01** |
 | M3 | Attendance offline | P6.1 |
