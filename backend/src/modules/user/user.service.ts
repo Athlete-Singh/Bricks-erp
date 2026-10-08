@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
 import { DataSource, In, Repository } from 'typeorm';
 import type { CreateUserDto, UpdateUserDto } from '@brics/shared';
+import { AuditService } from '../audit/audit.service';
 import { MembershipService } from '../auth/membership.service';
 import { RolesService } from '../auth/roles.service';
 import { User } from '../auth/entities/user.entity';
@@ -31,6 +32,7 @@ export class UserService {
     private roles: RolesService,
     private membership: MembershipService,
     private companyService: CompanyService,
+    private audit: AuditService,
     private dataSource: DataSource,
   ) {}
 
@@ -70,6 +72,17 @@ export class UserService {
       );
       await this.membership.addMembership(user.id, companyId, role.id, true, manager);
       await this.membership.replaceSiteAccess(user.id, siteIds, manager);
+      await this.audit.record(
+        {
+          companyId,
+          userId: actorId,
+          entityName: 'users',
+          entityId: user.id,
+          action: 'CREATE',
+          after: { name: user.name, mobile: user.mobile, email: user.email, roleCode: role.code, siteIds },
+        },
+        manager,
+      );
       return user;
     });
 
@@ -92,6 +105,8 @@ export class UserService {
     }
     const role = dto.roleCode ? await this.roles.requireByCode(dto.roleCode) : null;
     const siteIds = dto.siteIds ? await this.assertSitesBelongToCompany(companyId, dto.siteIds) : null;
+    // Captured before the entity is mutated below. Never includes password_hash.
+    const before = { name: user.name, email: user.email, isActive: user.isActive };
 
     await this.dataSource.transaction(async (manager) => {
       if (dto.name !== undefined) user.name = dto.name;
@@ -102,6 +117,25 @@ export class UserService {
 
       if (role) await this.membership.setRole(userId, companyId, role.id, manager);
       if (siteIds) await this.membership.replaceSiteAccess(userId, siteIds, manager);
+
+      await this.audit.record(
+        {
+          companyId,
+          userId: actorId,
+          entityName: 'users',
+          entityId: userId,
+          action: 'UPDATE',
+          before,
+          after: {
+            name: user.name,
+            email: user.email,
+            isActive: user.isActive,
+            ...(role ? { roleCode: role.code } : {}),
+            ...(siteIds ? { siteIds } : {}),
+          },
+        },
+        manager,
+      );
     });
 
     const roleCode = role ? role.code : ((await this.roles.codeByIdMap()).get(membership.roleId) ?? null);

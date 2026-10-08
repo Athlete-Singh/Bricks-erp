@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('user_sites')
 export class UserSite {
@@ -10,4 +10,7 @@ export class UserSite {
 
   @Column({ name: 'site_id', type: 'uuid' })
   siteId: string;
+
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
+  createdAt: Date;
 }

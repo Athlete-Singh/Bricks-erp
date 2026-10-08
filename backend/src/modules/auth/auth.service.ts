@@ -12,9 +12,16 @@ import { Company } from '../company/entities/company.entity';
 import { Site } from '../company/entities/site.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { User } from './entities/user.entity';
+import { AuditService } from '../audit/audit.service';
 import { MembershipService } from './membership.service';
 import { RolesService } from './roles.service';
 import type { JwtPayload } from '../../common/decorators/auth.decorators';
+
+/** Request metadata recorded with sign-in events. */
+export interface RequestContext {
+  ipAddress?: string | null;
+  userAgent?: string | null;
+}
 
 interface TokenPair {
   accessToken: string;
@@ -44,11 +51,12 @@ export class AuthService {
     @InjectRepository(RefreshToken) private refreshTokenRepo: Repository<RefreshToken>,
     private membership: MembershipService,
     private roles: RolesService,
+    private audit: AuditService,
     private jwtService: JwtService,
     private configService: ConfigService<Env, true>,
   ) {}
 
-  async login(dto: LoginDto): Promise<AuthResponseDto> {
+  async login(dto: LoginDto, context?: RequestContext): Promise<AuthResponseDto> {
     const user = await this.userRepository.findOne({
       where: [{ email: dto.emailOrMobile }, { mobile: dto.emailOrMobile }],
     });
@@ -62,7 +70,17 @@ export class AuthService {
     }
 
     const companyId = await this.defaultCompanyIdFor(user.id);
-    return this.buildSession(user, companyId);
+    const session = await this.buildSession(user, companyId);
+    await this.audit.record({
+      companyId,
+      userId: user.id,
+      entityName: 'users',
+      entityId: user.id,
+      action: 'LOGIN',
+      ipAddress: context?.ipAddress ?? null,
+      userAgent: context?.userAgent ?? null,
+    });
+    return session;
   }
 
   /** ADM-02: move the session to another company the user belongs to. */
@@ -100,6 +118,19 @@ export class AuthService {
     return { success: true };
   }
 
+  /** Separate from `logout` so an internal revoke does not look like a sign-out. */
+  async logoutAndAudit(userId: string, companyId: string | null): Promise<{ success: boolean }> {
+    const result = await this.logout(userId);
+    await this.audit.record({
+      companyId,
+      userId,
+      entityName: 'users',
+      entityId: userId,
+      action: 'LOGOUT',
+    });
+    return result;
+  }
+
   /** ADM-05: every other session is revoked, so a stolen token dies with the change. */
   async changePassword(userId: string, dto: ChangePasswordDto): Promise<{ success: boolean }> {
     const user = await this.requireActiveUser(userId);
@@ -114,6 +145,13 @@ export class AuthService {
     user.updatedBy = userId;
     await this.userRepository.save(user);
     await this.logout(userId);
+    await this.audit.record({
+      companyId: null,
+      userId,
+      entityName: 'users',
+      entityId: userId,
+      action: 'PASSWORD_CHANGE',
+    });
     return { success: true };
   }
 

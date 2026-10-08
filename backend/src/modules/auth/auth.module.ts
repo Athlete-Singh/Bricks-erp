@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Company } from '../company/entities/company.entity';
 import { Site } from '../company/entities/site.entity';
+import { AuditModule } from '../audit/audit.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { MembershipService } from './membership.service';
@@ -29,6 +30,7 @@ import { User } from './entities/user.entity';
       Site,
     ]),
     JwtModule.register({}),
+    AuditModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, MembershipService, RolesService],

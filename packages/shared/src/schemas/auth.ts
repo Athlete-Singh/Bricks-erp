@@ -79,6 +79,28 @@ export const updateUserSchema = z.object({
 });
 export type UpdateUserDto = z.infer<typeof updateUserSchema>;
 
+/** Filters for the Owner's audit-log viewer (ADM-07). */
+export const auditLogQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(25),
+  entityName: z.string().min(1).optional(),
+  entityId: z.string().min(1).optional(),
+  action: z.string().min(1).optional(),
+  userId: z.string().uuid().optional(),
+  from: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+  to: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+});
+export type AuditLogQueryDto = z.infer<typeof auditLogQuerySchema>;
+
+export const AUDIT_ACTIONS = ['CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT', 'PASSWORD_CHANGE'] as const;
+export type AuditAction = (typeof AUDIT_ACTIONS)[number];
+
 export const authResponseSchema = z.object({
   accessToken: z.string(),
   refreshToken: z.string(),

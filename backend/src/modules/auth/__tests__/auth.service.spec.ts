@@ -7,6 +7,7 @@ import * as bcrypt from 'bcryptjs';
 import { AuthService } from '../auth.service';
 import { MembershipService } from '../membership.service';
 import { RolesService } from '../roles.service';
+import { AuditService } from '../../audit/audit.service';
 import { User } from '../entities/user.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
 import { Company } from '../../company/entities/company.entity';
@@ -34,6 +35,7 @@ describe('AuthService', () => {
   let refreshTokenRepo: ReturnType<typeof mockRepository>;
   let membership: jest.Mocked<Partial<MembershipService>>;
   let roles: jest.Mocked<Partial<RolesService>>;
+  let audit: jest.Mocked<Partial<AuditService>>;
 
   const activeUser = async (overrides: Partial<User> = {}) =>
     ({
@@ -73,6 +75,7 @@ describe('AuthService', () => {
       siteIdsFor: jest.fn().mockResolvedValue([]),
       assertMember: jest.fn().mockResolvedValue(undefined),
     };
+    audit = { record: jest.fn().mockResolvedValue(undefined) };
     roles = {
       findById: jest.fn().mockResolvedValue({ id: ROLE_ID, code: 'owner' }),
       permissionCodesFor: jest.fn().mockResolvedValue(['company.view', 'company.manage']),
@@ -95,6 +98,7 @@ describe('AuthService', () => {
         { provide: getRepositoryToken(RefreshToken), useValue: refreshTokenRepo },
         { provide: MembershipService, useValue: membership },
         { provide: RolesService, useValue: roles },
+        { provide: AuditService, useValue: audit },
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfigService },
       ],
@@ -135,6 +139,19 @@ describe('AuthService', () => {
       expect(result.user.permissions).toEqual(['company.view', 'company.manage']);
       expect(result.company.id).toBe(COMPANY_ID);
       expect(refreshTokenRepo.save).toHaveBeenCalledTimes(1);
+    });
+
+    it('writes a LOGIN entry to the audit trail (ADM-07)', async () => {
+      userRepository.findOne.mockResolvedValue(await activeUser());
+
+      await service.login(
+        { emailOrMobile: 'owner@kiln.test', password: 'correct-horse' },
+        { ipAddress: '10.0.0.5', userAgent: 'jest' },
+      );
+
+      expect(audit.record).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'LOGIN', userId: USER_ID, ipAddress: '10.0.0.5' }),
+      );
     });
 
     it('refuses a user who belongs to no company', async () => {

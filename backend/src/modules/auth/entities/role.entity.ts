@@ -6,7 +6,8 @@ export class Role extends BaseEntity {
   @Column({ type: 'varchar', length: 100 })
   name: string;
 
-  @Column({ type: 'varchar', length: 50, unique: true })
+  /** Unique together with `company_id` — see the AuthHardening migration. */
+  @Column({ type: 'varchar', length: 50 })
   code: string;
 
   @Column({ type: 'text', nullable: true })

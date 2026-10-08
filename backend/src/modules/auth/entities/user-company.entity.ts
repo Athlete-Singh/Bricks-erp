@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('user_companies')
 export class UserCompany {
@@ -16,4 +16,7 @@ export class UserCompany {
 
   @Column({ name: 'is_default', type: 'boolean', default: false })
   isDefault: boolean;
+
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
+  createdAt: Date;
 }

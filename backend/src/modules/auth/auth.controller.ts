@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Ip, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   changePasswordSchema,
@@ -26,8 +26,12 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login with email/mobile + password' })
-  async login(@Body(new ZodValidationPipe(loginSchema)) dto: LoginDto) {
-    return this.authService.login(dto);
+  async login(
+    @Body(new ZodValidationPipe(loginSchema)) dto: LoginDto,
+    @Ip() ipAddress: string,
+    @Headers('user-agent') userAgent: string | undefined,
+  ) {
+    return this.authService.login(dto, { ipAddress, userAgent });
   }
 
   @Public()
@@ -42,8 +46,8 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Logout and revoke refresh token' })
-  async logout(@CurrentUser('sub') userId: string) {
-    return this.authService.logout(userId);
+  async logout(@CurrentUser('sub') userId: string, @CurrentUser('companyId') companyId: string) {
+    return this.authService.logoutAndAudit(userId, companyId);
   }
 
   @Post('switch-company')

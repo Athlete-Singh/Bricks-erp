@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
 import type { CreateCompanyDto, CreateFinancialYearDto, CreateSiteDto, UpdateCompanyDto } from '@brics/shared';
+import { AuditService } from '../audit/audit.service';
 import { MembershipService } from '../auth/membership.service';
 import { RolesService } from '../auth/roles.service';
 import { Company } from './entities/company.entity';
@@ -21,6 +22,7 @@ export class CompanyService {
     @InjectRepository(FinancialYear) private fyRepo: Repository<FinancialYear>,
     private membership: MembershipService,
     private roles: RolesService,
+    private audit: AuditService,
     private dataSource: DataSource,
   ) {}
 
@@ -59,6 +61,17 @@ export class CompanyService {
         }),
       );
       await this.membership.addMembership(userId, company.id, ownerRole.id, false, manager);
+      await this.audit.record(
+        {
+          companyId: company.id,
+          userId,
+          entityName: 'companies',
+          entityId: company.id,
+          action: 'CREATE',
+          after: { name: company.name, gstin: company.gstin, stateCode: company.stateCode },
+        },
+        manager,
+      );
       return company;
     });
   }
@@ -71,8 +84,32 @@ export class CompanyService {
   ): Promise<Company> {
     await this.membership.assertMember(userId, companyId, isSuperAdmin);
     const company = await this.requireCompany(companyId);
+    const before = { ...company };
     Object.assign(company, dto, { updatedBy: userId });
-    return this.companyRepo.save(company);
+    const saved = await this.companyRepo.save(company);
+    await this.audit.record({
+      companyId,
+      userId,
+      entityName: 'companies',
+      entityId: companyId,
+      action: 'UPDATE',
+      before: this.diffable(before),
+      after: this.diffable(saved),
+    });
+    return saved;
+  }
+
+  /** Only the fields worth keeping in the trail — no internals, no timestamps. */
+  private diffable(company: Company): Record<string, unknown> {
+    return {
+      name: company.name,
+      gstin: company.gstin,
+      pan: company.pan,
+      stateCode: company.stateCode,
+      address: company.address,
+      logoUrl: company.logoUrl,
+      isActive: company.isActive,
+    };
   }
 
   private async requireCompany(companyId: string): Promise<Company> {
@@ -103,7 +140,16 @@ export class CompanyService {
       createdBy: userId,
       updatedBy: userId,
     });
-    return this.siteRepo.save(site);
+    const saved = await this.siteRepo.save(site);
+    await this.audit.record({
+      companyId,
+      userId,
+      entityName: 'sites',
+      entityId: saved.id,
+      action: 'CREATE',
+      after: { name: saved.name, code: saved.code, type: saved.type },
+    });
+    return saved;
   }
 
   /** Site ids the user may act on: their granted sites, or all company sites. */
@@ -146,7 +192,16 @@ export class CompanyService {
       createdBy: userId,
       updatedBy: userId,
     });
-    return this.fyRepo.save(fy);
+    const saved = await this.fyRepo.save(fy);
+    await this.audit.record({
+      companyId,
+      userId,
+      entityName: 'financial_years',
+      entityId: saved.id,
+      action: 'CREATE',
+      after: { name: saved.name, startDate: saved.startDate, endDate: saved.endDate, isActive: saved.isActive },
+    });
+    return saved;
   }
 
   /** Exactly one active FY per company, swapped in a single transaction. */
@@ -159,6 +214,16 @@ export class CompanyService {
     await this.dataSource.transaction(async (manager) => {
       await manager.update(FinancialYear, { companyId }, { isActive: false });
       await manager.update(FinancialYear, { id: fyId }, { isActive: true, updatedBy: userId });
+    });
+
+    await this.audit.record({
+      companyId,
+      userId,
+      entityName: 'financial_years',
+      entityId: fyId,
+      action: 'UPDATE',
+      before: { isActive: fy.isActive },
+      after: { isActive: true },
     });
 
     fy.isActive = true;
