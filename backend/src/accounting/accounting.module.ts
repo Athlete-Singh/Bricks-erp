@@ -8,6 +8,8 @@ import { Ledger } from './entities/ledger.entity';
 import { VoucherType } from './entities/voucher-type.entity';
 import { LedgerService } from './ledger.service';
 import { PostingService } from './posting.service';
+import { ReportsController } from './reports.controller';
+import { ReportsService } from './reports.service';
 import { Voucher } from './entities/voucher.entity';
 import { VoucherLine } from './entities/voucher-line.entity';
 import { VoucherSequence } from './entities/voucher-sequence.entity';
@@ -25,8 +27,8 @@ import { FinancialYear } from '../modules/company/entities/financial-year.entity
     TypeOrmModule.forFeature([LedgerGroup, Ledger, VoucherType, Voucher, VoucherLine, VoucherSequence, FinancialYear]),
     JwtModule.register({}),
   ],
-  controllers: [AccountingController, VoucherController],
-  providers: [ChartOfAccountsService, LedgerService, PostingService, VoucherService],
+  controllers: [AccountingController, VoucherController, ReportsController],
+  providers: [ChartOfAccountsService, LedgerService, PostingService, VoucherService, ReportsService],
   // PostingService is exported because every later module posts through it.
   exports: [ChartOfAccountsService, LedgerService, PostingService],
 })

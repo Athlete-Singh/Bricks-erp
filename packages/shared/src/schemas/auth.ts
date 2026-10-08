@@ -268,3 +268,35 @@ export const voucherQuerySchema = z.object({
   status: z.enum(['posted', 'reversed']).optional(),
 });
 export type VoucherQueryDto = z.infer<typeof voucherQuerySchema>;
+
+// ── Books: Day Book, Ledger statement, Trial Balance (ACC-05) ────────────────
+
+const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD');
+
+export const dayBookQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(25),
+  from: isoDate.optional(),
+  to: isoDate.optional(),
+  voucherType: z.string().min(1).optional(),
+});
+export type DayBookQueryDto = z.infer<typeof dayBookQuerySchema>;
+
+export const ledgerStatementQuerySchema = z.object({
+  from: isoDate.optional(),
+  to: isoDate.optional(),
+});
+export type LedgerStatementQueryDto = z.infer<typeof ledgerStatementQuerySchema>;
+
+export const trialBalanceQuerySchema = z.object({
+  /** Balances as at this date. Defaults to today. */
+  asOf: isoDate.optional(),
+  /** Movement from here; before it counts as opening. Defaults to the FY start. */
+  from: isoDate.optional(),
+  /** Hide ledgers with no opening balance and no movement. */
+  includeZero: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
+});
+export type TrialBalanceQueryDto = z.infer<typeof trialBalanceQuerySchema>;

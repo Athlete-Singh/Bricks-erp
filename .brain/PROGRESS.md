@@ -1,6 +1,6 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** P2.1b ✅ done → **next: P2.1c** (Day Book, Ledger, Trial Balance) (web login page wired to auth API, company/kiln switcher, user/role management screens) · **CP1 features done:** 6 / 101 (6 %)
+**Client Phase:** CP1 (MVP) · **Current step:** P2.1c ✅ done → **next: P2.2** (web: voucher entry + the books) — **P2.1 backend complete** (web login page wired to auth API, company/kiln switcher, user/role management screens) · **CP1 features done:** 6 / 101 (6 %)
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
@@ -19,13 +19,14 @@ That creates the 9 roles, one company, one kiln and one Owner. The bootstrap ref
   - P1.1a ✅ backend auth & RBAC skeleton: 11 entities, JWT access+refresh, guards, CRUD controllers, migration, first tests.
   - P1.2a ✅ web auth foundation: `api-client` (envelope unwrap, typed `ApiError`, single-flight 401→refresh→retry), token custody per ADR-016, auth store, login page, `AuthGuard`, sign-out. Verified in a real browser against the running API: login → dashboard, hard reload restores the session, sign-out clears both sides.
   - P1.2b ✅ web shell: user dropdown + change-password, company switcher, kiln switcher, permission-aware nav, and the company / kilns / financial-year screens. **ADM-01…04 are the first features to reach ✅.** Sidebar turned into a drawer below `md` — it was a 224 px rail on a 375 px phone, which broke the entry screens the new CONVENTIONS rule exists to protect.
+  - P2.1c ✅ the books: Day Book, Ledger statement with a running balance on the ledger's natural side, Trial Balance proving Σ Dr = Σ Cr. Verified on real journals — a reversal leaves the trial balance balanced because both entries stay in. e2e 38 → 53.
   - P2.1b ✅ **`PostingService`** — the spine. Balanced, FY-gated, tenant-checked, written in the **caller's** transaction so a document and its journal commit together. Gapless voucher numbering under 8 concurrent posts, and a rejected post does not burn a number. Reversal instead of editing; no update route exists. Manual vouchers (receipt/payment/contra/journal). Backend 64 → 97 unit, e2e 22 → 38.
   - P2.1a ✅ chart of accounts: 22 Tally-style groups, 28 ledgers, 8 voucher types, **seeded per company inside company creation** so a tenant cannot exist without somewhere to post. Opening balances (ACC-04) transactional, and honest about an unbalanced set rather than refusing it. Four DB CHECK constraints verified against Postgres. Backend tests 31 → 64.
   - P1.2c ✅ web admin: users list + create + edit (role, kiln access, active), and the Owner's audit viewer with filters and paging. **ADM-05…07 complete — P1 is done on the web side.** Fixed a shared-schema bug that made every optional text field reject a blank value.
   - P1.1b ✅ **repair of P1.1** — see "Why P1.1b existed" below. Tenant isolation, RBAC seed, audit trail, API contract, missing ADM endpoints, schema hardening. 31 unit + 22 e2e green.
 - **Half-done:** none.
-- **Next step (exact):** **P2.1c — the books (ACC-05)**: Day Book (vouchers by date, already served by `GET /vouchers`), Ledger statement (one ledger's lines with a running balance, opening balance first), and Trial Balance (every ledger's closing balance grouped by its chart group, with Σ debit = Σ credit proved). All read-only queries over `voucher_lines` + `ledgers.opening_debit/credit`. Watch the `openingOnNaturalSide` helper in `LedgerService` — a credit on an asset is a negative asset, not a liability.
-- **Then:** P2.2 (web: voucher entry, Day Book, Ledger, Trial Balance) closes ACC-01…05 and finishes phase P2.
+- **Next step (exact):** **P2.2 — the web side of accounting**, which closes ACC-01…05 and finishes phase P2. Voucher entry form (receipt/payment/contra/journal) with a live running Dr/Cr total that blocks submit until it balances and shows the difference; Day Book on `GET /reports/day-book`; Ledger statement on `GET /reports/ledgers/:id`; Trial Balance on `GET /reports/trial-balance` with the difference surfaced when openings do not tie; chart-of-accounts and opening-balance screens on the P2.1a endpoints. All of it reuses `DataTable`, `Dialog`, `Select` and `Pagination` from P1.2.
+- **Watch in P2.2:** money is a **string** end to end (CONVENTIONS) — never parse a voucher amount into a JS number for arithmetic in the browser either.
 - **Then:** P1.3 (mobile login + sync setup) → P2.1 (accounting engine) → …
 
 ### Why P1.1b existed (read before marking any step ✅)
@@ -88,7 +89,7 @@ The P track is never blocked by the M track.
 | P1 | P1.2c | Web admin: users & roles screens, audit log viewer, DataTable/Select/Dialog primitives | ✅ |
 | P2 | P2.1a | **Backend: chart of accounts** — ledger groups, ledgers, voucher types, migration, per-company seed, opening balances (ACC-01, ACC-04) | ✅ |
 | P2 | P2.1b | Backend: `PostingService` (balanced, atomic, FY-checked, immutable + reversal) and manual vouchers — receipt, payment, contra, journal (ACC-02, ACC-03) | ✅ |
-| P2 | P2.1c | Backend reports: Day Book, Ledger statement, Trial Balance (ACC-05) | ⬜ |
+| P2 | P2.1c | Backend reports: Day Book, Ledger statement, Trial Balance (ACC-05) | ✅ |
 | P2 | P2.2 | Web: voucher entry, Day Book, Ledger, Trial Balance | ⬜ |
 | P3 | P3.1 | Backend masters (parties + auto ledger, items, units, warehouses, brick types, vehicles, drivers, HSN/GST, wage rates) | ⬜ |
 | P3 | P3.2 | Web master screens + party ledger | ⬜ |

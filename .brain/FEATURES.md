@@ -11,7 +11,7 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 101 | 6 | 5 | 1 | 89 | 0 |
+| CP1 MVP | 101 | 6 | 6 | 1 | 88 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 
 **CP1 done: 6 %** (6 of 101 features ✅)
@@ -20,10 +20,10 @@
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
-| Backend | 97 | 7 | 4 | 0 | 0 | 86 |
+| Backend | 97 | 7 | 5 | 0 | 0 | 85 |
 | Web | 94 | 7 | 0 | 0 | 0 | 87 |
 | Mobile | 11 | 0 | 0 | 0 | 0 | 11 |
-| Tests | 101 | 11 | 0 | 0 | 0 | 90 |
+| Tests | 101 | 12 | 0 | 0 | 0 | 89 |
 
 ## Client Phase 1 — MVP
 
@@ -142,7 +142,7 @@
 | ACC-02 | Posting engine: balanced, atomic, immutable, reversal | CP1 | P2 | 🧩 | ⬜ | — | ✅ | 🟨 | `PostingService.post(manager, …)` — balanced, FY-gated, tenant-checked, **in the caller's transaction** so a document and its journal are one atomic act. Reversal, never edit. Numbering gapless under concurrency |
 | ACC-03 | Manual vouchers: receipt, payment, contra, journal | CP1 | P2 | 🧩 | ⬜ | — | ✅ | 🟨 | `POST /vouchers` for receipt, payment, contra and journal; no update route by design. Web entry screen in P2.2 |
 | ACC-04 | Opening balances for ledgers | CP1 | P2 | 🧩 | ⬜ | — | ✅ | 🟨 | Opening Dr/Cr per ledger, transactional. Deliberately accepts an unbalanced set and reports the difference — real opening figures rarely tie first time |
-| ACC-05 | Day Book, Ledger, Trial Balance | CP1 | P2 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| ACC-05 | Day Book, Ledger, Trial Balance | CP1 | P2 | 🧩 | ⬜ | — | ✅ | 🟨 | Day Book, Ledger statement with running balance, Trial Balance with Σ Dr = Σ Cr proved. Reversed vouchers stay in and net to zero. Web screens in P2.2 |
 | ACC-06 | Sales & purchase vouchers auto-posted from documents; debit/credit notes | CP1 | P7/P8 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | ACC-07 | Cash Book, Bank Book | CP1 | P10 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | ACC-08 | Profit & Loss, Balance Sheet (closing stock valuation method: see open questions) | CP1 | P10 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
