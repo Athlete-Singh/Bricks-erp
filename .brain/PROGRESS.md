@@ -1,18 +1,19 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** P0.3 ✅ done → **next: P0.5** (CI + Husky hooks) · **CP1 features done:** 0 / 89 (0 %)
+**Client Phase:** CP1 (MVP) · **Current step:** P0.5 ✅ done → **next: P1.1** (backend auth, RBAC, companies, kilns) · **CP1 features done:** 0 / 89 (0 %)
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
-- **Last green commit:** `3a0eba6` — `feat(web): P0.3 web shell` (2026-10-08). Gate green: shared + backend + web (lint ✓ typecheck ✓ test 1/1 ✓ build ✓).
+- **Last green commit:** `4b4be5f` — `chore(ci): add github actions ci, husky hooks` (2026-10-08). Gate green: shared + backend + web all lint ✓ typecheck ✓ test ✓. Hooks verified (commitlint rejects bad messages, lint-staged runs prettier).
 - **Done:**
-  - P0.1 ✅ git, PDFs → `docs/client-requirements/`, full brain, docs 01–13, AI entry files, `pnpm status` generator.
-  - P0.2 ✅ pnpm + Turborepo root, shared package, infra docker-compose, NestJS 11 backend, `/api/v1/health`, migrations, unit + e2e tests. Per-app env files (ADR-011).
-  - P0.3 ✅ web enabled in workspace; app router (RootLayout, Providers, dashboard route, login stub); components/ui (Button, Card, Badge, Input, Skeleton, EmptyState); components/layout (Sidebar, Topbar+health dot, PageHeader, KilnSwitcher stub); lib (api-client, query-client, cn); stores (ui-store); features/system health API + hook; 1 Vitest test; gate fully green.
-  - P0.4 🟨 mobile folder structure + placeholder (device A); full scaffold pending device B.
+  - P0.1 ✅ git, PDFs, brain, docs 01–13, AI entry files, `pnpm status` generator.
+  - P0.2 ✅ monorepo, shared package, docker-compose, NestJS 11 backend, `/health`, migrations, unit + e2e.
+  - P0.3 ✅ web shell — app router, DS primitives (Button/Card/Badge/Input/Skeleton/EmptyState), layout (Sidebar/Topbar/PageHeader/KilnSwitcher), lib + stores, features/system health hook, 1 Vitest test.
+  - P0.4 🟨 mobile folder structure only (device A); full scaffold on device B.
+  - P0.5 ✅ CI workflow (postgres service, node 24, build→migrate→lint→typecheck→test→e2e→build), Husky pre-commit (lint-staged) + commit-msg (commitlint), .prettierignore fix for .brain/.
 - **Half-done:** none.
-- **Next step (exact):** P0.5 — add GitHub Actions CI workflow (`.github/workflows/ci.yml`) with Postgres service container, `pnpm lint`, `pnpm typecheck`, `pnpm test` for all apps. Add Husky pre-commit hook (`pnpm lint-staged`) and commit-msg hook (`npx commitlint`). Verify hooks fire. Commit + `pnpm status`.
-- **Then:** P1.1 (backend: auth/RBAC, companies, kilns, FY, users, roles, audit) → P1.2 (web: login, shell wired to real auth, company/kiln/user screens) → …
+- **Next step (exact):** P1.1 — backend auth + RBAC. Entities: `companies`, `kilns`, `financial_years`, `users`, `roles`, `permissions`, `audit_logs`. JWT auth (access 15m + refresh 30d). Guards: JwtAuthGuard, RolesGuard, TenantGuard (company_id from JWT). Endpoints: POST /auth/login, POST /auth/refresh, POST /auth/logout, CRUD /companies, /kilns, /users, /roles. Seed 9 roles (roles.ts). Migration. Unit + e2e tests. Commit.
+- **Then:** P1.2 (web login page wired to auth API, sidebar shows company/kiln, user/role management screens) → P2.1 (accounting engine) → …
 - **Work split (2026-10-07):** backend + web are built on device A (no Flutter). The Flutter app is built on device B. Each device uses its own Resume block. `git pull` before and `git push` after every session. Device B edits only the **Mob** columns in FEATURES/API_INDEX, then runs `pnpm status`.
 
 ## ▶ Resume here: mobile (device B, with Flutter)
@@ -29,7 +30,7 @@ Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 | P0 | P0.2 | Monorepo, docker-compose, backend scaffold + /health | ✅ |
 | P0 | P0.3 | Web scaffold, tokens, shell, Vitest — app router, DS primitives, layout components, health hook | ✅ |
 | P0 | P0.4 | Mobile scaffold: folder structure + placeholder app ✅ (device A); flutter create, packages, theme, widgets, router, Drift stub, l10n, analyze/test (device B) | 🟨 |
-| P0 | P0.5 | CI, Husky hooks, commitlint, verify, tracking | ⬜ |
+| P0 | P0.5 | CI, Husky hooks, commitlint, verify, tracking | ✅ |
 | P1 | P1.1 | Backend: auth, tenancy guard, companies, kilns, FY, users, roles, audit | ⬜ |
 | P1 | P1.2 | Web: login, shell, DS primitives, company/kiln/user screens | ⬜ |
 | P1 | P1.3 | Mobile: login, widgets, router, Drift + sync skeleton | ⬜ |

@@ -1,5 +1,6 @@
 # CHANGELOG — newest first
 
+- 2026-10-08 — [ci] — P0.5: GitHub Actions CI workflow (postgres 16 service, node 24, pnpm 12.4.2, build→migrate→lint→typecheck→unit+e2e→build); Husky pre-commit (lint-staged prettier) + commit-msg (commitlint conventional); .prettierignore excludes .brain/ (sync-status regex protection) — P0.5
 - 2026-10-08 — [web] — P0.3 complete: web re-enabled in workspace; app router shell (RootLayout, Providers, dashboard route, login stub); components/ui (Button, Card, Badge, Input, Skeleton, EmptyState); components/layout (Sidebar, Topbar with DB health dot, PageHeader, KilnSwitcher stub); lib (api-client fetch wrapper, query-client, cn); stores (ui-store Zustand); features/system health API + useHealth hook; 1 Vitest test; tsconfig fix (exclude vitest.config); gate ✓ lint typecheck test build — P0.3
 - 2026-10-07 — [mobile] — P0.4 structure only: Flutter folders per master prompt §6, placeholder app + widget test, env example, mobile/README with setup steps; work split device A (backend+web) / device B (Flutter) — P0.4
 - 2026-10-07 — [brain] — Wiring tracker: API_INDEX is now a per-endpoint BE/Web/Mob table; new 🧩 "built but not connected" status; `pnpm status` generates wiring gaps + per-app progress — tracking

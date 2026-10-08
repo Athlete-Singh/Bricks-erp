@@ -5,7 +5,7 @@
 
 ## Where we are
 
-**Client Phase:** CP1 (MVP) · **Current step:** P0.3 ✅ done → **next: P0.5** (CI + Husky hooks) · **CP1 features done:** 0 / 89 (0 %)
+**Client Phase:** CP1 (MVP) · **Current step:** P0.5 ✅ done → **next: P1.1** (backend auth, RBAC, companies, kilns) · **CP1 features done:** 0 / 89 (0 %)
 
 **Client Phase 1 (MVP) progress: 0 %** (0 of 89 features done)
 
