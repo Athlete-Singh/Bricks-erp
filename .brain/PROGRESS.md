@@ -1,6 +1,6 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** P1.1b ✅ done → **next: P1.2** (web login page wired to auth API, company/kiln switcher, user/role management screens) · **CP1 features done:** 0 / 101 (0 %)
+**Client Phase:** CP1 (MVP) · **Current step:** P1.2b ✅ done → **next: P1.2c** (web login page wired to auth API, company/kiln switcher, user/role management screens) · **CP1 features done:** 4 / 101 (4 %)
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
@@ -18,9 +18,10 @@ That creates the 9 roles, one company, one kiln and one Owner. The bootstrap ref
   - P0.5 ✅ CI workflow, Husky pre-commit + commit-msg, .prettierignore fix.
   - P1.1a ✅ backend auth & RBAC skeleton: 11 entities, JWT access+refresh, guards, CRUD controllers, migration, first tests.
   - P1.2a ✅ web auth foundation: `api-client` (envelope unwrap, typed `ApiError`, single-flight 401→refresh→retry), token custody per ADR-016, auth store, login page, `AuthGuard`, sign-out. Verified in a real browser against the running API: login → dashboard, hard reload restores the session, sign-out clears both sides.
+  - P1.2b ✅ web shell: user dropdown + change-password, company switcher, kiln switcher, permission-aware nav, and the company / kilns / financial-year screens. **ADM-01…04 are the first features to reach ✅.** Sidebar turned into a drawer below `md` — it was a 224 px rail on a 375 px phone, which broke the entry screens the new CONVENTIONS rule exists to protect.
   - P1.1b ✅ **repair of P1.1** — see "Why P1.1b existed" below. Tenant isolation, RBAC seed, audit trail, API contract, missing ADM endpoints, schema hardening. 31 unit + 22 e2e green.
 - **Half-done:** none.
-- **Next step (exact):** P1.2b — shell wiring. Topbar user dropdown (profile, change-password form on `POST /auth/change-password`), company switcher on `GET /companies` + `POST /auth/switch-company`, kiln switcher on `GET /sites` writing to `authStore.activeSiteId` (the current `kiln-switcher.tsx` is still a disabled stub), permission-aware sidebar using `useSession().can()`, then company settings / kilns / financial-year screens. P1.2c follows with users, roles and the audit viewer.
+- **Next step (exact):** P1.2c — admin screens. Users list on `GET /users` with create (`POST /users`) and edit (`PATCH /users/:id`, role + kiln access + active) using `GET /users/roles` for the role picker; audit log viewer on `GET /audit-logs` with entity/action/user/date filters and paging (it is the only endpoint returning `{data, meta}`, so `apiClient.getPaged` gets its first real use). Reuse `DataTable`, `Dialog`, `Select` and `Dropdown` from P1.2b. After that ADM-06 and ADM-07 reach ✅ and P1 is complete on the web side.
 - **Then:** P1.3 (mobile login + sync setup) → P2.1 (accounting engine) → …
 
 ### Why P1.1b existed (read before marking any step ✅)
@@ -73,7 +74,7 @@ The P track is never blocked by the M track.
 | P1 | P1.1a | Backend auth, companies, kilns, FY, users, roles — entities, JWT, guards, CRUD | ✅ |
 | P1 | P1.1b | Backend repair: tenant isolation + tests, RBAC seed, audit trail, API contract, missing ADM endpoints, schema hardening | ✅ |
 | P1 | P1.2a | **Web auth foundation:** api-client envelope + refresh-on-401, auth store, login page, route guard, logout | ✅ |
-| P1 | P1.2b | Web shell wiring: user menu, company switcher, kiln switcher, permission-aware nav, company/kilns/FY screens | ⬜ |
+| P1 | P1.2b | Web shell wiring: user menu, company switcher, kiln switcher, permission-aware nav, company/kilns/FY screens | ✅ |
 | P1 | P1.2c | Web admin: users & roles screens, audit log viewer, DataTable/Select/Dialog primitives | ⬜ |
 | P2 | P2.1 | Backend: CoA seed, groups, voucher types, PostingService, opening balances | ⬜ |
 | P2 | P2.2 | Web: voucher entry, Day Book, Ledger, Trial Balance | ⬜ |

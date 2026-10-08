@@ -35,6 +35,8 @@ export const createSiteSchema = z.object({
   address: z.string().optional().nullable(),
 });
 export type CreateSiteDto = z.infer<typeof createSiteSchema>;
+/** Before defaults are applied — what a form holds, where `type` may be unset. */
+export type CreateSiteInput = z.input<typeof createSiteSchema>;
 
 export const createUserSchema = z.object({
   email: z.string().email().optional().nullable(),
@@ -45,6 +47,7 @@ export const createUserSchema = z.object({
   siteIds: z.array(z.string().uuid()).optional().default([]),
 });
 export type CreateUserDto = z.infer<typeof createUserSchema>;
+export type CreateUserInput = z.input<typeof createUserSchema>;
 
 export const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, 'Current password is required'),
