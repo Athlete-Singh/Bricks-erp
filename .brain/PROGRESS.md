@@ -35,12 +35,18 @@ all simply absent. `pnpm status` could not catch the wiring gap because its gene
 **Lesson for every future step:** a column is ✅ only when a test proves it, not when the file exists. Tenancy and audit are in the
 "never cut correctness" list — give them an e2e test in the same step, as `backend/test/tenancy.e2e-spec.ts` now does.
 
-### Known gaps carried forward (not blocking P1.2)
+### Known gaps carried forward (not blocking P2)
 - List endpoints other than `/audit-logs` do not paginate; `CONVENTIONS.md` specifies `?page&limit` → `meta`.
 - Company/Site/FinancialYear responses are raw entities; only users go through a response DTO (`UserSummary`).
 - `BusinessRuleException` is defined and tested but never thrown — domain error codes (`MODULE_REASON`) are not adopted yet. Adopt from P2, where posting/stock rules need them.
 - `QueryFailedError` is not mapped in `AllExceptionsFilter`, so an unhandled DB constraint violation is a 500.
 - No request/correlation id in error responses, so a 500 cannot be traced to its Pino log line.
+- **No "create company" screen.** `POST /companies` is built and tested but no UI calls it, so a second company can only be
+  created through the API or the seed. ADM-01/ADM-02 do not ask for it in writing (the switcher and the multi-company schema
+  are what they specify), but an owner who wants a second kiln business cannot add one from the web today. Small screen,
+  reuses `CompanyForm` — fold into P2.2 or a later admin pass unless the client needs it sooner.
+- `GET /companies/:id` has no consumer either: the web reads `/companies/current` instead. Harmless, kept for the
+  company-detail screen that would come with the above.
 
 - **Work split (updated 2026-10-08):** the **P track** (backend + web) is built here; the **M track** (Flutter app) is built later, wherever the Flutter SDK is available — another machine, or this one once Flutter is installed. **Backend and web come first either way.** Each track keeps its own Resume block below. Whoever builds the M track edits only the **Mob** columns in FEATURES/API_INDEX, then runs `pnpm status`.
 
