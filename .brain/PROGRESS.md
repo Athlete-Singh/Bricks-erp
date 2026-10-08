@@ -1,16 +1,18 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** P0.3 paused (web shell half-done) → **next: resume P0.3** · **CP1 features done:** 0 / 89 (0 %)
+**Client Phase:** CP1 (MVP) · **Current step:** P0.3 ✅ done → **next: P0.5** (CI + Husky hooks) · **CP1 features done:** 0 / 89 (0 %)
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
-- **Last green commit:** `git log -1` → "chore(brain): pause after P0.2 …" (2026-10-07). Gate green: shared + backend build, lint, typecheck, unit tests, e2e (health against real Postgres).
+- **Last green commit:** `3a0eba6` — `feat(web): P0.3 web shell` (2026-10-08). Gate green: shared + backend + web (lint ✓ typecheck ✓ test 1/1 ✓ build ✓).
 - **Done:**
-  - P0.1 ✅ git, PDFs → `docs/client-requirements/`, full brain (FEATURES 89 CP1 + 10 CP2), docs 01–13 + 16 module stubs, AGENTS/CLAUDE/GEMINI/Cursor/Copilot files, `pnpm status` generator.
-  - P0.2 ✅ pnpm + Turborepo root, `packages/config`, `packages/shared` (enums, ₹/date formatters, health schema, tests), `infra/docker-compose.yml` (Postgres 16 + `brics_test`), NestJS 11 backend: env validation (zod), Pino, Swagger `/api/docs`, `/api/v1/health` with DB check, envelope + error filter, base entities, Money utils, TypeORM data source + migration CLI (verified), unit + e2e tests. One env file per app (ADR-011).
-- **Half-done: P0.3 web.** Written: `web/package.json`, tsconfig, next/postcss/tailwind/eslint/vitest configs, `src/styles/tokens.css` + `globals.css`, `web/.env.example`. NOT written: `src/app/*` (layout, providers, placeholder dashboard), `components/ui` (Button, Card, Badge), `components/layout` (Sidebar, Topbar, PageHeader, KilnSwitcher), `lib/api-client.ts`, `lib/query-client.ts`, `lib/cn.ts`, `stores/ui-store.ts`, `features/system` (health API + hook → topbar status), tests. `web` is **commented out in `pnpm-workspace.yaml`** to keep the gate green.
-- **Next step (exact):** uncomment `- web` in `pnpm-workspace.yaml` → `pnpm install` → write the missing web files above → web gate (lint, typecheck, test, build) → set `/health` Web ✅ in API_INDEX → commit → P0.4.
-- **Then:** P0.5 (GitHub Actions CI with Postgres service, Husky pre-commit + commit-msg hooks: husky is installed but no hooks exist yet, final verify) → P1.1, P1.2 … (backend + web on this device).
+  - P0.1 ✅ git, PDFs → `docs/client-requirements/`, full brain, docs 01–13, AI entry files, `pnpm status` generator.
+  - P0.2 ✅ pnpm + Turborepo root, shared package, infra docker-compose, NestJS 11 backend, `/api/v1/health`, migrations, unit + e2e tests. Per-app env files (ADR-011).
+  - P0.3 ✅ web enabled in workspace; app router (RootLayout, Providers, dashboard route, login stub); components/ui (Button, Card, Badge, Input, Skeleton, EmptyState); components/layout (Sidebar, Topbar+health dot, PageHeader, KilnSwitcher stub); lib (api-client, query-client, cn); stores (ui-store); features/system health API + hook; 1 Vitest test; gate fully green.
+  - P0.4 🟨 mobile folder structure + placeholder (device A); full scaffold pending device B.
+- **Half-done:** none.
+- **Next step (exact):** P0.5 — add GitHub Actions CI workflow (`.github/workflows/ci.yml`) with Postgres service container, `pnpm lint`, `pnpm typecheck`, `pnpm test` for all apps. Add Husky pre-commit hook (`pnpm lint-staged`) and commit-msg hook (`npx commitlint`). Verify hooks fire. Commit + `pnpm status`.
+- **Then:** P1.1 (backend: auth/RBAC, companies, kilns, FY, users, roles, audit) → P1.2 (web: login, shell wired to real auth, company/kiln/user screens) → …
 - **Work split (2026-10-07):** backend + web are built on device A (no Flutter). The Flutter app is built on device B. Each device uses its own Resume block. `git pull` before and `git push` after every session. Device B edits only the **Mob** columns in FEATURES/API_INDEX, then runs `pnpm status`.
 
 ## ▶ Resume here: mobile (device B, with Flutter)
@@ -25,7 +27,7 @@ Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 |---|---|---|---|
 | P0 | P0.1 | Preflight, git, PDFs, brain, docs, AI files | ✅ |
 | P0 | P0.2 | Monorepo, docker-compose, backend scaffold + /health | ✅ |
-| P0 | P0.3 | Web scaffold, tokens, shell, Vitest (configs + tokens done; pages/components pending) | 🟨 |
+| P0 | P0.3 | Web scaffold, tokens, shell, Vitest — app router, DS primitives, layout components, health hook | ✅ |
 | P0 | P0.4 | Mobile scaffold: folder structure + placeholder app ✅ (device A); flutter create, packages, theme, widgets, router, Drift stub, l10n, analyze/test (device B) | 🟨 |
 | P0 | P0.5 | CI, Husky hooks, commitlint, verify, tracking | ⬜ |
 | P1 | P1.1 | Backend: auth, tenancy guard, companies, kilns, FY, users, roles, audit | ⬜ |
