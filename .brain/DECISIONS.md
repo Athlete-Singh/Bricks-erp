@@ -53,3 +53,11 @@ Why: the schemas already exist in `packages/shared` and are shared with the web 
 **ADR-015 — Refresh-token row id travels in the token — 2026-10-08**
 Decision: the `refresh_tokens` row id is minted first and carried in the token's `jti`; refresh does one indexed lookup plus one bcrypt compare, checks `expires_at`, then rotates. Expiry is derived from `JWT_REFRESH_TTL`.
 Why: P1.1 loaded every non-revoked token for the user and bcrypt-compared each one (~100ms apiece), so refresh latency grew with session count — a self-inflicted DoS. It also ignored `expires_at` and hardcoded 30 days. Alternative: store an unhashed lookup key (weaker if the table leaks).
+
+**ADR-016 — Access token in memory, refresh token in localStorage — 2026-10-08**
+Decision: the access token (15 min) lives only in a module variable, never in storage. The refresh token (30 days) is kept in `localStorage` under `brics_refresh`. On boot, if a refresh token exists the app calls `POST /auth/refresh` to get a fresh pair.
+Why: the backend returns both tokens in the response body, so an httpOnly cookie is not available without changing the API. Keeping the short-lived token out of storage means an XSS payload has to stay resident to use it, rather than exfiltrating a token that works for 15 minutes. The refresh token is rotated on every use (ADR-015), so a stolen one is single-use and its theft is detectable. Cost: one extra `/auth/refresh` call on a hard page reload. Alternatives: both in localStorage (simpler, larger blast radius); httpOnly cookies (better, but needs the API to set cookies and a CSRF story — revisit for CP2).
+
+**ADR-017 — The API client unwraps the envelope — 2026-10-08**
+Decision: `apiClient.get<T>()` returns the `data` payload, not `{ data }`. Paginated endpoints use `apiClient.getPaged<T>()`, which returns `{ items, meta }`.
+Why: every endpoint returns the envelope, so unwrapping once in the client keeps `.data.data` out of every hook and component. Decided now rather than after P1.2b/c wrote screens against the raw shape.

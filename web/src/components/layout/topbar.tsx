@@ -1,13 +1,14 @@
 'use client';
 
 import { Bell } from 'lucide-react';
+import { UserMenu } from './user-menu';
 import { useHealth } from '@/features/system/use-health';
 import { cn } from '@/lib/cn';
 
 export function Topbar() {
   const { data, isError } = useHealth();
 
-  const dbUp = !isError && data?.data?.db === 'up';
+  const dbUp = !isError && data?.db === 'up';
 
   return (
     <header className="flex h-14 items-center justify-between border-b border-border bg-surface px-4">
@@ -34,6 +35,8 @@ export function Topbar() {
         >
           <Bell className="h-4 w-4" />
         </button>
+
+        <UserMenu />
       </div>
     </header>
   );

@@ -1,14 +1,7 @@
+import type { Health } from '@brics/shared';
 import { apiClient } from '@/lib/api-client';
 
-export type HealthResponse = {
-  data: {
-    status: 'ok' | 'degraded';
-    db: 'up' | 'down';
-    uptime: number;
-    timestamp: string;
-  };
-};
-
+/** `apiClient` unwraps the envelope (ADR-017), so this is the payload itself. */
 export function fetchHealth(signal?: AbortSignal) {
-  return apiClient.get<HealthResponse>('/health', signal);
+  return apiClient.get<Health>('/health', signal);
 }

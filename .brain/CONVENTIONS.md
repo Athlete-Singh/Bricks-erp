@@ -48,6 +48,11 @@
 - UI only from `components/ui` + `components/shared`. Anything used twice → component. No hard-coded colours/sizes — Tailwind tokens only.
 - Forms: React Hook Form + Zod (schemas in `packages/shared` when the backend uses them too). Keyboard: Enter moves to next field, Ctrl+S saves on voucher forms.
 - List pages: `PageHeader` + filters bar + `DataTable` — same layout everywhere.
+- **Operational entry screens must work on a phone browser.** Production, attendance, GRN and dispatch entry are done in the
+  field; where there is signal, a supervisor opens the web app on their phone instead of waiting for the Flutter app. Single
+  column under `sm`, touch targets ≥ 44 px, numeric keypads (`inputMode="numeric"`) for counts, as little typing as possible,
+  and tables that collapse to cards rather than scrolling sideways. A screen that is unusable on a phone sends the supervisor
+  back to paper, which is what `LEK-01`/`LEK-02` exist to prevent. Applies to P5.2, P6.2, P7.2 and P9.2.
 - Query keys: `[feature, 'list', params]`, `[feature, 'detail', id]`; invalidate on mutation success.
 
 ## Mobile (Flutter)

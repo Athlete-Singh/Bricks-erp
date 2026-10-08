@@ -17,9 +17,10 @@ That creates the 9 roles, one company, one kiln and one Owner. The bootstrap ref
   - P0.4 ✅ **closed** — mobile folder structure, placeholder app, widget test, `env/dev.example.json`, `mobile/README.md`. That was everything P0.4 could do without the Flutter SDK; **the rest of the original P0.4 (flutter create, packages, theme, widgets, router, Drift, l10n) is now step M0.** P0.4 is not pending — do not reopen it.
   - P0.5 ✅ CI workflow, Husky pre-commit + commit-msg, .prettierignore fix.
   - P1.1a ✅ backend auth & RBAC skeleton: 11 entities, JWT access+refresh, guards, CRUD controllers, migration, first tests.
+  - P1.2a ✅ web auth foundation: `api-client` (envelope unwrap, typed `ApiError`, single-flight 401→refresh→retry), token custody per ADR-016, auth store, login page, `AuthGuard`, sign-out. Verified in a real browser against the running API: login → dashboard, hard reload restores the session, sign-out clears both sides.
   - P1.1b ✅ **repair of P1.1** — see "Why P1.1b existed" below. Tenant isolation, RBAC seed, audit trail, API contract, missing ADM endpoints, schema hardening. 31 unit + 22 e2e green.
 - **Half-done:** none.
-- **Next step (exact):** P1.2 — web login page wired to `POST /auth/login`, auth store (Zustand + token storage), refresh-on-401 in `lib/api-client.ts` (the current one has no refresh path), protected dashboard route guard, company switcher on `POST /auth/switch-company`, kiln switcher on `GET /sites`, user & role management screens on `/users` + `/users/roles`, audit viewer on `/audit-logs`.
+- **Next step (exact):** P1.2b — shell wiring. Topbar user dropdown (profile, change-password form on `POST /auth/change-password`), company switcher on `GET /companies` + `POST /auth/switch-company`, kiln switcher on `GET /sites` writing to `authStore.activeSiteId` (the current `kiln-switcher.tsx` is still a disabled stub), permission-aware sidebar using `useSession().can()`, then company settings / kilns / financial-year screens. P1.2c follows with users, roles and the audit viewer.
 - **Then:** P1.3 (mobile login + sync setup) → P2.1 (accounting engine) → …
 
 ### Why P1.1b existed (read before marking any step ✅)
@@ -71,7 +72,9 @@ The P track is never blocked by the M track.
 | P0 | P0.5 | CI, Husky hooks, commitlint, verify, tracking | ✅ |
 | P1 | P1.1a | Backend auth, companies, kilns, FY, users, roles — entities, JWT, guards, CRUD | ✅ |
 | P1 | P1.1b | Backend repair: tenant isolation + tests, RBAC seed, audit trail, API contract, missing ADM endpoints, schema hardening | ✅ |
-| P1 | P1.2 | **Web: login, auth store, refresh-on-401, route guard, company/kiln switcher, user & role screens, audit viewer** | ⬜ |
+| P1 | P1.2a | **Web auth foundation:** api-client envelope + refresh-on-401, auth store, login page, route guard, logout | ✅ |
+| P1 | P1.2b | Web shell wiring: user menu, company switcher, kiln switcher, permission-aware nav, company/kilns/FY screens | ⬜ |
+| P1 | P1.2c | Web admin: users & roles screens, audit log viewer, DataTable/Select/Dialog primitives | ⬜ |
 | P2 | P2.1 | Backend: CoA seed, groups, voucher types, PostingService, opening balances | ⬜ |
 | P2 | P2.2 | Web: voucher entry, Day Book, Ledger, Trial Balance | ⬜ |
 | P3 | P3.1 | Backend masters (parties + auto ledger, items, units, warehouses, brick types, vehicles, drivers, HSN/GST, wage rates) | ⬜ |
@@ -119,6 +122,7 @@ A step is **not** ✅ until these are true. Check this list before marking any o
 | **P5.1 / P6.1 / P9.1** | The matching leakage report (`LEK-01`+`LEK-02` / `LEK-03` / `LEK-04`) ships **with** the module, not later. These are the client's ROI — see M13 in FEATURES.md. |
 | **P6.1** | `LEK-03`'s warning fires **at the moment a new advance is entered**, not only in a report. |
 | **any tenant-scoped module** | A cross-tenant refusal test in `backend/test/*.e2e-spec.ts`, as `tenancy.e2e-spec.ts` does. CONVENTIONS requires it. |
+| **P5.2 / P6.2 / P7.2 / P9.2** | The entry screen is usable on a phone browser (single column, ≥44 px targets, numeric keypads). Where there is signal this is how the field actually enters data until the Flutter app exists — see CONVENTIONS → Web. |
 | **any new create endpoint** | Decide explicitly whether the mobile app will ever call it. If yes, it needs `Idempotency-Key`. |
 
 ### Gate per track
@@ -132,6 +136,8 @@ Exit criteria per phase: see BRICS_MASTER_PROMPT.md §12.
 A1 banking/accounting adv · A2 adv GST (if approved) · A3 profitability/leakage · A4 admin extras · A5 AI anomaly · A6 IoT · A7 approved extras — all ⏭️
 
 ## Splits recorded
+- **P1.2 → P1.2a + P1.2b + P1.2c** (2026-10-08). One session could not cover auth plumbing, shell wiring and three admin
+  screen sets. P1.2a is the foundation every later screen needs (envelope handling, token refresh, route guard).
 - **P1.1 → P1.1a + P1.1b** (2026-10-08). P1.1a is the original backend auth/RBAC commit `54b2d13`. P1.1b is the repair: tenant isolation,
   RBAC seed, audit trail, API contract and the ADM endpoints P1.1 never built. Split recorded because P1.1 had been marked ✅ while
   ADM-02/04/05/06/07 were incomplete and tenancy was unenforced.

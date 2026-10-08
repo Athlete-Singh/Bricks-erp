@@ -20,8 +20,8 @@
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
-| Backend | 97 | 0 | 7 | 0 | 0 | 90 |
-| Web | 94 | 0 | 0 | 0 | 0 | 94 |
+| Backend | 97 | 1 | 6 | 0 | 0 | 90 |
+| Web | 94 | 0 | 0 | 1 | 0 | 93 |
 | Mobile | 11 | 0 | 0 | 0 | 0 | 11 |
 | Tests | 101 | 7 | 0 | 0 | 0 | 94 |
 
@@ -35,7 +35,7 @@
 | ADM-02 | Multiple companies under one login + company switcher | CP1 | P1 | 🧩 | ⬜ | — | ✅ | 🟨 | `POST /auth/switch-company` re-issues the session; web switcher in P1.2 |
 | ADM-03 | Multiple kilns/chimneys/sites per company (site type: kiln / branch / depot) + kiln switcher | CP1 | P1 | 🧩 | ⬜ | — | ✅ | 🟨 | `/sites` is JWT-scoped and returns only the user’s kilns; web switcher in P1.2 |
 | ADM-04 | Financial years (April–March default): create, set active | CP1 | P1 | 🧩 | ⬜ | — | ✅ | 🟨 | Create + activate, overlap rejected, one active FY enforced by a partial unique index |
-| ADM-05 | Users: login (email or mobile + password), JWT access/refresh, logout, change password | CP1 | P1 | 🧩 | ⬜ | ⬜ | ✅ | 🟨 | Login, rotating refresh, logout, change-password; web P1.2, mobile P1.3 |
+| ADM-05 | Users: login (email or mobile + password), JWT access/refresh, logout, change password | CP1 | P1 | ✅ | 🟨 | ⬜ | ✅ | 🟨 | Backend complete. Web: login, silent refresh, route guard and logout done in P1.2a; change-password screen in P1.2b. Mobile in M1 |
 | ADM-06 | 9 seeded roles with default permission sets; Owner assigns role + kiln access per user | CP1 | P1 | 🧩 | ⬜ | — | ✅ | 🟨 | 9 roles + permission sets seeded via `pnpm seed`; role/kiln reassignment on `PATCH /users/:id` |
 | ADM-07 | Audit log (who / what / when / before-after) on financial + stock data; simple viewer for Owner | CP1 | P1 | 🧩 | ⬜ | — | ✅ | 🟨 | AuditService writes on company/kiln/FY/user/auth changes; `GET /audit-logs` viewer |
 
