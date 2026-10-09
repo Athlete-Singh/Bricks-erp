@@ -82,3 +82,19 @@ Why: ADR-013 keeps `company_id` out of the body, which stops a caller *naming* a
 **ADR-022 — Rates are decimal strings and are normalised at the schema edge — 2026-10-09**
 Decision: GST percentages and wage rates are `string` in the schema, the entity and the JSON, and the Zod schema normalises them to two decimals (`'6'` → `'6.00'`) on both create and update.
 Why: CONVENTIONS already said money is never a float; P3.1c typed rates as `z.number()` anyway, and TypeORM returns `numeric` as a string, so the entity type was simply wrong. The normalisation is the second half: without it, a create returned `"6.00"` (reloaded from the column) and an update returned `"6"` (echoed from the request), so the same field had two shapes depending on the verb.
+
+**ADR-023 — One stock ledger for both items and brick grades — 2026-10-09**
+Decision: a single `stock_movements` table, with `item_id` and `brick_type_id` both nullable and a CHECK that exactly one is set.
+Why: a kiln holds two kinds of stock — purchased materials (coal, soil, diesel) and finished bricks by grade — but they behave identically: something comes in, something goes out, and the balance must reconcile. INV-07 asks for one report "by kiln/grade/item". Two tables would mean two services, two sets of rules and two chances to drift; one table means `StockService` is the only writer of either, exactly as `PostingService` is for journals.
+
+**ADR-024 — A movement is one-sided, like a journal line — 2026-10-09**
+Decision: each row carries `quantity_in` or `quantity_out`, never both, both non-negative, with the total greater than zero — enforced by CHECK constraints in Postgres, not only in code.
+Why: it makes INV-07's identity (`Opening + Production + Purchase − Sales − Wastage = Closing`) a sum rather than a case analysis, and it matches `voucher_lines`, so the stock ledger reads the way the financial ledger already does. A signed quantity column would let a careless `-0` or a double negative pass unnoticed.
+
+**ADR-025 — Stock movements carry quantity only; value comes later — 2026-10-09**
+Decision: no rate or amount on a stock movement. Quantity is `NUMERIC(18,3)` carried as a decimal string.
+Why: ACCOUNTING_RULES already says pure stock events move quantity only — value enters through bills and invoices, and closing stock is valued at period end (OPEN_QUESTIONS #4, due in P10). Putting a rate here would create a second, competing source of cost. Three decimal places because coal is weighed in tonnes while bricks are counted in pieces; strings for the same reason money is a string — never a float.
+
+**ADR-026 — Stock cannot go negative, except by an explicit adjustment — 2026-10-09**
+Decision: `StockService` refuses a movement that would take a balance below zero, with `STOCK_INSUFFICIENT`. Only a manual adjustment (INV-06), which already requires a reason and a restricted permission, may do so.
+Why: this product exists partly to catch leakage (M13). Silent negative stock is precisely what theft looks like in the data, so the database should not accept it quietly. The escape hatch is deliberate: a correction is recorded as a correction, by a named user, with a stated reason, rather than hidden inside an ordinary issue.
