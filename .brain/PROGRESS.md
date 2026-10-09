@@ -4,7 +4,7 @@
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
-- **Last green commit:** P4.1 audited and repaired (2026-10-09). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 134 unit + **241 e2e**, web 71, shared 63.
+- **Last green commit:** P4.2 web stock screens, reviewed and repaired (2026-10-09). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 136 unit + 241 e2e, web **89**, shared **76**.
 - **What shipped:** **phase P3 is complete.** All nine master modules on the backend, and a Masters section on the web with a tab per module: parties (with the opening balance and the PTY-04 ledger statement), inventory, transport, taxes/HSN and wage rates. **PTY-01…04, PRD-01, INV-01/02, VEH-01, GST-01, LAB-03 are all ✅ on BE, Web and Tests.**
 - **Next step (exact):** **P5.1 — production**: batches per kiln + chamber + date (PRD-02), and the stage entries — making, drying, firing, sorting (PRD-03). Sorting is where it matters: good bricks by grade go **into** finished stock and rejects are wastage, both through `StockService` in the same transaction as the batch (INV-05 starts being wired here). Coal and soil consumption (PRD-04) comes out of stock the same way.
 - **INV-05 is not startable before P5/P7/P9** — it *is* the wiring of GRN, production, dispatch and wastage into `StockService`, so it fills in as each of those modules lands rather than being a step of its own.
@@ -35,6 +35,10 @@ That creates the 9 roles, one company, one kiln and one Owner. The bootstrap ref
   - P1.1b ✅ **repair of P1.1** — see "Why P1.1b existed" below. Tenant isolation, RBAC seed, audit trail, API contract, missing ADM endpoints, schema hardening. 31 unit + 22 e2e green.
 - **Half-done:** none.
 - **OPEN_QUESTIONS #2 and #7 are answered by design, not by a reply:** ADR-018 makes brick grades and GST rates per-company rows the owner and their CA fill in, so neither blocks a build step.
+- **Known flake (unreproduced):** `pnpm test` across the whole workspace failed two web files once, immediately after
+  a large batch of new test files landed; four consecutive full runs since have been clean and the failure message was
+  not captured. Not diagnosed — recorded rather than claimed fixed. If it recurs, capture the message before changing
+  anything.
 - **Carried gaps:** the opening-balance *screen* is not built (the API is, and the Trial Balance surfaces the difference). **Every master list now paginates**; the remaining unpaginated lists are the P1 admin ones (companies, sites, financial years, ledgers, voucher types).
 - **Then:** P1.3 (mobile login + sync setup) → P2.1 (accounting engine) → …
 
@@ -62,6 +66,23 @@ exactly: 63 indexes, 42 foreign keys, 10 checks.
    `generate`, which is why this happened.
 2. **Test the schema, not just the API.** `backend/test/schema-integrity.e2e-spec.ts` asserts the constraints exist in
    Postgres. It is the only kind of test that could have caught this, and it runs with the e2e suite.
+
+### What the P4.2 review found (2026-10-09)
+A second pass over the new screens against the backend contract. The contract itself was clean — routes, params,
+response fields, pagination and the permission split all matched. Four real defects behind it:
+- **`text-error-foreground` and `text-warning-foreground` are not classes in this project.** tailwind.config.ts
+  defines flat `danger`/`warning`/`success` with no `error` and no `-foreground` variants, so Tailwind generated
+  nothing: a **negative closing balance, the whole point of a leakage report, rendered in ordinary text.**
+- **Quantities ran through JS floats**, which CONVENTIONS forbids. The money helpers could not be reused —
+  `toPaise` truncates at two decimals and would silently drop the third of a tonne weight — so
+  `packages/shared/src/format/quantity.ts` adds the same integer-scaled arithmetic at three.
+- **Reopening the adjustment dialog offered a one-click duplicate.** Both dialogs stay mounted and `close()` reset
+  only the mutation, not the fields. Opening stock is protected by a unique index; an adjustment is not, and it is
+  the one movement allowed below zero.
+- A failed picker query rendered an **empty dropdown**, which reads as "there are none".
+**Lesson:** a CSS class name is not type-checked. `text-error-foreground` looked plausible, compiled, linted, and did
+nothing — and a test asserting the class string would have passed while the UI was wrong. Check a new utility class
+against `tailwind.config.ts`, or copy one the app already uses.
 
 ### What the browser run found in P4.2 (2026-10-09)
 Neither would have failed a unit test, and both were only visible by driving the real app:
