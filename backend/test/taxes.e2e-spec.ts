@@ -49,10 +49,23 @@ describe('Taxes masters (e2e)', () => {
       expect(response.body.data.igstRate).toBe('0.00');
     });
 
-    it('lists the rates of the calling company', async () => {
+    it('lists the rates of the calling company, paginated', async () => {
       const response = await list(fx.tokenA).expect(200);
       expect(Array.isArray(response.body.data)).toBe(true);
       expect(response.body.data.length).toBeGreaterThanOrEqual(2);
+      // CONVENTIONS: every list carries `meta` so a page can be asked for.
+      expect(response.body.meta).toMatchObject({ page: 1, total: expect.any(Number) });
+    });
+
+    it('refuses a second rate for the same HSN code, as a 409 and not a 500', async () => {
+      const res = await post(fx.tokenA, { hsnCode: '6904', igstRate: '12' });
+      expect(res.status).toBe(409);
+      expect(res.body.error.code).toBe('DUPLICATE_VALUE');
+    });
+
+    it('lets another company hold its own rate for the same HSN code', async () => {
+      // ADR-018: the scheme and the rates are a per-company election.
+      await post(fx.tokenB, { hsnCode: '6904', igstRate: '6' }).expect(201);
     });
 
     it('updates a rate', async () => {
@@ -86,9 +99,13 @@ describe('Taxes masters (e2e)', () => {
 
   describe('tenant isolation', () => {
     it('does not show company A rates to company B', async () => {
-      const response = await list(fx.tokenB).expect(200);
-      const codes = (response.body.data as { hsnCode: string }[]).map((r) => r.hsnCode);
-      expect(codes).not.toContain('6904');
+      // Both companies legitimately hold an HSN 6904 row, so compare ids: B must
+      // see its own row and never A's.
+      const aIds = ((await list(fx.tokenA).expect(200)).body.data as { id: string }[]).map((r) => r.id);
+      const bIds = ((await list(fx.tokenB).expect(200)).body.data as { id: string }[]).map((r) => r.id);
+
+      expect(bIds.length).toBeGreaterThan(0);
+      expect(bIds.some((id) => aIds.includes(id))).toBe(false);
     });
 
     it('refuses to update a rate belonging to another company', async () => {

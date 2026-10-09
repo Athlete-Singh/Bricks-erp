@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, UseGuards, Query } from '@nestjs/common';
 import { TransportMastersService } from './transport-masters.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -15,6 +15,8 @@ import {
   UpdateVehicleDto,
   updateVehicleSchema,
   PERMISSIONS,
+  masterQuerySchema,
+  MasterQueryDto,
 } from '@brics/shared';
 
 @Controller('transport')
@@ -24,8 +26,11 @@ export class TransportMastersController {
 
   @Get('drivers')
   @RequirePermissions(PERMISSIONS.TRANSPORT_VIEW)
-  async listDrivers(@CurrentCompany() companyId: string) {
-    return this.service.listDrivers(companyId);
+  async listDrivers(
+    @CurrentCompany() companyId: string,
+    @Query(new ZodValidationPipe(masterQuerySchema)) query: MasterQueryDto,
+  ) {
+    return this.service.listDrivers(companyId, query);
   }
 
   @Post('drivers')
@@ -51,8 +56,11 @@ export class TransportMastersController {
 
   @Get('vehicles')
   @RequirePermissions(PERMISSIONS.TRANSPORT_VIEW)
-  async listVehicles(@CurrentCompany() companyId: string) {
-    return this.service.listVehicles(companyId);
+  async listVehicles(
+    @CurrentCompany() companyId: string,
+    @Query(new ZodValidationPipe(masterQuerySchema)) query: MasterQueryDto,
+  ) {
+    return this.service.listVehicles(companyId, query);
   }
 
   @Post('vehicles')

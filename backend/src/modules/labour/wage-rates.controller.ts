@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, UseGuards, Query } from '@nestjs/common';
 import { WageRatesService } from './wage-rates.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -11,6 +11,8 @@ import {
   UpdateWageRateDto,
   updateWageRateSchema,
   PERMISSIONS,
+  masterQuerySchema,
+  MasterQueryDto,
 } from '@brics/shared';
 
 @Controller('labour')
@@ -20,8 +22,11 @@ export class WageRatesController {
 
   @Get('wage-rates')
   @RequirePermissions(PERMISSIONS.LABOUR_VIEW)
-  async listWageRates(@CurrentCompany() companyId: string) {
-    return this.service.listWageRates(companyId);
+  async listWageRates(
+    @CurrentCompany() companyId: string,
+    @Query(new ZodValidationPipe(masterQuerySchema)) query: MasterQueryDto,
+  ) {
+    return this.service.listWageRates(companyId, query);
   }
 
   @Post('wage-rates')

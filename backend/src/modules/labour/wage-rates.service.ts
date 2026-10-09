@@ -3,7 +3,7 @@ import { InjectEntityManager } from '@nestjs/typeorm';
 import { EntityManager } from 'typeorm';
 import { WageRate } from './entities/wage-rate.entity';
 import { AuditService } from '../audit/audit.service';
-import { CreateWageRateDto, UpdateWageRateDto } from '@brics/shared';
+import { CreateWageRateDto, UpdateWageRateDto, MasterQueryDto } from '@brics/shared';
 
 @Injectable()
 export class WageRatesService {
@@ -92,10 +92,18 @@ export class WageRatesService {
     });
   }
 
-  async listWageRates(companyId: string) {
-    return this.em.find(WageRate, {
-      where: { companyId },
-      order: { activity: 'ASC' },
-    });
+  async listWageRates(companyId: string, query: MasterQueryDto) {
+    const qb = this.em.createQueryBuilder(WageRate, 'w').where('w.companyId = :companyId', { companyId });
+    if (query.search) qb.andWhere('w.activity ILIKE :search', { search: `%${query.search}%` });
+    if (query.isActive !== undefined) qb.andWhere('w.isActive = :isActive', { isActive: query.isActive });
+
+    const total = await qb.getCount();
+    const items = await qb
+      .orderBy('w.activity', 'ASC')
+      .skip((query.page - 1) * query.limit)
+      .take(query.limit)
+      .getMany();
+
+    return { items, meta: { page: query.page, limit: query.limit, total } };
   }
 }

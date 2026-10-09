@@ -48,10 +48,18 @@ describe('Labour masters (e2e)', () => {
       expect(response.body.data.rateAmount).toBe('450.50');
     });
 
-    it('lists the rates of the calling company', async () => {
+    it('lists the rates of the calling company, paginated', async () => {
       const response = await list(fx.tokenA).expect(200);
       expect(Array.isArray(response.body.data)).toBe(true);
       expect(response.body.data.length).toBeGreaterThanOrEqual(2);
+      expect(response.body.meta).toMatchObject({ page: 1, total: expect.any(Number) });
+    });
+
+    it('refuses a second rate for the same activity and unit', async () => {
+      // Two rates for "making per 1000 bricks" would make the payout ambiguous.
+      const res = await post(fx.tokenA, { activity: 'making', unit: '1000 bricks', rateAmount: '700' });
+      expect(res.status).toBe(409);
+      expect(res.body.error.code).toBe('DUPLICATE_VALUE');
     });
 
     it('updates a rate and keeps the decimal shape', async () => {

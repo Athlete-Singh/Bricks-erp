@@ -47,9 +47,10 @@ describe('Transport masters (e2e)', () => {
       expect(response.body.data.licenseNo).toBeNull();
     });
 
-    it('lists the drivers of the calling company', async () => {
+    it('lists the drivers of the calling company, paginated', async () => {
       const response = await list(drivers, fx.tokenA).expect(200);
       expect(response.body.data.length).toBeGreaterThanOrEqual(2);
+      expect(response.body.meta).toMatchObject({ page: 1, total: expect.any(Number) });
     });
 
     it('updates a driver and can deactivate one', async () => {
@@ -96,6 +97,17 @@ describe('Transport masters (e2e)', () => {
     it('lists the vehicles of the calling company', async () => {
       const response = await list(vehicles, fx.tokenA).expect(200);
       expect(response.body.data.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('refuses a second vehicle with the same registration number', async () => {
+      // Case-insensitive: a number plate is the same plate however it is typed.
+      const res = await post(vehicles, fx.tokenA, {
+        registrationNo: 'up32 ab 1234',
+        type: 'truck',
+        ownerType: 'own',
+      });
+      expect(res.status).toBe(409);
+      expect(res.body.error.code).toBe('DUPLICATE_VALUE');
     });
 
     it('rejects an unknown vehicle type', async () => {

@@ -3,7 +3,7 @@ import { InjectEntityManager } from '@nestjs/typeorm';
 import { EntityManager } from 'typeorm';
 import { HsnRate } from './entities/hsn-rate.entity';
 import { AuditService } from '../audit/audit.service';
-import { CreateHsnRateDto, UpdateHsnRateDto } from '@brics/shared';
+import { CreateHsnRateDto, UpdateHsnRateDto, MasterQueryDto } from '@brics/shared';
 
 @Injectable()
 export class TaxesService {
@@ -95,10 +95,18 @@ export class TaxesService {
     });
   }
 
-  async listHsnRates(companyId: string) {
-    return this.em.find(HsnRate, {
-      where: { companyId },
-      order: { hsnCode: 'ASC' },
-    });
+  async listHsnRates(companyId: string, query: MasterQueryDto) {
+    const qb = this.em.createQueryBuilder(HsnRate, 'h').where('h.companyId = :companyId', { companyId });
+    if (query.search) qb.andWhere('h.hsnCode ILIKE :search', { search: `%${query.search}%` });
+    if (query.isActive !== undefined) qb.andWhere('h.isActive = :isActive', { isActive: query.isActive });
+
+    const total = await qb.getCount();
+    const items = await qb
+      .orderBy('h.hsnCode', 'ASC')
+      .skip((query.page - 1) * query.limit)
+      .take(query.limit)
+      .getMany();
+
+    return { items, meta: { page: query.page, limit: query.limit, total } };
   }
 }

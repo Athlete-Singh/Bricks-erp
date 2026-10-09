@@ -65,6 +65,25 @@ describe('Inventory masters (e2e)', () => {
     });
   });
 
+  describe('duplicates', () => {
+    it('refuses a second unit with the same name, as a 409 and not a 500', async () => {
+      await api('post', '/units', fx.tokenA).send({ name: 'Bags', abbreviation: 'bag' }).expect(201);
+      // Case-insensitive: "Bags" and "bags" are the same unit to a storekeeper.
+      const res = await api('post', '/units', fx.tokenA).send({ name: 'bags', abbreviation: 'bg' });
+      expect(res.status).toBe(409);
+    });
+
+    it('refuses a second brick grade with the same name', async () => {
+      await api('post', '/brick-types', fx.tokenA).send({ grade: 'Jhama' }).expect(201);
+      const res = await api('post', '/brick-types', fx.tokenA).send({ grade: 'jhama' });
+      expect(res.status).toBe(409);
+    });
+
+    it('lets another company use the same unit name', async () => {
+      await api('post', '/units', fx.tokenB).send({ name: 'Bags', abbreviation: 'bag' }).expect(201);
+    });
+  });
+
   describe('brick types', () => {
     it('creates a brick grade', async () => {
       const res = await api('post', '/brick-types', fx.tokenA)
@@ -125,7 +144,14 @@ describe('Inventory masters (e2e)', () => {
 
   describe('tenant isolation', () => {
     it('does not show company A masters to company B', async () => {
-      expect((await api('get', '/units', fx.tokenB).expect(200)).body.data).toHaveLength(0);
+      // B has one unit of its own (from the duplicate-name test), so assert on
+      // what it must NOT see rather than on an empty list.
+      const unitNames = ((await api('get', '/units', fx.tokenB).expect(200)).body.data as { name: string }[]).map(
+        (u) => u.name,
+      );
+      expect(unitNames).not.toContain('Pieces');
+      expect(unitNames).not.toContain('Kilograms');
+
       expect((await api('get', '/brick-types', fx.tokenB).expect(200)).body.data).toHaveLength(0);
       expect((await api('get', '/warehouses', fx.tokenB).expect(200)).body.data).toHaveLength(0);
       expect((await api('get', '/items', fx.tokenB).expect(200)).body.data).toHaveLength(0);

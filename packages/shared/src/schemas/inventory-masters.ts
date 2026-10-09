@@ -94,3 +94,7 @@ export const inventoryMasterQuerySchema = z.object({
   sort: z.string().optional().default('-created_at'),
 });
 export type InventoryMasterQueryDto = z.infer<typeof inventoryMasterQuerySchema>;
+
+/** The same shape, named for use by every master list — transport, taxes, labour. */
+export const masterQuerySchema = inventoryMasterQuerySchema;
+export type MasterQueryDto = InventoryMasterQueryDto;

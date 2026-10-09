@@ -4,7 +4,7 @@ import { EntityManager } from 'typeorm';
 import { Driver } from './entities/driver.entity';
 import { Vehicle } from './entities/vehicle.entity';
 import { AuditService } from '../audit/audit.service';
-import { CreateDriverDto, UpdateDriverDto, CreateVehicleDto, UpdateVehicleDto } from '@brics/shared';
+import { CreateDriverDto, UpdateDriverDto, CreateVehicleDto, UpdateVehicleDto, MasterQueryDto } from '@brics/shared';
 
 @Injectable()
 export class TransportMastersService {
@@ -91,11 +91,19 @@ export class TransportMastersService {
     });
   }
 
-  async listDrivers(companyId: string) {
-    return this.em.find(Driver, {
-      where: { companyId },
-      order: { name: 'ASC' },
-    });
+  async listDrivers(companyId: string, query: MasterQueryDto) {
+    const qb = this.em.createQueryBuilder(Driver, 'd').where('d.companyId = :companyId', { companyId });
+    if (query.search) qb.andWhere('d.name ILIKE :search', { search: `%${query.search}%` });
+    if (query.isActive !== undefined) qb.andWhere('d.isActive = :isActive', { isActive: query.isActive });
+
+    const total = await qb.getCount();
+    const items = await qb
+      .orderBy('d.name', 'ASC')
+      .skip((query.page - 1) * query.limit)
+      .take(query.limit)
+      .getMany();
+
+    return { items, meta: { page: query.page, limit: query.limit, total } };
   }
 
   async createVehicle(companyId: string, userId: string, dto: CreateVehicleDto) {
@@ -166,10 +174,18 @@ export class TransportMastersService {
     });
   }
 
-  async listVehicles(companyId: string) {
-    return this.em.find(Vehicle, {
-      where: { companyId },
-      order: { registrationNo: 'ASC' },
-    });
+  async listVehicles(companyId: string, query: MasterQueryDto) {
+    const qb = this.em.createQueryBuilder(Vehicle, 'v').where('v.companyId = :companyId', { companyId });
+    if (query.search) qb.andWhere('v.registrationNo ILIKE :search', { search: `%${query.search}%` });
+    if (query.isActive !== undefined) qb.andWhere('v.isActive = :isActive', { isActive: query.isActive });
+
+    const total = await qb.getCount();
+    const items = await qb
+      .orderBy('v.registrationNo', 'ASC')
+      .skip((query.page - 1) * query.limit)
+      .take(query.limit)
+      .getMany();
+
+    return { items, meta: { page: query.page, limit: query.limit, total } };
   }
 }

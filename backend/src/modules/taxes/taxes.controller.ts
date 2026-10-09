@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, UseGuards, Query } from '@nestjs/common';
 import { TaxesService } from './taxes.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -11,6 +11,8 @@ import {
   UpdateHsnRateDto,
   updateHsnRateSchema,
   PERMISSIONS,
+  masterQuerySchema,
+  MasterQueryDto,
 } from '@brics/shared';
 
 @Controller('taxes')
@@ -20,8 +22,11 @@ export class TaxesController {
 
   @Get('hsn-rates')
   @RequirePermissions(PERMISSIONS.TAXES_VIEW)
-  async listHsnRates(@CurrentCompany() companyId: string) {
-    return this.service.listHsnRates(companyId);
+  async listHsnRates(
+    @CurrentCompany() companyId: string,
+    @Query(new ZodValidationPipe(masterQuerySchema)) query: MasterQueryDto,
+  ) {
+    return this.service.listHsnRates(companyId, query);
   }
 
   @Post('hsn-rates')

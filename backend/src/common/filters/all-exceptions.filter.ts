@@ -1,5 +1,6 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import type { Response } from 'express';
+import { QueryFailedError } from 'typeorm';
 import { ZodError } from 'zod';
 import { formatZodIssues } from '../pipes/zod-validation.pipe';
 
@@ -16,6 +17,25 @@ const STATUS_CODES: Record<number, string> = {
   422: 'BUSINESS_RULE',
   503: 'SERVICE_UNAVAILABLE',
 };
+
+/**
+ * Postgres error codes we can answer better than "something went wrong".
+ * The database is the last line of defence — a service usually checks for a
+ * duplicate first — but it is the only one that holds under a race, and
+ * several masters rely on a unique index alone. Without this mapping a user
+ * entering a unit that already exists gets a 500.
+ */
+const PG_UNIQUE_VIOLATION = '23505';
+const PG_FOREIGN_KEY_VIOLATION = '23503';
+const PG_CHECK_VIOLATION = '23514';
+const PG_NOT_NULL_VIOLATION = '23502';
+
+/** `lower(name)` reads as a function to a user; the column name does not. */
+function describeConstraint(constraint: string | undefined): string | undefined {
+  if (!constraint) return undefined;
+  const match = /^(?:uq|idx|fk|chk|ck)_(.+?)_(.+)$/i.exec(constraint);
+  return match?.[2]?.replace(/_/g, ' ');
+}
 
 /** Maps every thrown error to `{ error: { code, message, details? } }`. */
 @Catch()
@@ -39,6 +59,58 @@ export class AllExceptionsFilter implements ExceptionFilter {
         },
       };
     }
+    if (exception instanceof QueryFailedError) {
+      const driver = exception.driverError as { code?: string; constraint?: string; detail?: string };
+      const field = describeConstraint(driver?.constraint);
+
+      if (driver?.code === PG_UNIQUE_VIOLATION) {
+        return {
+          status: HttpStatus.CONFLICT,
+          body: {
+            error: {
+              code: 'DUPLICATE_VALUE',
+              message: field ? `A record with this ${field} already exists` : 'This record already exists',
+              details: driver.constraint,
+            },
+          },
+        };
+      }
+      if (driver?.code === PG_FOREIGN_KEY_VIOLATION) {
+        // Either the id does not exist, or something still references this row.
+        return {
+          status: HttpStatus.CONFLICT,
+          body: {
+            error: {
+              code: 'REFERENCE_CONFLICT',
+              message: field
+                ? `The ${field} is not valid, or this record is still in use`
+                : 'This record references something that does not exist, or is still in use',
+              details: driver.constraint,
+            },
+          },
+        };
+      }
+      if (driver?.code === PG_CHECK_VIOLATION || driver?.code === PG_NOT_NULL_VIOLATION) {
+        return {
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          body: {
+            error: {
+              code: 'BUSINESS_RULE',
+              message: 'That value is not allowed',
+              details: driver.constraint,
+            },
+          },
+        };
+      }
+
+      // Anything else from the driver is a bug on our side, not the caller's.
+      this.logger.error(exception);
+      return {
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        body: { error: { code: 'INTERNAL_ERROR', message: 'Something went wrong' } },
+      };
+    }
+
     if (!(exception instanceof HttpException)) {
       return {
         status: HttpStatus.INTERNAL_SERVER_ERROR,
