@@ -22,8 +22,11 @@ export type GstScheme = (typeof GST_SCHEMES)[number];
 export const PAYMENT_MODES = ['cash', 'bank', 'upi', 'credit'] as const;
 export type PaymentMode = (typeof PAYMENT_MODES)[number];
 
-/** Production stages, in physical order. */
-export const PRODUCTION_STAGES = ['soil', 'brick_making', 'drying', 'firing', 'sorting'] as const;
+/**
+ * Production stages, in physical order. One stage entry per batch per stage;
+ * `soil` is not a stage — it is raw material consumed at `making` (PRD-04).
+ */
+export const PRODUCTION_STAGES = ['making', 'drying', 'firing', 'sorting'] as const;
 export type ProductionStage = (typeof PRODUCTION_STAGES)[number];
 
 export const ITEM_CATEGORIES = ['raw_material', 'consumable', 'machinery', 'electrical', 'repair', 'other'] as const;

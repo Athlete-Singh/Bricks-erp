@@ -110,6 +110,33 @@ describe('Schema integrity (e2e)', () => {
     });
   });
 
+  describe('production (P5)', () => {
+    it.each([
+      'uq_production_batches_identity',
+      'uq_production_entries_batch_stage',
+      'uq_production_sorting_outputs_entry_grade',
+      'idx_production_batches_company_date',
+      'idx_production_entries_batch',
+    ])('enforces %s', (name) => {
+      expect(indexes.has(name)).toBe(true);
+    });
+
+    it.each([
+      ['fk_production_batches_site_id', 'a batch names a real kiln'],
+      ['fk_production_entries_batch_id', 'a stage entry belongs to a real batch'],
+      ['fk_production_entries_sardar_party_id', 'a making entry names a real Sardar party'],
+      ['fk_production_entries_warehouse_id', 'a sorting entry names a real warehouse'],
+      ['fk_production_sorting_outputs_entry_id', 'a sorting output belongs to a real sorting entry'],
+      ['fk_production_sorting_outputs_brick_type_id', 'a sorting output names a real brick grade'],
+      [
+        'fk_production_sorting_outputs_stock_movement_id',
+        'a sorting output points at the exact stock movement it wrote',
+      ],
+    ])('enforces %s — %s', (name) => {
+      expect(foreignKeys.has(name)).toBe(true);
+    });
+  });
+
   describe('every tenant table is indexed and keyed on company_id', () => {
     const TENANT_TABLES = [
       'parties',
@@ -122,6 +149,9 @@ describe('Schema integrity (e2e)', () => {
       'tax_hsn_rates',
       'labour_wage_rates',
       'stock_movements',
+      'production_batches',
+      'production_entries',
+      'production_sorting_outputs',
     ];
 
     it.each(TENANT_TABLES)('%s has an index on company_id', async (table) => {

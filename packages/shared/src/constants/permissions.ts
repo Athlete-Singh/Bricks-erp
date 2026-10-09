@@ -23,6 +23,8 @@ export const PERMISSIONS = {
   TAXES_MANAGE: 'taxes.manage',
   LABOUR_VIEW: 'labour.view',
   LABOUR_MANAGE: 'labour.manage',
+  PRODUCTION_VIEW: 'production.view',
+  PRODUCTION_MANAGE: 'production.manage',
 } as const;
 
 export type PermissionCode = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -138,6 +140,18 @@ export const PERMISSION_CATALOGUE: readonly PermissionDefinition[] = [
     module: 'labour',
     description: 'Create and edit labour masters',
   },
+  {
+    code: PERMISSIONS.PRODUCTION_VIEW,
+    name: 'View production',
+    module: 'production',
+    description: 'Read production batches, stage entries and the yield variance report',
+  },
+  {
+    code: PERMISSIONS.PRODUCTION_MANAGE,
+    name: 'Manage production',
+    module: 'production',
+    description: 'Create production batches and record stage entries (making, drying, firing, sorting)',
+  },
 ] as const;
 
 export interface RoleDefinition {
@@ -176,6 +190,8 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.TAXES_MANAGE,
       PERMISSIONS.LABOUR_VIEW,
       PERMISSIONS.LABOUR_MANAGE,
+      PERMISSIONS.PRODUCTION_VIEW,
+      PERMISSIONS.PRODUCTION_MANAGE,
     ],
   },
   {
@@ -200,6 +216,8 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.TAXES_MANAGE,
       PERMISSIONS.LABOUR_VIEW,
       PERMISSIONS.LABOUR_MANAGE,
+      PERMISSIONS.PRODUCTION_VIEW,
+      PERMISSIONS.PRODUCTION_MANAGE,
     ],
   },
   {
@@ -219,6 +237,8 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.TAXES_VIEW,
       PERMISSIONS.TAXES_MANAGE,
       PERMISSIONS.INVENTORY_VIEW,
+      // Production is a cost driver, so the Accountant reads but does not post.
+      PERMISSIONS.PRODUCTION_VIEW,
     ],
   },
   {
@@ -236,6 +256,8 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.TRANSPORT_VIEW,
       PERMISSIONS.TAXES_VIEW,
       PERMISSIONS.LABOUR_VIEW,
+      PERMISSIONS.PRODUCTION_VIEW,
+      PERMISSIONS.PRODUCTION_MANAGE,
     ],
   },
   {
@@ -248,13 +270,23 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.INVENTORY_VIEW,
       PERMISSIONS.INVENTORY_MANAGE,
       PERMISSIONS.LABOUR_VIEW,
+      PERMISSIONS.PRODUCTION_VIEW,
+      PERMISSIONS.PRODUCTION_MANAGE,
     ],
   },
   {
     code: 'supervisor',
     name: 'Supervisor',
     description: 'Field entries from the mobile app',
-    permissions: [PERMISSIONS.COMPANY_VIEW, PERMISSIONS.INVENTORY_VIEW, PERMISSIONS.LABOUR_VIEW],
+    permissions: [
+      PERMISSIONS.COMPANY_VIEW,
+      PERMISSIONS.INVENTORY_VIEW,
+      PERMISSIONS.LABOUR_VIEW,
+      // Supervisor is the role the Flutter app signs in with (M1). Production
+      // entry is a mobile use-case (PRD-06), so this role posts stages too.
+      PERMISSIONS.PRODUCTION_VIEW,
+      PERMISSIONS.PRODUCTION_MANAGE,
+    ],
   },
   {
     code: 'sales_executive',
@@ -267,6 +299,8 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.PARTIES_MANAGE,
       PERMISSIONS.INVENTORY_VIEW,
       PERMISSIONS.TAXES_VIEW,
+      // Sorted stock is what the sales team quotes against.
+      PERMISSIONS.PRODUCTION_VIEW,
     ],
   },
   {
@@ -280,6 +314,8 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.INVENTORY_MANAGE,
       // Goods arrive and leave on a vehicle, so a GRN needs to name one.
       PERMISSIONS.TRANSPORT_VIEW,
+      // The store keeper sees what sorting is producing so stock lines up.
+      PERMISSIONS.PRODUCTION_VIEW,
     ],
   },
   {

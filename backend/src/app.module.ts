@@ -17,6 +17,7 @@ import { InventoryModule } from './modules/inventory/inventory.module';
 import { TransportModule } from './modules/transport/transport.module';
 import { TaxesModule } from './modules/taxes/taxes.module';
 import { LabourModule } from './modules/labour/labour.module';
+import { ProductionModule } from './modules/production/production.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -54,6 +55,7 @@ import { LabourModule } from './modules/labour/labour.module';
     TransportModule,
     TaxesModule,
     LabourModule,
+    ProductionModule,
   ],
 })
 export class AppModule {}
