@@ -30,12 +30,37 @@ const PG_FOREIGN_KEY_VIOLATION = '23503';
 const PG_CHECK_VIOLATION = '23514';
 const PG_NOT_NULL_VIOLATION = '23502';
 
-/** `lower(name)` reads as a function to a user; the column name does not. */
-function describeConstraint(constraint: string | undefined): string | undefined {
-  if (!constraint) return undefined;
-  const match = /^(?:uq|idx|fk|chk|ck)_(.+?)_(.+)$/i.exec(constraint);
-  return match?.[2]?.replace(/_/g, ' ');
-}
+/**
+ * What to tell a user when a constraint stops them.
+ *
+ * Deriving this from the constraint name produces nonsense — splitting
+ * `uq_tax_hsn_rates_company_code` on underscores reads as "hsn rates company
+ * code". Names are for us; these phrases are for the person at the keyboard,
+ * so they are written out. Anything not listed falls back to a message that is
+ * vague but never wrong.
+ */
+const CONSTRAINT_MESSAGES: Record<string, string> = {
+  uq_parties_company_name: 'A party with this name already exists',
+  uq_units_company_name: 'A unit with this name already exists',
+  uq_units_company_abbrev: 'A unit with this abbreviation already exists',
+  uq_items_company_name: 'An item with this name already exists',
+  uq_brick_types_company_grade: 'This brick grade already exists',
+  uq_warehouses_site_name: 'This kiln already has a warehouse with that name',
+  uq_transport_drivers_company_name: 'A driver with this name already exists',
+  uq_transport_vehicles_company_reg: 'A vehicle with this registration number already exists',
+  uq_tax_hsn_rates_company_code: 'A rate for this HSN / SAC code already exists',
+  uq_labour_wage_rates_company_activity: 'A rate for this activity and unit already exists',
+  UQ_vouchers_company_number: 'That voucher number has already been used',
+  UQ_ledgers_company_name: 'A ledger with this name already exists',
+  UQ_ledgers_company_code: 'A ledger with this code already exists',
+  UQ_sites_company_code: 'A kiln with this code already exists',
+  UQ_financial_years_one_active: 'Another financial year is already active',
+
+  fk_items_unit_id: 'That unit does not exist',
+  fk_items_hsn_id: 'That HSN rate does not exist',
+  fk_warehouses_site_id: 'That kiln does not exist',
+  fk_transport_vehicles_party_id: 'That transporter does not exist',
+};
 
 /** Maps every thrown error to `{ error: { code, message, details? } }`. */
 @Catch()
@@ -61,7 +86,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
     if (exception instanceof QueryFailedError) {
       const driver = exception.driverError as { code?: string; constraint?: string; detail?: string };
-      const field = describeConstraint(driver?.constraint);
+      const known = driver?.constraint ? CONSTRAINT_MESSAGES[driver.constraint] : undefined;
 
       if (driver?.code === PG_UNIQUE_VIOLATION) {
         return {
@@ -69,7 +94,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
           body: {
             error: {
               code: 'DUPLICATE_VALUE',
-              message: field ? `A record with this ${field} already exists` : 'This record already exists',
+              message: known ?? 'A record with these details already exists',
               details: driver.constraint,
             },
           },
@@ -82,9 +107,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
           body: {
             error: {
               code: 'REFERENCE_CONFLICT',
-              message: field
-                ? `The ${field} is not valid, or this record is still in use`
-                : 'This record references something that does not exist, or is still in use',
+              message: known ?? 'This refers to something that does not exist, or is still in use',
               details: driver.constraint,
             },
           },
