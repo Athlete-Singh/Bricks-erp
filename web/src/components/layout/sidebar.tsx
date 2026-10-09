@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   BarChart2,
   BookOpen,
+  Boxes,
   ChevronLeft,
   ChevronRight,
   Flame,
@@ -38,6 +39,7 @@ const NAV: NavItem[] = [
   { label: 'Labour', href: '/labour', icon: Users, comingIn: 'P6' },
   { label: 'Purchases', href: '/purchases', icon: ShoppingCart, comingIn: 'P7' },
   { label: 'Dispatch', href: '/dispatch', icon: Truck, comingIn: 'P9' },
+  { label: 'Stock', href: '/stock', icon: Boxes, permissions: [PERMISSIONS.INVENTORY_VIEW] },
   { label: 'Masters', href: '/masters', icon: Library, permissions: [PERMISSIONS.PARTIES_VIEW] },
   { label: 'Accounts', href: '/accounts', icon: BookOpen, permissions: [PERMISSIONS.ACCOUNTS_VIEW] },
   { label: 'Reports', href: '/reports', icon: BarChart2, comingIn: 'P11' },

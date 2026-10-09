@@ -1,12 +1,13 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** P4.1b ✅ done → **next: P4.2** (web stock screens)
+**Client Phase:** CP1 (MVP) · **Current step:** P4.2 ✅ done — **phase P4 complete** → **next: P5.1** (production batches)
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
 - **Last green commit:** P4.1 audited and repaired (2026-10-09). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 134 unit + **241 e2e**, web 71, shared 63.
 - **What shipped:** **phase P3 is complete.** All nine master modules on the backend, and a Masters section on the web with a tab per module: parties (with the opening balance and the PTY-04 ledger statement), inventory, transport, taxes/HSN and wage rates. **PTY-01…04, PRD-01, INV-01/02, VEH-01, GST-01, LAB-03 are all ✅ on BE, Web and Tests.**
-- **Next step (exact):** **P4.2 — web stock screens**: current stock (the leakage report an owner actually opens), the movement register, opening-stock entry and the adjustment form. The adjustment form must be gated on `inventory.adjust`, not `inventory.manage` — that separation is the control, and hiding it behind the wrong permission would quietly undo it.
+- **Next step (exact):** **P5.1 — production**: batches per kiln + chamber + date (PRD-02), and the stage entries — making, drying, firing, sorting (PRD-03). Sorting is where it matters: good bricks by grade go **into** finished stock and rejects are wastage, both through `StockService` in the same transaction as the batch (INV-05 starts being wired here). Coal and soil consumption (PRD-04) comes out of stock the same way.
+- **INV-05 is not startable before P5/P7/P9** — it *is* the wiring of GRN, production, dispatch and wastage into `StockService`, so it fills in as each of those modules lands rather than being a step of its own.
 - **Still open:** Opening balance posting — a party's Dr/Cr is stored on the party and its ledger, but no opening journal is written, so the Trial Balance shows it as a difference. Deferred to a dedicated import flow.
 
 ### First run on a fresh database
@@ -21,6 +22,7 @@ That creates the 9 roles, one company, one kiln and one Owner. The bootstrap ref
   - P1.1a ✅ backend auth & RBAC skeleton: 11 entities, JWT access+refresh, guards, CRUD controllers, migration, first tests.
   - P1.2a ✅ web auth foundation: `api-client` (envelope unwrap, typed `ApiError`, single-flight 401→refresh→retry), token custody per ADR-016, auth store, login page, `AuthGuard`, sign-out. Verified in a real browser against the running API: login → dashboard, hard reload restores the session, sign-out clears both sides.
   - P1.2b ✅ web shell: user dropdown + change-password, company switcher, kiln switcher, permission-aware nav, and the company / kilns / financial-year screens. **ADM-01…04 are the first features to reach ✅.** Sidebar turned into a drawer below `md` — it was a 224 px rail on a 375 px phone, which broke the entry screens the new CONVENTIONS rule exists to protect.
+  - P4.2 ✅ **web stock screens — phase P4 complete.** A Stock section with current stock and the movement register. The adjustment form is gated on **`inventory.adjust`**, not `inventory.manage`, so the separation built in P4.1a survives into the UI. The register's running-balance column only appears once the filters narrow to one subject in one warehouse, and says why when it does not. Driven in a real browser: opening stock 40,000 → adjustment −500 → closing 39,500, with the adjustment's reason shown inline in the register. Two DOM-id defects found and fixed that way (see below).
   - P4.1b ✅ **stock reports (INV-07)** — current stock with the identity spelled out column by column (`opening + purchased + produced + adjustedIn − sold − wasted − adjustedOut = closing`), so an owner who distrusts the closing figure can see which kind of movement produced it. `asOf` answers as at a past date; `from` folds everything earlier into opening, the same convention the Trial Balance uses. The movement register carries a **running balance only when narrowed to one subject in one warehouse** — across different items in different yards it would be a number that means nothing — and it continues correctly onto page 2 rather than restarting. e2e 220 → 238.
   - P4.1a ✅ **the stock ledger** — `StockService`, the only writer of `stock_movements`, taking the **caller's** `EntityManager` so a document and its stock commit together (the `PostingService` pattern). One table for items and grades (ADR-023), one-sided quantities (ADR-024), quantity only and no value (ADR-025), and no negative stock except by a reasoned adjustment (ADR-026). `inventory.adjust` is a **separate, restricted permission**: a store keeper may record stock but may not write off a shortfall, and there is a test for exactly that. Backend 119 → 134 unit, e2e 183 → 220.
   - P3.2 ✅ web masters: a Masters section with a tab per module. Parties with opening balance and the **PTY-04** ledger statement (which leads with "They owe you" / "You owe them" rather than a raw Dr/Cr), inventory, transport, taxes/HSN with a 5/12/18/28 split helper, and wage rates that fill in each activity's usual unit. **Phase P3 complete.** Driven in a real browser, which caught a duplicate-error message that read "A record with this hsn rates company code already exists".
@@ -60,6 +62,16 @@ exactly: 63 indexes, 42 foreign keys, 10 checks.
    `generate`, which is why this happened.
 2. **Test the schema, not just the API.** `backend/test/schema-integrity.e2e-spec.ts` asserts the constraints exist in
    Postgres. It is the only kind of test that could have caught this, and it runs with the e2e suite.
+
+### What the browser run found in P4.2 (2026-10-09)
+Neither would have failed a unit test, and both were only visible by driving the real app:
+- **Duplicate DOM ids across two mounted dialogs.** The opening-stock and adjustment dialogs are both mounted at all
+  times, and both rendered `stock-warehouse` / `stock-item` / `stock-brick-type`. Every `<label for>` in the second
+  dialog pointed at the first dialog's field, so clicking a label focused the wrong control. The pickers now take an
+  `idPrefix`.
+- **`Dialog` used a hardcoded `id="dialog-title"`** for `aria-labelledby`. Any screen with two dialogs — most of them;
+  the inventory masters page has four — announced the wrong title to a screen reader. Now `useId()` per instance, and
+  `aria-describedby` wired up while there.
 
 ### What the P4.1 audit found (2026-10-09)
 Audited before starting P4.2, the same way P3.1 was. Three defects, two of them real:
@@ -148,9 +160,9 @@ The P track is never blocked by the M track.
 | P3 | P3.1b | Backend: units, items, brick types, warehouses (INV-01, INV-02, PRD-01) | ✅ |
 | P3 | P3.1c | Backend: vehicles, drivers, HSN + GST rates, wage rates (VEH-01, GST-01, LAB-03) | ✅ |
 | P3 | P3.2 | Web master screens + party ledger | ⬜ |
-| P4 | P4.1a | **Backend `StockService`**, the stock ledger, opening stock and adjustments (INV-03, INV-04, INV-06) | ⬜ |
-| P4 | P4.1b | Backend stock reports: current stock and the movement register (INV-07) | ⬜ |
-| P4 | P4.2 | Web stock screens + reports | ⬜ |
+| P4 | P4.1a | **Backend `StockService`**, the stock ledger, opening stock and adjustments (INV-03, INV-04, INV-06) | ✅ |
+| P4 | P4.1b | Backend stock reports: current stock and the movement register (INV-07) | ✅ |
+| P4 | P4.2 | Web stock screens + reports | ✅ |
 | P5 | P5.1 | Production backend + **LEK-01 brick yield variance** + **LEK-02 coal per 1,000** + **SYN-01/02 idempotency & delta pull** | ⬜ |
 | P5 | P5.2 | Web production entry + the two variance reports | ⬜ |
 | P6 | P6.1 | Labour backend + **LEK-03 live advance exposure, with the warning at advance entry** | ⬜ |

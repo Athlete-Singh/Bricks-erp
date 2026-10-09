@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { financialYearLabel, formatDate } from './date';
+import { financialYearLabel, formatDate, todayISO } from './date';
 import { formatINR, formatQty } from './inr';
 
 describe('formatINR', () => {
@@ -26,5 +26,25 @@ describe('dates', () => {
     expect(financialYearLabel(new Date(2026, 9, 7))).toBe('2026-27');
     expect(financialYearLabel(new Date(2027, 2, 31))).toBe('2026-27');
     expect(financialYearLabel(new Date(2027, 3, 1))).toBe('2027-28');
+  });
+});
+
+describe('todayISO', () => {
+  it('reads the local calendar day, not the UTC one', () => {
+    // 00:30 local is still the previous day in UTC at +05:30 — which is when a
+    // morning entry would otherwise be dated a day early.
+    expect(todayISO(new Date(2026, 9, 9, 0, 30, 0))).toBe('2026-10-09');
+  });
+
+  it('does not slip forward late in the evening either', () => {
+    expect(todayISO(new Date(2026, 9, 9, 23, 30, 0))).toBe('2026-10-09');
+  });
+
+  it('pads single-digit months and days', () => {
+    expect(todayISO(new Date(2026, 0, 5))).toBe('2026-01-05');
+  });
+
+  it('defaults to now', () => {
+    expect(todayISO()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 });

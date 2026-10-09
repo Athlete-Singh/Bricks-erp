@@ -1,7 +1,7 @@
 'use client';
 
 import { X } from 'lucide-react';
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 
 interface DialogProps {
@@ -20,6 +20,15 @@ interface DialogProps {
  */
 export function Dialog({ open, onClose, title, description, children, className }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
+  /**
+   * Unique per instance. A fixed id broke every screen that mounts more than
+   * one dialog — and most do, since a list usually has both a create and an
+   * edit form open in the tree at once. `aria-labelledby` then resolved to
+   * whichever title happened to come first in the DOM, so a screen reader
+   * announced the wrong dialog.
+   */
+  const titleId = useId();
+  const descriptionId = useId();
 
   useEffect(() => {
     const dialog = ref.current;
@@ -31,7 +40,8 @@ export function Dialog({ open, onClose, title, description, children, className 
   return (
     <dialog
       ref={ref}
-      aria-labelledby="dialog-title"
+      aria-labelledby={titleId}
+      aria-describedby={description ? descriptionId : undefined}
       // Esc fires `cancel`; a backdrop click lands on the dialog element itself.
       onCancel={(event) => {
         event.preventDefault();
@@ -47,10 +57,14 @@ export function Dialog({ open, onClose, title, description, children, className 
     >
       <div className="flex items-start justify-between gap-4 border-b border-border px-4 py-3">
         <div className="min-w-0">
-          <h2 id="dialog-title" className="text-base font-semibold">
+          <h2 id={titleId} className="text-base font-semibold">
             {title}
           </h2>
-          {description && <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>}
+          {description && (
+            <p id={descriptionId} className="mt-0.5 text-xs text-muted-foreground">
+              {description}
+            </p>
+          )}
         </div>
         <button
           type="button"
