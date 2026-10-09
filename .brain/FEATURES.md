@@ -11,7 +11,7 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 101 | 10 | 2 | 1 | 88 | 0 |
+| CP1 MVP | 101 | 10 | 5 | 1 | 85 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 
 **CP1 done: 10 %** (10 of 101 features ✅)
@@ -20,10 +20,10 @@
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
-| Backend | 97 | 11 | 1 | 0 | 0 | 85 |
+| Backend | 97 | 14 | 1 | 0 | 0 | 82 |
 | Web | 94 | 11 | 0 | 0 | 0 | 83 |
 | Mobile | 11 | 0 | 0 | 0 | 0 | 11 |
-| Tests | 101 | 12 | 0 | 0 | 0 | 89 |
+| Tests | 101 | 15 | 0 | 0 | 0 | 86 |
 
 ## Client Phase 1 — MVP
 
@@ -47,9 +47,9 @@
 
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| PTY-01 | One party master with types: customer, supplier, Sardar/labour contractor, transporter, employee, other | CP1 | P3 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| PTY-02 | GSTIN, PAN, state, address, phone, opening balance (Dr/Cr) per party | CP1 | P3 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| PTY-03 | Every party auto-gets a ledger account in the right group | CP1 | P3 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| PTY-01 | One party master with types: customer, supplier, Sardar/labour contractor, transporter, employee, other | CP1 | P3 | ✅ | ⬜ | — | ✅ | 🟨 |  |
+| PTY-02 | GSTIN, PAN, state, address, phone, opening balance (Dr/Cr) per party | CP1 | P3 | ✅ | ⬜ | — | ✅ | 🟨 |  |
+| PTY-03 | Every party auto-gets a ledger account in the right group | CP1 | P3 | ✅ | ⬜ | — | ✅ | 🟨 |  |
 | PTY-04 | Party ledger statement, outstanding balance and transaction history (fills in as modules post) | CP1 | P3 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 
 ### M03 Production (SOW #3)

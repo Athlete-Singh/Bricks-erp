@@ -11,6 +11,7 @@ import { CompanyModule } from './modules/company/company.module';
 import { UserModule } from './modules/user/user.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { AccountingModule } from './accounting/accounting.module';
+import { PartyModule } from './modules/parties/party.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { AccountingModule } from './accounting/accounting.module';
     UserModule,
     AuditModule,
     AccountingModule,
+    PartyModule,
   ],
 })
 export class AppModule {}

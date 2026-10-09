@@ -1,10 +1,10 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** P2.2 ✅ done → **next: P3.1** (backend masters) — **phase P2 complete, ACC-01…05 all ✅** (web login page wired to auth API, company/kiln switcher, user/role management screens) · **CP1 features done:** 10 / 101 (10 %)
+**Client Phase:** CP1 (MVP) · **Current step:** P3.1a ✅ done → **next: P3.1b** (backend masters part 2) — **phase P3 started, PTY-01…03 all ✅** (backend party master with auto-ledger)
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
-- **Last green commit:** `<p1.1b>` — `docs(brain): update tracking after P1.1b` (2026-10-08), branch `feat/p1.1b-tenancy-rbac` (**not yet merged to `main`**). Gate green: lint ✓ typecheck ✓ test ✓ build ✓, backend 31 unit + 22 e2e, migrations up **and** down verified, `pnpm seed` idempotent.
+- **Last green commit:** `<p3.1a>` — `docs(brain): update tracking after P3.1a` (2026-10-09). Gate green: lint ✓ typecheck ✓ test ✓ build ✓, backend e2e tests passing with tenancy and auto-ledger.
 - **Verified against a running API** (seeded DB, `node dist/main.js`): login returns a single-wrapped `{data}`, role `owner` with its 4 permission codes, the bootstrap company and kiln; `GET /users` contains no password hash; `GET /audit-logs` returns `{data, meta}` with the LOGIN entry; an invalid login body returns 400 `VALIDATION_FAILED` with per-field details.
 
 ### First run on a fresh database
@@ -93,7 +93,7 @@ The P track is never blocked by the M track.
 | P2 | P2.1b | Backend: `PostingService` (balanced, atomic, FY-checked, immutable + reversal) and manual vouchers — receipt, payment, contra, journal (ACC-02, ACC-03) | ✅ |
 | P2 | P2.1c | Backend reports: Day Book, Ledger statement, Trial Balance (ACC-05) | ✅ |
 | P2 | P2.2 | Web: voucher entry, Day Book, Ledger, Trial Balance | ✅ |
-| P3 | P3.1a | **Backend: parties + auto ledger** (PTY-01…03) and the company GST scheme | ⬜ |
+| P3 | P3.1a | **Backend: parties + auto ledger** (PTY-01…03) and the company GST scheme | ✅ |
 | P3 | P3.1b | Backend: units, items, brick types, warehouses (INV-01, INV-02, PRD-01) | ⬜ |
 | P3 | P3.1c | Backend: vehicles, drivers, HSN + GST rates, wage rates (VEH-01, GST-01, LAB-03) | ⬜ |
 | P3 | P3.2 | Web master screens + party ledger | ⬜ |
