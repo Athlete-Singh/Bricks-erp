@@ -33,3 +33,26 @@ export type ItemCategory = (typeof ITEM_CATEGORIES)[number];
 export const BRICKS_PER_RATE_UNIT = 1000;
 
 export const API_PREFIX = 'api/v1';
+
+/**
+ * Why a quantity moved. Opening and adjustment are entered by a person; the
+ * rest are written by the module that caused them (P5 production, P7 purchases,
+ * P9 dispatch), which is what makes `Opening + In − Out = Closing` explainable
+ * line by line rather than just arithmetically true.
+ */
+export const STOCK_MOVEMENT_TYPES = [
+  'opening',
+  'purchase',
+  'production',
+  'sale',
+  'wastage',
+  'adjustment',
+  'transfer',
+] as const;
+export type StockMovementType = (typeof STOCK_MOVEMENT_TYPES)[number];
+
+/** Movement types a person may enter directly; everything else needs a source document. */
+export const MANUAL_STOCK_MOVEMENT_TYPES = ['opening', 'adjustment'] as const;
+
+/** Quantities allow three decimals — coal is weighed in tonnes, bricks counted in pieces. */
+export const QUANTITY_SCALE = 3;

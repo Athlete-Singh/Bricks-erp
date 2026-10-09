@@ -11,7 +11,7 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 101 | 20 | 2 | 1 | 78 | 0 |
+| CP1 MVP | 101 | 20 | 5 | 1 | 75 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 
 **CP1 done: 20 %** (20 of 101 features ✅)
@@ -20,10 +20,10 @@
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
-| Backend | 97 | 21 | 1 | 0 | 0 | 75 |
+| Backend | 97 | 24 | 1 | 0 | 0 | 72 |
 | Web | 94 | 21 | 0 | 0 | 0 | 73 |
 | Mobile | 11 | 0 | 0 | 0 | 0 | 11 |
-| Tests | 101 | 22 | 0 | 0 | 0 | 79 |
+| Tests | 101 | 25 | 0 | 0 | 0 | 76 |
 
 ## Client Phase 1 — MVP
 
@@ -83,10 +83,10 @@
 |---|---|---|---|---|---|---|---|---|---|
 | INV-01 | Items master: raw materials (soil, coal, sand, diesel), consumables, machinery/electrical/repair items; units; HSN | CP1 | P3 | ✅ | ✅ | — | ✅ | ✅ |  |
 | INV-02 | Warehouses / stock locations per kiln | CP1 | P3 | ✅ | ✅ | — | ✅ | ✅ |  |
-| INV-03 | Opening stock entry | CP1 | P4 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| INV-04 | Stock movement ledger via a single `StockService` (every in/out linked to its source document) | CP1 | P4 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| INV-03 | Opening stock entry | CP1 | P4 | ✅ | ⬜ | — | ✅ | 🟨 |  |
+| INV-04 | Stock movement ledger via a single `StockService` (every in/out linked to its source document) | CP1 | P4 | ✅ | ⬜ | — | ✅ | 🟨 |  |
 | INV-05 | Automatic updates from GRN, production, dispatch and wastage (wired in P5/P7/P9) | CP1 | P4 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| INV-06 | Manual stock adjustment with reason (restricted role) | CP1 | P4 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| INV-06 | Manual stock adjustment with reason (restricted role) | CP1 | P4 | ✅ | ⬜ | — | ✅ | 🟨 |  |
 | INV-07 | Stock reports: current stock by kiln/grade/item, movement register, Opening + Production + Purchase − Sales − Wastage = Closing | CP1 | P4 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 
 ### M06 Vehicle & Transport (SOW #6)

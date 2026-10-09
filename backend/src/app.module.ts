@@ -11,6 +11,7 @@ import { CompanyModule } from './modules/company/company.module';
 import { UserModule } from './modules/user/user.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { AccountingModule } from './accounting/accounting.module';
+import { StockModule } from './stock/stock.module';
 import { PartyModule } from './modules/parties/party.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { TransportModule } from './modules/transport/transport.module';
@@ -47,6 +48,7 @@ import { LabourModule } from './modules/labour/labour.module';
     UserModule,
     AuditModule,
     AccountingModule,
+    StockModule,
     PartyModule,
     InventoryModule,
     TransportModule,

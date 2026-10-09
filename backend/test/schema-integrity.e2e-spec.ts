@@ -92,6 +92,24 @@ describe('Schema integrity (e2e)', () => {
     });
   });
 
+  describe('the stock ledger (P4)', () => {
+    it.each(['uq_stock_movements_opening_item', 'uq_stock_movements_opening_grade', 'idx_stock_movements_balance'])(
+      'enforces %s',
+      (name) => {
+        expect(indexes.has(name)).toBe(true);
+      },
+    );
+
+    it.each([
+      ['fk_stock_movements_warehouse_id', 'a movement happens in a real warehouse'],
+      ['fk_stock_movements_item_id', 'an item movement names a real item'],
+      ['fk_stock_movements_brick_type_id', 'a grade movement names a real grade'],
+      ['fk_stock_movements_site_id', 'a movement belongs to a real kiln'],
+    ])('enforces %s — %s', (name) => {
+      expect(foreignKeys.has(name)).toBe(true);
+    });
+  });
+
   describe('every tenant table is indexed and keyed on company_id', () => {
     const TENANT_TABLES = [
       'parties',
@@ -103,6 +121,7 @@ describe('Schema integrity (e2e)', () => {
       'transport_vehicles',
       'tax_hsn_rates',
       'labour_wage_rates',
+      'stock_movements',
     ];
 
     it.each(TENANT_TABLES)('%s has an index on company_id', async (table) => {
@@ -148,6 +167,12 @@ describe('Schema integrity (e2e)', () => {
       'chk_parties_opening_one_side',
       'chk_parties_opening_non_negative',
       'chk_companies_gst_scheme',
+      // ADR-023/024/026 — the stock ledger's own rules, in the database.
+      'chk_stock_movements_one_subject',
+      'chk_stock_movements_one_side',
+      'chk_stock_movements_not_negative',
+      'chk_stock_movements_type',
+      'chk_stock_movements_adjustment_reason',
     ])('enforces %s', async (name) => {
       const rows = await dataSource.query<{ count: string }[]>(
         `SELECT count(*) AS count FROM pg_constraint WHERE contype = 'c' AND conname = $1`,
@@ -178,6 +203,20 @@ describe('Schema integrity (e2e)', () => {
         await dataSource.query(`DELETE FROM financial_years WHERE company_id = $1`, [companyId]);
         await dataSource.query(`DELETE FROM companies WHERE id = $1`, [companyId]);
       }
+    });
+
+    it('rejects a stock movement that is both an in and an out', async () => {
+      // The service never writes one, but the database must refuse it anyway —
+      // a rule that lives only in TypeScript is one bad migration from gone.
+      await expect(
+        dataSource.query(
+          `INSERT INTO stock_movements
+             (company_id, site_id, warehouse_id, item_id, movement_type, quantity_in, quantity_out, movement_date)
+           VALUES ('00000000-0000-4000-8000-000000000000','00000000-0000-4000-8000-000000000000',
+                   '00000000-0000-4000-8000-000000000000','00000000-0000-4000-8000-000000000000',
+                   'purchase', 5, 5, '2026-04-01')`,
+        ),
+      ).rejects.toThrow();
     });
 
     it('rejects a unit whose company does not exist', async () => {
