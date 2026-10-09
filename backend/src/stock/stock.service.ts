@@ -4,6 +4,7 @@ import Decimal from 'decimal.js';
 import { EntityManager } from 'typeorm';
 import type { OpeningStockDto, StockAdjustmentDto, StockMovementType } from '@brics/shared';
 import { BusinessRuleException } from '../common/exceptions/business-rule.exception';
+import { todayCalendarDate } from '../common/time/calendar-date';
 import { AuditService } from '../modules/audit/audit.service';
 import { Warehouse } from '../modules/inventory/entities/warehouse.entity';
 import { Item } from '../modules/inventory/entities/item.entity';
@@ -94,6 +95,14 @@ export class StockService {
       throw new BusinessRuleException('STOCK_QUANTITY_INVALID', 'A movement must be more than zero');
     }
 
+    // Stock cannot move tomorrow. A mistyped year is the common data-entry
+    // error here, and it would silently distort every `asOf` report rather than
+    // failing anywhere visible.
+    const today = todayCalendarDate();
+    if (input.movementDate > today) {
+      throw new BusinessRuleException('STOCK_DATE_IN_FUTURE', `A movement cannot be dated after today (${today})`);
+    }
+
     const warehouse = await manager.findOne(Warehouse, {
       where: { id: input.warehouseId, companyId },
     });
@@ -105,6 +114,8 @@ export class StockService {
     const subject = await this.resolveSubject(manager, companyId, input);
 
     if (direction === 'out' && !input.allowNegative) {
+      await this.lockSubject(manager, companyId, input);
+
       const balance = await this.balanceOf(manager, companyId, input);
       if (new Decimal(balance).lessThan(amount)) {
         // ADR-026 — refuse rather than let a balance drift below zero, which is
@@ -198,6 +209,36 @@ export class StockService {
         allowNegative: true,
       }),
     );
+  }
+
+  /**
+   * Serialises the check-then-write for one subject in one warehouse.
+   *
+   * Reading a balance and then inserting against it is a read-then-write race:
+   * without this, eight concurrent issues of 20 all passed a check against a
+   * balance of 100 and took it to −60, which is precisely the hole ADR-026
+   * exists to close. Offline mobile sync (M14) makes concurrent writes the
+   * normal case, not an exotic one.
+   *
+   * An advisory lock rather than `SELECT … FOR UPDATE`: the rows that matter
+   * are the ones *about to be inserted*, which no row lock can cover. It is
+   * held to the end of the transaction and keyed per subject, so unrelated
+   * stock never queues behind it. A hash collision would only make two
+   * unrelated subjects take turns — slower, never wrong.
+   *
+   * Only the `out` path takes it. An `in` committing alongside can only make
+   * more stock available, so the worst it can cause is a refusal that would
+   * have succeeded a moment later — never an over-issue.
+   */
+  private async lockSubject(manager: EntityManager, companyId: string, subject: StockSubject): Promise<void> {
+    if (!manager.queryRunner?.isTransactionActive) {
+      // Outside a transaction the lock would be released immediately and the
+      // guarantee would be silently absent — fail loudly instead.
+      throw new BusinessRuleException('STOCK_REQUIRES_TRANSACTION', 'Stock must be recorded inside a transaction');
+    }
+
+    const key = `stock:${companyId}:${subject.warehouseId}:${subject.itemId ?? subject.brickTypeId ?? ''}`;
+    await manager.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [key]);
   }
 
   /** Confirms the item or grade belongs to this company, and names it for messages. */

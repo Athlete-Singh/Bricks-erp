@@ -98,3 +98,11 @@ Why: ACCOUNTING_RULES already says pure stock events move quantity only — valu
 **ADR-026 — Stock cannot go negative, except by an explicit adjustment — 2026-10-09**
 Decision: `StockService` refuses a movement that would take a balance below zero, with `STOCK_INSUFFICIENT`. Only a manual adjustment (INV-06), which already requires a reason and a restricted permission, may do so.
 Why: this product exists partly to catch leakage (M13). Silent negative stock is precisely what theft looks like in the data, so the database should not accept it quietly. The escape hatch is deliberate: a correction is recorded as a correction, by a named user, with a stated reason, rather than hidden inside an ordinary issue.
+
+**ADR-027 — The negative-stock check takes an advisory lock — 2026-10-09**
+Decision: before reading a balance to refuse an issue, `StockService` takes `pg_advisory_xact_lock` keyed on company + warehouse + subject, and refuses outright if it is not inside a transaction.
+Why: ADR-026 was read-then-write, which is a race. An audit test proved it: eight concurrent issues of 20 each all passed a check against a balance of 100 and took it to −60. A row lock cannot help, because the rows that matter are the ones about to be inserted. The lock is per subject so unrelated stock never queues, and only the `out` path takes it — an `in` committing alongside can only make more stock available, so the worst it causes is a refusal that would have succeeded a moment later. Offline mobile sync (M14) makes concurrent writes ordinary, not exotic.
+
+**ADR-028 — A stock movement cannot be dated in the future — 2026-10-09**
+Decision: `StockService` refuses `movement_date > today` with `STOCK_DATE_IN_FUTURE`.
+Why: stock cannot have moved tomorrow. A mistyped year is the common data-entry error on this screen and it would not fail anywhere visible — it would quietly distort every `asOf` report instead. Financial-year gating is a separate question and stays with P10 closing stock (OPEN_QUESTIONS #4).

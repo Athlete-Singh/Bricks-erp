@@ -14,7 +14,11 @@ import { StockService } from '../stock.service';
  */
 describe('StockService', () => {
   let service: StockService;
-  let manager: jest.Mocked<Pick<EntityManager, 'findOne' | 'save' | 'create' | 'createQueryBuilder'>>;
+  let manager: jest.Mocked<
+    Pick<EntityManager, 'findOne' | 'save' | 'create' | 'createQueryBuilder' | 'query'> & {
+      queryRunner: { isTransactionActive: boolean };
+    }
+  >;
 
   const WAREHOUSE = { id: 'w1', companyId: 'c1', siteId: 's1', name: 'Main Yard', isActive: true };
   const ITEM = { id: 'i1', companyId: 'c1', name: 'Coal', isActive: true };
@@ -35,6 +39,10 @@ describe('StockService', () => {
       save: jest.fn((entity: unknown) => Promise.resolve(entity)),
       create: jest.fn((_entity: unknown, data: unknown) => ({ id: 'm1', ...(data as object) })),
       createQueryBuilder: jest.fn(() => balanceOf('0')),
+      // The advisory lock (ADR-027) runs raw SQL and only holds inside a
+      // transaction, so the stub has to look like one.
+      query: jest.fn(() => Promise.resolve([])),
+      queryRunner: { isTransactionActive: true },
     } as never;
 
     const moduleRef = await Test.createTestingModule({
@@ -143,6 +151,25 @@ describe('StockService', () => {
         input({ direction: 'out', quantity: '50', movementType: 'adjustment', allowNegative: true }),
       );
       expect(movement.quantityOut).toBe('50.000');
+    });
+
+    it('takes a lock before reading the balance, so the check cannot race', async () => {
+      manager.createQueryBuilder.mockReturnValue(balanceOf('100') as never);
+      await service.record(manager as never, input({ direction: 'out', quantity: '10' }));
+
+      expect(manager.query).toHaveBeenCalledWith(expect.stringContaining('pg_advisory_xact_lock'), [
+        expect.stringContaining('stock:c1:w1:i1'),
+      ]);
+    });
+
+    it('refuses outright outside a transaction, rather than locking nothing', async () => {
+      // An advisory lock taken outside a transaction is released at once, so the
+      // guarantee would be silently absent.
+      manager.queryRunner.isTransactionActive = false;
+      await expectRefusal(
+        service.record(manager as never, input({ direction: 'out', quantity: '10' })),
+        'STOCK_REQUIRES_TRANSACTION',
+      );
     });
 
     it('does not even read the balance when stock is coming in', async () => {

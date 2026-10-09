@@ -66,6 +66,25 @@ export interface StockRegisterRow {
   notes: string | null;
 }
 
+/** The raw shape the register query returns. */
+interface RegisterRaw {
+  id: string;
+  movementDate: string | Date;
+  movementType: StockMovementType;
+  warehouseId: string;
+  warehouseName: string;
+  itemId: string | null;
+  itemName: string | null;
+  brickTypeId: string | null;
+  brickGrade: string | null;
+  quantityIn: string;
+  quantityOut: string;
+  sourceType: string | null;
+  sourceId: string | null;
+  notes: string | null;
+  createdAt: Date;
+}
+
 /** The raw shape the grouped query returns; every numeric arrives as a string. */
 interface CurrentStockRaw {
   siteId: string;
@@ -273,6 +292,11 @@ export class StockReportsService {
       .addSelect('m.source_type', 'sourceType')
       .addSelect('m.source_id', 'sourceId')
       .addSelect('m.notes', 'notes')
+      // Needed to carry the balance across pages: same-date rows are ordered by
+      // created_at, so the tie has to be broken the same way the page order
+      // does. Without it the carried balance silently dropped every row sharing
+      // the oldest row's date.
+      .addSelect('m.created_at', 'createdAt')
       .where('m.company_id = :companyId', { companyId });
 
     if (query.warehouseId) qb.andWhere('m.warehouse_id = :warehouseId', { warehouseId: query.warehouseId });
@@ -289,7 +313,7 @@ export class StockReportsService {
       .addOrderBy('m.created_at', 'DESC')
       .offset((query.page - 1) * query.limit)
       .limit(query.limit)
-      .getRawMany<Record<string, string | null>>();
+      .getRawMany<RegisterRaw>();
 
     const narrowed = Boolean(query.warehouseId && (query.itemId || query.brickTypeId));
     const rows = await this.withRunningBalance(companyId, query, raw, narrowed);
@@ -307,15 +331,15 @@ export class StockReportsService {
   private async withRunningBalance(
     companyId: string,
     query: StockMovementQueryDto,
-    raw: Record<string, string | null>[],
+    raw: RegisterRaw[],
     narrowed: boolean,
   ): Promise<StockRegisterRow[]> {
-    const toRow = (r: Record<string, string | null>, runningBalance: string | null): StockRegisterRow => ({
-      id: r.id!,
-      movementDate: toCalendarDate(r.movementDate as unknown as string | Date),
-      movementType: r.movementType as StockMovementType,
-      warehouseId: r.warehouseId!,
-      warehouseName: r.warehouseName!,
+    const toRow = (r: RegisterRaw, runningBalance: string | null): StockRegisterRow => ({
+      id: r.id,
+      movementDate: toCalendarDate(r.movementDate),
+      movementType: r.movementType,
+      warehouseId: r.warehouseId,
+      warehouseName: r.warehouseName,
       subjectType: r.itemId ? 'item' : 'brick',
       subjectId: (r.itemId ?? r.brickTypeId)!,
       subjectName: r.itemName ?? r.brickGrade ?? 'Unknown',
@@ -339,7 +363,7 @@ export class StockReportsService {
       .andWhere('m.warehouse_id = :warehouseId', { warehouseId: query.warehouseId })
       .andWhere('(m.movement_date < :date OR (m.movement_date = :date AND m.created_at < :createdAt))', {
         date: oldestOnPage.movementDate,
-        createdAt: oldestOnPage.createdAt ?? new Date(0).toISOString(),
+        createdAt: oldestOnPage.createdAt,
       });
 
     if (query.itemId) before.andWhere('m.item_id = :itemId', { itemId: query.itemId });

@@ -106,7 +106,12 @@ export const currentStockQuerySchema = z.object({
   warehouseId: uuid.optional(),
   /** `item`, `brick` or both — a storekeeper and an owner want different halves. */
   subject: z.enum(['item', 'brick', 'all']).default('all'),
-  /** Rows that have never moved and sit at zero are noise by default. */
+  /**
+   * Keep subjects whose movements net to zero. The report is built from the
+   * ledger, so an item that has never moved at all has no row either way —
+   * this only decides whether a subject that moved and came back to zero is
+   * shown or hidden.
+   */
   includeZero: z
     .enum(['true', 'false'])
     .default('false')

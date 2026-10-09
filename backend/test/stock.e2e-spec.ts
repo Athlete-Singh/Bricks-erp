@@ -8,6 +8,7 @@ import { Warehouse } from '../src/modules/inventory/entities/warehouse.entity';
 import { Unit } from '../src/modules/inventory/entities/unit.entity';
 import { Item } from '../src/modules/inventory/entities/item.entity';
 import { BrickType } from '../src/modules/inventory/entities/brick-type.entity';
+import { StockService } from '../src/stock/stock.service';
 import { createTenantFixture, type TenantFixture } from './helpers/tenant-fixture';
 
 jest.setTimeout(40000);
@@ -167,6 +168,16 @@ describe('Stock (e2e)', () => {
       }).expect(400);
     });
 
+    it('refuses a movement dated after today', async () => {
+      const res = await opening(fx.tokenA, {
+        warehouseId: warehouseA.id,
+        brickTypeId: gradeB.id,
+        quantity: '5',
+        movementDate: '2099-01-01',
+      }).expect(422);
+      expect(res.body.error.code).toBe('STOCK_DATE_IN_FUTURE');
+    });
+
     it('refuses an inactive item', async () => {
       const res = await opening(fx.tokenA, {
         warehouseId: warehouseA.id,
@@ -247,6 +258,54 @@ describe('Stock (e2e)', () => {
     it('keeps items and grades separate in the same warehouse', async () => {
       const res = await balance(fx.tokenA, { warehouseId: warehouseA.id, brickTypeId: classOne.id }).expect(200);
       expect(res.body.data.balance).toBe('40500.000');
+    });
+  });
+
+  describe('under concurrency', () => {
+    it('does not let simultaneous issues drive the balance negative', async () => {
+      // The whole of ADR-026 rests on this check, and a read-then-write check is
+      // only as good as its locking. Eight callers each try to take 20 from a
+      // balance of 100: five may succeed, three must be refused.
+      const stock = fx.app.get(StockService);
+      const USER_ID = '00000000-0000-4000-8000-0000000000aa';
+      const grade = await fx.dataSource
+        .getRepository(BrickType)
+        .save(fx.dataSource.getRepository(BrickType).create({ companyId: fx.companyA.id, grade: 'Race Test' }));
+
+      await stock.openingStock(fx.companyA.id, USER_ID, {
+        warehouseId: warehouseA.id,
+        brickTypeId: grade.id,
+        itemId: null,
+        quantity: '100',
+        movementDate: '2026-04-01',
+        notes: null,
+      });
+
+      const attempts = await Promise.allSettled(
+        Array.from({ length: 8 }, () =>
+          fx.dataSource.transaction((manager) =>
+            stock.record(manager, {
+              companyId: fx.companyA.id,
+              userId: USER_ID,
+              warehouseId: warehouseA.id,
+              brickTypeId: grade.id,
+              movementType: 'sale',
+              direction: 'out',
+              quantity: '20',
+              movementDate: '2026-10-09',
+            }),
+          ),
+        ),
+      );
+
+      const accepted = attempts.filter((a) => a.status === 'fulfilled').length;
+      const balance = await stock.currentBalance(fx.companyA.id, {
+        warehouseId: warehouseA.id,
+        brickTypeId: grade.id,
+      });
+
+      expect(accepted).toBe(5);
+      expect(balance).toBe('0.000');
     });
   });
 

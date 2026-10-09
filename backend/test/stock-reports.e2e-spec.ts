@@ -279,6 +279,34 @@ describe('Stock reports (e2e)', () => {
       expect(registerRowsOf(page2)[0]!.runningBalance).toBe('30000.000');
     });
 
+    it('keeps the running balance right when several movements share one date', async () => {
+      // Same-date rows are ordered by created_at, so the balance carried into a
+      // page has to break the tie the same way the page ordering does.
+      const sameDay = await ds
+        .getRepository(BrickType)
+        .save(ds.getRepository(BrickType).create({ companyId: fx.companyA.id, grade: 'Same Day' }));
+      for (const qty of ['100', '200', '300', '400']) {
+        await move({ brickTypeId: sameDay.id }, 'production', 'in', qty, '2026-08-01');
+      }
+
+      const filters = { warehouseId: warehouse.id, brickTypeId: sameDay.id };
+      const whole = await register(fx.tokenA, { ...filters, limit: '50' }).expect(200);
+      expect(registerRowsOf(whole).map((r) => r.runningBalance)).toEqual(['1000.000', '600.000', '300.000', '100.000']);
+
+      // Every page must agree with the whole list. Page 1 is the telling one:
+      // its oldest row has two same-date rows before it, which the carried
+      // balance has to include.
+      for (const page of ['1', '2']) {
+        const paged = await register(fx.tokenA, { ...filters, limit: '2', page }).expect(200);
+        const offset = (Number(page) - 1) * 2;
+        expect(registerRowsOf(paged).map((r) => [r.id, r.runningBalance])).toEqual(
+          registerRowsOf(whole)
+            .slice(offset, offset + 2)
+            .map((r) => [r.id, r.runningBalance]),
+        );
+      }
+    });
+
     it('leaves the running balance out when it would mean nothing', async () => {
       // Across different items in different yards a running total is nonsense.
       const res = await register(fx.tokenA, { limit: '50' }).expect(200);

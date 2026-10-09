@@ -4,7 +4,7 @@
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
-- **Last green commit:** P4.1b stock reports (2026-10-09). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 134 unit + **238 e2e**, web 71, shared 63.
+- **Last green commit:** P4.1 audited and repaired (2026-10-09). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 134 unit + **241 e2e**, web 71, shared 63.
 - **What shipped:** **phase P3 is complete.** All nine master modules on the backend, and a Masters section on the web with a tab per module: parties (with the opening balance and the PTY-04 ledger statement), inventory, transport, taxes/HSN and wage rates. **PTY-01…04, PRD-01, INV-01/02, VEH-01, GST-01, LAB-03 are all ✅ on BE, Web and Tests.**
 - **Next step (exact):** **P4.2 — web stock screens**: current stock (the leakage report an owner actually opens), the movement register, opening-stock entry and the adjustment form. The adjustment form must be gated on `inventory.adjust`, not `inventory.manage` — that separation is the control, and hiding it behind the wrong permission would quietly undo it.
 - **Still open:** Opening balance posting — a party's Dr/Cr is stored on the party and its ledger, but no opening journal is written, so the Trial Balance shows it as a difference. Deferred to a dedicated import flow.
@@ -60,6 +60,20 @@ exactly: 63 indexes, 42 foreign keys, 10 checks.
    `generate`, which is why this happened.
 2. **Test the schema, not just the API.** `backend/test/schema-integrity.e2e-spec.ts` asserts the constraints exist in
    Postgres. It is the only kind of test that could have caught this, and it runs with the e2e suite.
+
+### What the P4.1 audit found (2026-10-09)
+Audited before starting P4.2, the same way P3.1 was. Three defects, two of them real:
+- **The negative-stock guard did not hold under concurrency.** Read-then-write: eight simultaneous issues of 20 each
+  all passed a check against a balance of 100 and took it to **−60**. The entire point of ADR-026 was void whenever
+  two people acted at once — and with offline sync that is the normal case. Fixed with a per-subject advisory lock
+  (**ADR-027**), with the concurrency test kept.
+- **The register's carried balance silently dropped same-date rows.** `created_at` was used to break the tie but never
+  selected, so it was always `undefined` and fell back to 1970. Page 1 of a four-row same-date set reported **700**
+  where the truth was **1000**. The original test only checked page 2, where the bug cannot show.
+- **No guard against a future-dated movement** (**ADR-028**) — a mistyped year would not fail anywhere visible, it
+  would quietly distort every `asOf` report.
+**Lesson:** a test that passes can still be the wrong test. The page-2 assertion and the single-threaded balance check
+both passed while the code was wrong; it took asking "what would break this?" rather than "does this work?".
 
 ### What the P3.1 audit found (read before marking any step ✅)
 P3.1a (parties) was built properly — 20 e2e tests including cross-tenant read **and** write. P3.1b and P3.1c were not:
