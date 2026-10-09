@@ -11,7 +11,7 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 101 | 10 | 5 | 1 | 85 | 0 |
+| CP1 MVP | 101 | 10 | 8 | 1 | 82 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 
 **CP1 done: 10 %** (10 of 101 features ✅)
@@ -20,10 +20,10 @@
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
-| Backend | 97 | 14 | 1 | 0 | 0 | 82 |
+| Backend | 97 | 17 | 1 | 0 | 0 | 79 |
 | Web | 94 | 11 | 0 | 0 | 0 | 83 |
 | Mobile | 11 | 0 | 0 | 0 | 0 | 11 |
-| Tests | 101 | 15 | 0 | 0 | 0 | 86 |
+| Tests | 101 | 18 | 0 | 0 | 0 | 83 |
 
 ## Client Phase 1 — MVP
 
@@ -56,7 +56,7 @@
 
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| PRD-01 | Brick types / grades master (configurable, e.g. Class 1/2/3) | CP1 | P3 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| PRD-01 | Brick types / grades master (configurable, e.g. Class 1/2/3) | CP1 | P3 | ✅ | ⬜ | — | ✅ | 🟨 |  |
 | PRD-02 | Production batch per kiln + chamber + date | CP1 | P5 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | PRD-03 | Stage entries: brick making (green bricks, labour group) → drying → firing (chamber, fuel) → sorting (fired, broken/rejected, good by grade) | CP1 | P5 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | PRD-04 | Fuel/raw material consumption (coal, soil) reduces raw stock | CP1 | P5 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
@@ -81,8 +81,8 @@
 
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| INV-01 | Items master: raw materials (soil, coal, sand, diesel), consumables, machinery/electrical/repair items; units; HSN | CP1 | P3 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| INV-02 | Warehouses / stock locations per kiln | CP1 | P3 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| INV-01 | Items master: raw materials (soil, coal, sand, diesel), consumables, machinery/electrical/repair items; units; HSN | CP1 | P3 | ✅ | ⬜ | — | ✅ | 🟨 |  |
+| INV-02 | Warehouses / stock locations per kiln | CP1 | P3 | ✅ | ⬜ | — | ✅ | 🟨 |  |
 | INV-03 | Opening stock entry | CP1 | P4 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | INV-04 | Stock movement ledger via a single `StockService` (every in/out linked to its source document) | CP1 | P4 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | INV-05 | Automatic updates from GRN, production, dispatch and wastage (wired in P5/P7/P9) | CP1 | P4 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
