@@ -11,19 +11,19 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 101 | 24 | 2 | 1 | 74 | 0 |
+| CP1 MVP | 97 | 24 | 2 | 1 | 70 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 
-**CP1 done: 24 %** (24 of 101 features ✅)
+**CP1 done: 25 %** (24 of 97 features ✅)
 
 ### Per app
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
-| Backend | 97 | 25 | 1 | 0 | 0 | 71 |
-| Web | 94 | 25 | 0 | 0 | 0 | 69 |
+| Backend | 93 | 25 | 1 | 0 | 0 | 67 |
+| Web | 90 | 25 | 0 | 0 | 0 | 65 |
 | Mobile | 11 | 0 | 0 | 0 | 0 | 11 |
-| Tests | 101 | 26 | 0 | 0 | 0 | 75 |
+| Tests | 97 | 26 | 0 | 0 | 0 | 71 |
 
 ## Client Phase 1 — MVP
 
@@ -57,10 +57,10 @@
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
 | PRD-01 | Brick types / grades master (configurable, e.g. Class 1/2/3) | CP1 | P3 | ✅ | ✅ | — | ✅ | ✅ |  |
-| PRD-02 | Production batch per kiln + chamber + date | CP1 | P5 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| PRD-03 | Stage entries: brick making (green bricks, labour group) → drying → firing (chamber, fuel) → sorting (fired, broken/rejected, good by grade) | CP1 | P5 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| PRD-04 | Fuel/raw material consumption (coal, soil) reduces raw stock | CP1 | P5 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| PRD-05 | Sorted good bricks enter finished stock by grade; wastage recorded | CP1 | P5 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| PRD-02 | Production batch per kiln + chamber + date | CP1 | P5.1a | ✅ | ⬜ | — | ✅ | 🧩 BE done; web in P5.2 |
+| PRD-03 | Stage entries: brick making (green bricks, labour group) → drying → firing (chamber, fuel) → sorting (fired, broken/rejected, good by grade) | CP1 | P5.1a | 🧩 | ⬜ | — | ✅ | 🧩 Making/drying/firing/sorting shipped; **firing's fuel consumption lands in P5.1b** |
+| PRD-04 | Fuel/raw material consumption (coal, soil) reduces raw stock | CP1 | P5.1b | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| PRD-05 | Sorted good bricks enter finished stock by grade; wastage recorded | CP1 | P5.1a | ✅ | ⬜ | — | ✅ | 🧩 Sort → stock IN per grade, in the same transaction; broken + rejects are counts only |
 | PRD-06 | Production entry on mobile (offline) | CP1 | P5 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |  |
 | PRD-07 | Production report: day / month / year by kiln and grade | CP1 | P5 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 
@@ -169,7 +169,7 @@
 
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| LEK-01 | Brick yield variance: green moulded − (good + broken + rejects) per batch / chamber / Sardar gang, with an "unexplained" column | CP1 | P5 | ⬜ | ⬜ | — | ⬜ | ⬜ | Catches over-reported moulding counts (labour = 29% of cost) |
+| LEK-01 | Brick yield variance: green moulded − (good + broken + rejects) per batch / chamber / Sardar gang, with an "unexplained" column | CP1 | P5.1a | ✅ | ⬜ | — | ✅ | 🧩 BE report shipped; web in P5.2 |
 | LEK-02 | Coal consumption per 1,000 bricks fired, compared batch-to-batch, kiln-to-kiln and month-to-month; outliers flagged | CP1 | P5 | ⬜ | ⬜ | — | ⬜ | ⬜ | Coal = 42% of cost. No weighbridge in CP1, so this is the only fuel control |
 | LEK-03 | Live Sardar advance exposure: advances drawn − wages earned to date, per Sardar; **warning shown at the moment a new advance is entered** | CP1 | P6 | ⬜ | ⬜ | — | ⬜ | ⬜ | Highest value / lowest effort. Season-end settlement is too late to act |
 | LEK-04 | Gate reconciliation: dispatched qty vs invoiced qty vs stock movement, with unmatched dispatches listed | CP1 | P9 | ⬜ | ⬜ | — | ⬜ | ⬜ | Catches trucks leaving without a bill |

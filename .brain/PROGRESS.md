@@ -1,19 +1,21 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** P4.2 ✅ done — **phase P4 complete** → **next: P5.1** (production batches)
+**Client Phase:** CP1 (MVP) · **Current step:** P5.1a ✅ done — **next: P5.1b** (coal + soil consumption + LEK-02)
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
-- **Last green commit:** P4.2 web stock screens, reviewed and repaired (2026-10-09). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 136 unit + 241 e2e, web **89**, shared **76**.
-- **What shipped:** **phase P3 is complete.** All nine master modules on the backend, and a Masters section on the web with a tab per module: parties (with the opening balance and the PTY-04 ledger statement), inventory, transport, taxes/HSN and wage rates. **PTY-01…04, PRD-01, INV-01/02, VEH-01, GST-01, LAB-03 are all ✅ on BE, Web and Tests.**
-- **Next step (exact):** **P5.1 — production**: batches per kiln + chamber + date (PRD-02), and the stage entries — making, drying, firing, sorting (PRD-03). Sorting is where it matters: good bricks by grade go **into** finished stock and rejects are wastage, both through `StockService` in the same transaction as the batch (INV-05 starts being wired here). Coal and soil consumption (PRD-04) comes out of stock the same way.
-- **INV-05 is not startable before P5/P7/P9** — it *is* the wiring of GRN, production, dispatch and wastage into `StockService`, so it fills in as each of those modules lands rather than being a step of its own.
-- **Still open:** Opening balance posting — a party's Dr/Cr is stored on the party and its ledger, but no opening journal is written, so the Trial Balance shows it as a difference. Deferred to a dedicated import flow.
+- **Last green commit:** P5.1a backend production — batches, stages, sorting into stock, LEK-01 (2026-10-09). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 136 unit + **278** e2e (+37 from 241), web 89, shared 76.
+- **What shipped (P5.1a):** backend production — **PRD-02 batches** per kiln + chamber + date, **PRD-03 stages** making / drying / firing / sorting with stage order enforced, **PRD-05 sorted-good → finished stock** per grade through `StockService.record(manager, ...)` **in the batch's transaction** (first use of INV-05 wiring), and **LEK-01 yield variance** report grouped by batch / chamber / Sardar gang. Three new tables with hand-written SQL and CHECKs that stop each stage from carrying another stage's counts. New permissions `production.view` / `production.manage` seeded to the roles the Functional Spec expects. 19 e2e tests, incl. cross-tenant refusal (POST on another company's batch 404s before any write) and permission split (Accountant 200 on GET, 403 on POST).
+- **Next step (exact):** **P5.1b — PRD-04 fuel + soil consumption + LEK-02.** Coal consumed at the firing stage and soil consumed at the making stage both come **out** of raw stock through `StockService.record(manager, ..., direction: 'out', movementType: 'production')` **in the same transaction as the stage entry**, so a stage that saved cannot leave stock untouched. LEK-02 report = `fired bricks ÷ (coal consumed / 1,000)` per batch / kiln / month, with batch-to-batch and kiln-to-kiln outliers flagged. The making and firing endpoints will grow a `consumption[]` block (one row per raw material: `itemId`, `warehouseId`, `quantity`); the stage-entry row keeps nothing new, but a new `production_consumptions` table records which stage consumed what and against which `stock_movements` row.
+- **Then P5.1c:** SYN-01 (`Idempotency-Key` + `idempotency_keys` table, written in the same transaction as the business insert, with a test proving a repeat returns the original result and creates no second row) and SYN-02 (`?since=` on kilns / parties / items / brick types / wage rates). **P5.1 is not ✅ until both have shipped** — see the exit-criteria table in this file. **Then P5.2** — web production entry + the two variance reports.
+- **INV-05 is being wired across P5/P7/P9** — P5.1a is the first instance (sorting IN); P5.1b adds the firing/making OUT; P7 adds GRN IN; P9 adds dispatch OUT.
+- **Still open:** opening balance posting — a party's Dr/Cr is stored on the party and its ledger, but no opening journal is written, so the Trial Balance shows it as a difference. Deferred to a dedicated import flow.
 
 ### First run on a fresh database
 `pnpm db:up` → `pnpm --filter @brics/backend migration:run` → set `SEED_OWNER_MOBILE` + `SEED_OWNER_PASSWORD` in `backend/.env` → `pnpm seed`.
 That creates the 9 roles, one company, one kiln and one Owner. The bootstrap refuses to run if any user already exists.
 - **Done:**
+  - P5.1a ✅ **production backend — batches, stages, sorted-good → stock, LEK-01.** Three tables with hand-written CHECKs that keep each stage's counts in its own columns. Sorting writes stock per grade through `StockService.record(manager, ...)` in the batch's transaction — the first use of INV-05 wiring, so if any grade is rejected the whole sort rolls back and nothing moved. Stage order enforced (`making → firing → sorting`, drying optional) and `(batch, stage)` is unique — correction is reversal, not an edit. New permissions `production.view` / `production.manage`. 19 e2e tests, incl. cross-tenant refusal before any write and the permission split (Accountant GET 200, POST 403). Backend e2e 241 → 278.
   - P0.1 ✅ git, PDFs, brain, docs 01–13, AI entry files, `pnpm status` generator.
   - P0.2 ✅ monorepo, shared package, docker-compose, NestJS 11 backend, `/health`, migrations, unit + e2e.
   - P0.3 ✅ web shell — app router, DS primitives (Button/Card/Badge/Input/Skeleton/EmptyState), layout (Sidebar/Topbar/PageHeader/KilnSwitcher), lib + stores, features/system health hook, 1 Vitest test.
@@ -184,7 +186,9 @@ The P track is never blocked by the M track.
 | P4 | P4.1a | **Backend `StockService`**, the stock ledger, opening stock and adjustments (INV-03, INV-04, INV-06) | ✅ |
 | P4 | P4.1b | Backend stock reports: current stock and the movement register (INV-07) | ✅ |
 | P4 | P4.2 | Web stock screens + reports | ✅ |
-| P5 | P5.1 | Production backend + **LEK-01 brick yield variance** + **LEK-02 coal per 1,000** + **SYN-01/02 idempotency & delta pull** | ⬜ |
+| P5 | P5.1a | Backend: batches, stage entries, sort → finished stock in-tx, **LEK-01 brick yield variance** | ✅ |
+| P5 | P5.1b | Backend: **PRD-04** coal + soil consumption from stock + **LEK-02 coal per 1,000** | ⬜ |
+| P5 | P5.1c | Backend: **SYN-01** `Idempotency-Key` + **SYN-02** `?since=` delta pull — gates mobile M2 | ⬜ |
 | P5 | P5.2 | Web production entry + the two variance reports | ⬜ |
 | P6 | P6.1 | Labour backend + **LEK-03 live advance exposure, with the warning at advance entry** | ⬜ |
 | P6 | P6.2 | Web attendance, wages, advances, settlement + exposure screen | ⬜ |
@@ -239,6 +243,7 @@ Exit criteria per phase: see BRICS_MASTER_PROMPT.md §12.
 A1 banking/accounting adv · A2 adv GST (if approved) · A3 profitability/leakage · A4 admin extras · A5 AI anomaly · A6 IoT · A7 approved extras — all ⏭️
 
 ## Splits recorded
+- **P5.1 → P5.1a + P5.1b + P5.1c** (2026-10-09). Batches + stages + sort-to-stock + LEK-01 go first (one session's worth, and the sort-into-stock tx is the one piece worth reviewing alone); P5.1b adds coal/soil consumption + LEK-02; P5.1c adds SYN-01 idempotency + SYN-02 delta pull. **P5.1 is not ✅ until all three ship** — see exit criteria.
 - **P4.1 → P4.1a + P4.1b** (2026-10-09). The ledger and its reader are each a session, the same way `PostingService`
   (P2.1b) and the books (P2.1c) were split.
 - **P3.1 → P3.1a + P3.1b + P3.1c** (2026-10-09). Nine master tables is three sessions. Parties go first and alone because
