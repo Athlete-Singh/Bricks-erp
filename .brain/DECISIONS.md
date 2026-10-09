@@ -74,3 +74,11 @@ Why: brick manufacturers elect a scheme; two companies of the same owner can be 
 **ADR-020 — One ledger per party, group chosen by type precedence — 2026-10-09**
 Decision: every party auto-creates exactly one ledger (`ledgers.party_id`, already uniquely indexed), inside the same transaction as the party. The group is picked by precedence over the party's types: customer → Sundry Debtors; else supplier or transporter → Sundry Creditors; else Sardar or employee → Labour Payables; else other → Sundry Creditors.
 Why: ADR-008 keeps one `parties` table with `party_types[]`, so a party can be both customer and supplier, but must still have **one** ledger or their statement would be split across two accounts. Precedence gives a deterministic home. A balance landing on the contrary side is not a problem: the Trial Balance already presents each balance on its natural side, so a customer in credit reads correctly.
+
+**ADR-021 — A foreign key in a request body is checked against the tenant, not trusted — 2026-10-09**
+Decision: every service that accepts an id from a request body (`siteId`, `hsnId`, `unitId`, `partyId`, …) verifies that row belongs to the caller's company before using it. `assertBelongsToCompany` in the inventory service is the shape to copy.
+Why: ADR-013 keeps `company_id` out of the body, which stops a caller *naming* another tenant — but it does not stop a caller *pointing at* one. P3.1b shipped with `POST /inventory/warehouses` taking `siteId` on trust, so a company could attach a warehouse to a kiln it did not own. Every module from P4 onward (GRN, dispatch, production) takes more of these ids, so the rule is written down rather than rediscovered.
+
+**ADR-022 — Rates are decimal strings and are normalised at the schema edge — 2026-10-09**
+Decision: GST percentages and wage rates are `string` in the schema, the entity and the JSON, and the Zod schema normalises them to two decimals (`'6'` → `'6.00'`) on both create and update.
+Why: CONVENTIONS already said money is never a float; P3.1c typed rates as `z.number()` anyway, and TypeORM returns `numeric` as a string, so the entity type was simply wrong. The normalisation is the second half: without it, a create returned `"6.00"` (reloaded from the column) and an update returned `"6"` (echoed from the request), so the same field had two shapes depending on the verb.

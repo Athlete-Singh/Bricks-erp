@@ -1,12 +1,12 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** P3.1c ✅ done → **next: P3.2** (web master screens)
+**Client Phase:** CP1 (MVP) · **Current step:** P3.1 ✅ done **and audited** → **next: P3.2** (web master screens)
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
-- **Last green commit:** P3.1c (2026-10-09). Gate green: lint ✓ typecheck ✓ test ✓ build ✓.
-- **What shipped:** Transport (Drivers, Vehicles), Taxes (HSN rates), Labour (Wage rates) backend modules with CRUD, auditing, and tenant isolation. E2E tests are complete and passing.
-- **Next step (exact):** **P3.2** — web: Master screens for Party, Inventory, Transport, Taxes, and Labour.
+- **Last green commit:** P3.1 repair (2026-10-09). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 119 unit + **123 e2e**, web 61, shared **63**.
+- **What shipped:** all nine master modules — parties (+ auto-ledger), units, items, brick types, warehouses, drivers, vehicles, HSN/GST rates, wage rates — with CRUD, audit trail, RBAC and **proven** tenant isolation.
+- **Next step (exact):** **P3.2** — web master screens. Parties, Inventory and Transport screens exist in the working tree and compile; **Taxes and Labour screens are not written, and nothing is linked from the sidebar yet**.
 - **Still open:** Opening balance posting (Dr/Cr stored on party and ledger but no opening JNL posted yet — deferred to a dedicated import flow). PTY-04 (party ledger statement) is backend-ready via the existing Ledger statement report; a party-specific view lands in P3.2.
 
 ### First run on a fresh database
@@ -41,6 +41,22 @@ every permissioned route; the audit log a table with no writer; and ADM-02 switc
 all simply absent. `pnpm status` could not catch the wiring gap because its generator ignored `BE 🧩`.
 **Lesson for every future step:** a column is ✅ only when a test proves it, not when the file exists. Tenancy and audit are in the
 "never cut correctness" list — give them an e2e test in the same step, as `backend/test/tenancy.e2e-spec.ts` now does.
+
+### What the P3.1 audit found (read before marking any step ✅)
+P3.1a (parties) was built properly — 20 e2e tests including cross-tenant read **and** write. P3.1b and P3.1c were not:
+they shipped happy-path tests only, and four real defects were hiding behind that.
+- **Cross-tenant write**: `POST /inventory/warehouses` trusted `siteId` from the body, so a company could attach a
+  warehouse to another company's kiln; `hsnId` on items was unchecked the same way. `company_id` came from the JWT
+  correctly (ADR-013) — but **the ids it points at were never checked**. One `assertBelongsToCompany` guard now covers both.
+- **Money as floats**: wage rates and GST rates were `z.number()` / `number`, while the columns are NUMERIC(18,2) and
+  the driver returns strings. The responses lied about their own type and a float would have reached the GST and
+  wage maths. Now decimal strings end to end.
+- **Same field, two shapes**: create returned `"6.00"`, update returned `"6"`. Rates normalise at the schema edge now.
+- **Role matrix**: the Accountant had no `taxes.manage` even though ADR-018 names the client's CA as the authority on
+  HSN and GST. Widened, with an invariant test over the catalogue.
+**Lesson, the same one as P1.1b:** a happy-path test is not a passing step. Tenancy and audit are "never cut
+correctness" — a step is ✅ only when a test proves a *second tenant is refused*, not when the route returns 201.
+`backend/test/helpers/tenant-fixture.ts` makes that two lines, so there is no excuse to skip it again.
 
 ### Known gaps carried forward (not blocking P2)
 - List endpoints other than `/audit-logs` do not paginate; `CONVENTIONS.md` specifies `?page&limit` → `meta`.
