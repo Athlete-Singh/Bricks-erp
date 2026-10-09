@@ -12,7 +12,10 @@ import { UserModule } from './modules/user/user.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { AccountingModule } from './accounting/accounting.module';
 import { PartyModule } from './modules/parties/party.module';
-
+import { InventoryModule } from './modules/inventory/inventory.module';
+import { TransportModule } from './modules/transport/transport.module';
+import { TaxesModule } from './modules/taxes/taxes.module';
+import { LabourModule } from './modules/labour/labour.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -45,6 +48,10 @@ import { PartyModule } from './modules/parties/party.module';
     AuditModule,
     AccountingModule,
     PartyModule,
+    InventoryModule,
+    TransportModule,
+    TaxesModule,
+    LabourModule,
   ],
 })
 export class AppModule {}

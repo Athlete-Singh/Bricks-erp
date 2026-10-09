@@ -88,7 +88,6 @@ describe('PartyService', () => {
   let partyRepo: jest.Mocked<Repository<Party>>;
   let groupRepo: jest.Mocked<Repository<LedgerGroup>>;
   let ledgerRepo: jest.Mocked<Repository<Ledger>>;
-  let fyRepo: jest.Mocked<Repository<FinancialYear>>;
   let audit: jest.Mocked<AuditService>;
   let dataSource: jest.Mocked<DataSource>;
 
@@ -123,7 +122,6 @@ describe('PartyService', () => {
     partyRepo = module.get(getRepositoryToken(Party));
     groupRepo = module.get(getRepositoryToken(LedgerGroup));
     ledgerRepo = module.get(getRepositoryToken(Ledger));
-    fyRepo = module.get(getRepositoryToken(FinancialYear));
     audit = module.get(AuditService);
     dataSource = module.get(DataSource);
   });

@@ -11,7 +11,7 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 101 | 10 | 8 | 1 | 82 | 0 |
+| CP1 MVP | 101 | 10 | 11 | 1 | 79 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 
 **CP1 done: 10 %** (10 of 101 features ✅)
@@ -20,10 +20,10 @@
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
-| Backend | 97 | 17 | 1 | 0 | 0 | 79 |
+| Backend | 97 | 20 | 1 | 0 | 0 | 76 |
 | Web | 94 | 11 | 0 | 0 | 0 | 83 |
 | Mobile | 11 | 0 | 0 | 0 | 0 | 11 |
-| Tests | 101 | 18 | 0 | 0 | 0 | 83 |
+| Tests | 101 | 21 | 0 | 0 | 0 | 80 |
 
 ## Client Phase 1 — MVP
 
@@ -70,7 +70,7 @@
 |---|---|---|---|---|---|---|---|---|---|
 | LAB-01 | Labour groups under a Sardar; worker master | CP1 | P6 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | LAB-02 | Daily attendance by group/worker (web + mobile offline) | CP1 | P6 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |  |
-| LAB-03 | Wage-rate config: piece rate per 1,000 bricks by activity (making, loading, unloading) and daily wage | CP1 | P6 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| LAB-03 | Wage-rate config: piece rate per 1,000 bricks by activity (making, loading, unloading) and daily wage | CP1 | P6 | ✅ | ⬜ | — | ✅ | 🟨 |  |
 | LAB-04 | Auto wage entries from production and loading counts | CP1 | P6 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | LAB-05 | Cash advances and loans to Sardar/workers (cash/bank/UPI) | CP1 | P6 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | LAB-06 | Deductions: advance recovery, loan instalment, **food/ration (khurak), fines and penalties** | CP1 | P6 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
@@ -93,7 +93,7 @@
 
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| VEH-01 | Vehicles (own/hired; truck/tractor/tipper) and drivers | CP1 | P3 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| VEH-01 | Vehicles (own/hired; truck/tractor/tipper) and drivers | CP1 | P3 | ✅ | ⬜ | — | ✅ | 🟨 |  |
 | VEH-02 | Trip log: vehicle, driver, route, linked dispatch, freight income | CP1 | P9 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | VEH-03 | Diesel entries per vehicle/trip | CP1 | P9 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | VEH-04 | Maintenance/repair expense per vehicle | CP1 | P9 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
@@ -153,7 +153,7 @@
 
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| GST-01 | HSN/SAC master + GST rate config (configurable; clay building bricks usually HSN 6904, confirm with the client's CA) | CP1 | P3 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| GST-01 | HSN/SAC master + GST rate config (configurable; clay building bricks usually HSN 6904, confirm with the client's CA) | CP1 | P3 | ✅ | ⬜ | — | ✅ | 🟨 |  |
 | GST-02 | CGST+SGST vs IGST by place of supply | CP1 | P8 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | GST-03 | GST input on purchases | CP1 | P7 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | GST-04 | GSTR-1 register (B2B, B2C, HSN summary) with Excel export | CP1 | P10 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |

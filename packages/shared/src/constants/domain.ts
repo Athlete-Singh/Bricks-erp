@@ -26,6 +26,9 @@ export type PaymentMode = (typeof PAYMENT_MODES)[number];
 export const PRODUCTION_STAGES = ['soil', 'brick_making', 'drying', 'firing', 'sorting'] as const;
 export type ProductionStage = (typeof PRODUCTION_STAGES)[number];
 
+export const ITEM_CATEGORIES = ['raw_material', 'consumable', 'machinery', 'electrical', 'repair', 'other'] as const;
+export type ItemCategory = (typeof ITEM_CATEGORIES)[number];
+
 /** Brick prices and wages are quoted per 1,000 bricks. */
 export const BRICKS_PER_RATE_UNIT = 1000;
 

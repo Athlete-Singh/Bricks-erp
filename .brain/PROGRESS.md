@@ -1,12 +1,12 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** P3.1b ✅ done → **next: P3.1c** (backend masters part 3: vehicles, drivers, HSN/GST, wage rates)
+**Client Phase:** CP1 (MVP) · **Current step:** P3.1c ✅ done → **next: P3.2** (web master screens)
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
-- **Last green commit:** P3.1b (2026-10-09). Gate green: lint ✓ typecheck ✓ test ✓ build ✓.
-- **What shipped:** Inventory masters (Units, Brick Types, Warehouses, Items) with CRUD, auditing, and tenant isolation. Updated response enveloper to prevent double-wrapping.
-- **Next step (exact):** **P3.1c** — backend: vehicles, drivers, HSN + GST rates, wage rates (VEH-01, GST-01, LAB-03). These are the final backend masters needed before moving to the Web UI for masters (P3.2).
+- **Last green commit:** P3.1c (2026-10-09). Gate green: lint ✓ typecheck ✓ test ✓ build ✓.
+- **What shipped:** Transport (Drivers, Vehicles), Taxes (HSN rates), Labour (Wage rates) backend modules with CRUD, auditing, and tenant isolation. E2E tests are complete and passing.
+- **Next step (exact):** **P3.2** — web: Master screens for Party, Inventory, Transport, Taxes, and Labour.
 - **Still open:** Opening balance posting (Dr/Cr stored on party and ledger but no opening JNL posted yet — deferred to a dedicated import flow). PTY-04 (party ledger statement) is backend-ready via the existing Ledger statement report; a party-specific view lands in P3.2.
 
 ### First run on a fresh database
@@ -97,7 +97,7 @@ The P track is never blocked by the M track.
 | P2 | P2.2 | Web: voucher entry, Day Book, Ledger, Trial Balance | ✅ |
 | P3 | P3.1a | **Backend: parties + auto ledger** (PTY-01…03) and the company GST scheme | ✅ |
 | P3 | P3.1b | Backend: units, items, brick types, warehouses (INV-01, INV-02, PRD-01) | ✅ |
-| P3 | P3.1c | Backend: vehicles, drivers, HSN + GST rates, wage rates (VEH-01, GST-01, LAB-03) | ⬜ |
+| P3 | P3.1c | Backend: vehicles, drivers, HSN + GST rates, wage rates (VEH-01, GST-01, LAB-03) | ✅ |
 | P3 | P3.2 | Web master screens + party ledger | ⬜ |
 | P4 | P4.1 | Backend StockService, opening stock, adjustments + tests | ⬜ |
 | P4 | P4.2 | Web stock screens + reports | ⬜ |

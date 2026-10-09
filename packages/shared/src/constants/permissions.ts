@@ -14,6 +14,14 @@ export const PERMISSIONS = {
   ACCOUNTS_MANAGE: 'accounts.manage',
   PARTIES_VIEW: 'parties.view',
   PARTIES_MANAGE: 'parties.manage',
+  INVENTORY_VIEW: 'inventory.view',
+  INVENTORY_MANAGE: 'inventory.manage',
+  TRANSPORT_VIEW: 'transport.view',
+  TRANSPORT_MANAGE: 'transport.manage',
+  TAXES_VIEW: 'taxes.view',
+  TAXES_MANAGE: 'taxes.manage',
+  LABOUR_VIEW: 'labour.view',
+  LABOUR_MANAGE: 'labour.manage',
 } as const;
 
 export type PermissionCode = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -75,6 +83,54 @@ export const PERMISSION_CATALOGUE: readonly PermissionDefinition[] = [
     module: 'parties',
     description: 'Create and edit parties',
   },
+  {
+    code: PERMISSIONS.INVENTORY_VIEW,
+    name: 'View inventory',
+    module: 'inventory',
+    description: 'Read inventory masters and stock levels',
+  },
+  {
+    code: PERMISSIONS.INVENTORY_MANAGE,
+    name: 'Manage inventory',
+    module: 'inventory',
+    description: 'Create and edit inventory masters and stock adjustments',
+  },
+  {
+    code: PERMISSIONS.TRANSPORT_VIEW,
+    name: 'View transport',
+    module: 'transport',
+    description: 'Read transport masters (vehicles and drivers)',
+  },
+  {
+    code: PERMISSIONS.TRANSPORT_MANAGE,
+    name: 'Manage transport',
+    module: 'transport',
+    description: 'Create and edit transport masters',
+  },
+  {
+    code: PERMISSIONS.TAXES_VIEW,
+    name: 'View taxes',
+    module: 'taxes',
+    description: 'Read tax masters (HSN and GST rates)',
+  },
+  {
+    code: PERMISSIONS.TAXES_MANAGE,
+    name: 'Manage taxes',
+    module: 'taxes',
+    description: 'Create and edit tax masters',
+  },
+  {
+    code: PERMISSIONS.LABOUR_VIEW,
+    name: 'View labour',
+    module: 'labour',
+    description: 'Read labour masters (wage rates)',
+  },
+  {
+    code: PERMISSIONS.LABOUR_MANAGE,
+    name: 'Manage labour',
+    module: 'labour',
+    description: 'Create and edit labour masters',
+  },
 ] as const;
 
 export interface RoleDefinition {
@@ -103,6 +159,14 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.ACCOUNTS_MANAGE,
       PERMISSIONS.PARTIES_VIEW,
       PERMISSIONS.PARTIES_MANAGE,
+      PERMISSIONS.INVENTORY_VIEW,
+      PERMISSIONS.INVENTORY_MANAGE,
+      PERMISSIONS.TRANSPORT_VIEW,
+      PERMISSIONS.TRANSPORT_MANAGE,
+      PERMISSIONS.TAXES_VIEW,
+      PERMISSIONS.TAXES_MANAGE,
+      PERMISSIONS.LABOUR_VIEW,
+      PERMISSIONS.LABOUR_MANAGE,
     ],
   },
   {
@@ -118,6 +182,14 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.ACCOUNTS_MANAGE,
       PERMISSIONS.PARTIES_VIEW,
       PERMISSIONS.PARTIES_MANAGE,
+      PERMISSIONS.INVENTORY_VIEW,
+      PERMISSIONS.INVENTORY_MANAGE,
+      PERMISSIONS.TRANSPORT_VIEW,
+      PERMISSIONS.TRANSPORT_MANAGE,
+      PERMISSIONS.TAXES_VIEW,
+      PERMISSIONS.TAXES_MANAGE,
+      PERMISSIONS.LABOUR_VIEW,
+      PERMISSIONS.LABOUR_MANAGE,
     ],
   },
   {
@@ -167,7 +239,12 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
     code: 'store_keeper',
     name: 'Store Keeper',
     description: 'Stock, GRN and issues',
-    permissions: [PERMISSIONS.COMPANY_VIEW, PERMISSIONS.PARTIES_VIEW],
+    permissions: [
+      PERMISSIONS.COMPANY_VIEW,
+      PERMISSIONS.PARTIES_VIEW,
+      PERMISSIONS.INVENTORY_VIEW,
+      PERMISSIONS.INVENTORY_MANAGE,
+    ],
   },
   {
     code: 'driver',
