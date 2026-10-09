@@ -24,23 +24,27 @@ function WarehousePicker({
   onChange: (id: string) => void;
   disabled?: boolean;
 }) {
-  const { data } = useWarehouses({ limit: 100, isActive: 'true' });
+  const { data, isError } = useWarehouses({ limit: 100, isActive: 'true' });
   return (
-    <Select
-      id={`${idPrefix}-warehouse`}
-      label="Warehouse *"
-      value={value}
-      required
-      disabled={disabled}
-      onChange={(e) => onChange(e.target.value)}
-    >
-      <option value="">Select a warehouse…</option>
-      {data?.items.map((w) => (
-        <option key={w.id} value={w.id}>
-          {w.name}
-        </option>
-      ))}
-    </Select>
+    <div className="flex flex-col gap-1">
+      <Select
+        id={`${idPrefix}-warehouse`}
+        label="Warehouse *"
+        value={value}
+        required
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        <option value="">Select a warehouse…</option>
+        {data?.items.map((w) => (
+          <option key={w.id} value={w.id}>
+            {w.name}
+          </option>
+        ))}
+      </Select>
+      {/* An empty dropdown with no explanation looks like "none exist". */}
+      {isError && <p className="text-xs text-danger">Could not load warehouses. Try again.</p>}
+    </div>
   );
 }
 
@@ -55,6 +59,12 @@ export function OpeningStockDialog({ open, onClose }: { open: boolean; onClose: 
 
   const close = () => {
     mutation.reset();
+    // These dialogs are never unmounted, so nothing clears this for us.
+    setWarehouseId('');
+    setSubject({ itemId: '', brickTypeId: '' });
+    setQuantity('');
+    setMovementDate(todayISO());
+    setNotes('');
     onClose();
   };
 
@@ -147,6 +157,15 @@ export function StockAdjustmentDialog({ open, onClose }: { open: boolean; onClos
 
   const close = () => {
     mutation.reset();
+    // Critical here, not merely tidy: an adjustment is the one movement allowed
+    // to take a balance below zero, and a form that reopens pre-filled and
+    // already valid turns a stray click into a second write-off.
+    setWarehouseId('');
+    setSubject({ itemId: '', brickTypeId: '' });
+    setDirection('out');
+    setQuantity('');
+    setMovementDate(todayISO());
+    setReason('');
     onClose();
   };
 

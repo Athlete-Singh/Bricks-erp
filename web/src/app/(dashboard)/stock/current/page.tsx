@@ -2,7 +2,7 @@
 
 import { Boxes, Plus, SlidersHorizontal } from 'lucide-react';
 import { useState } from 'react';
-import { PERMISSIONS } from '@brics/shared';
+import { formatQuantity, isNegativeQuantity, isZeroQuantity, PERMISSIONS, subtractQuantities } from '@brics/shared';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -14,16 +14,6 @@ import { useWarehouses } from '@/features/masters/hooks';
 import type { CurrentStock, CurrentStockRow } from '@/features/stock/api';
 import { OpeningStockDialog, StockAdjustmentDialog } from '@/features/stock/components/stock-entry-dialogs';
 import { useCurrentStock } from '@/features/stock/hooks';
-
-/** Quantities are decimal strings; trailing zeros make a count hard to read. */
-function qty(value: string): string {
-  const n = Number(value);
-  return Number.isFinite(n) ? n.toLocaleString('en-IN', { maximumFractionDigits: 3 }) : value;
-}
-
-function isZero(value: string): boolean {
-  return Number(value) === 0;
-}
 
 /** INV-07 — what each kiln holds, and what moved it there. */
 export default function CurrentStockPage() {
@@ -195,8 +185,8 @@ function StockTable({ data, asOf }: { data: CurrentStock; asOf: string }) {
               </th>
             </tr>
             {rows.map((row) => {
-              const adjusted = Number(row.adjustedIn) - Number(row.adjustedOut);
-              const negative = Number(row.closing) < 0;
+              const adjusted = subtractQuantities(row.adjustedIn, row.adjustedOut);
+              const negative = isNegativeQuantity(row.closing);
               return (
                 <tr key={`${row.warehouseId}-${row.subjectId}`} className="border-b border-border last:border-0">
                   <td className="px-3 py-2">
@@ -205,29 +195,29 @@ function StockTable({ data, asOf }: { data: CurrentStock; asOf: string }) {
                   </td>
                   <td className="px-3 py-2 text-muted-foreground">{row.warehouseName}</td>
                   <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">
-                    {isZero(row.opening) ? '—' : qty(row.opening)}
+                    {isZeroQuantity(row.opening) ? '—' : formatQuantity(row.opening)}
                   </td>
                   <td className="hidden px-3 py-2 text-right tabular-nums lg:table-cell">
-                    {isZero(row.purchased) ? '' : qty(row.purchased)}
+                    {isZeroQuantity(row.purchased) ? '' : formatQuantity(row.purchased)}
                   </td>
                   <td className="hidden px-3 py-2 text-right tabular-nums lg:table-cell">
-                    {isZero(row.produced) ? '' : qty(row.produced)}
+                    {isZeroQuantity(row.produced) ? '' : formatQuantity(row.produced)}
                   </td>
                   <td className="hidden px-3 py-2 text-right tabular-nums lg:table-cell">
-                    {isZero(row.sold) ? '' : qty(row.sold)}
+                    {isZeroQuantity(row.sold) ? '' : formatQuantity(row.sold)}
                   </td>
                   <td className="hidden px-3 py-2 text-right tabular-nums lg:table-cell">
-                    {isZero(row.wasted) ? '' : <span className="text-warning-foreground">{qty(row.wasted)}</span>}
+                    {isZeroQuantity(row.wasted) ? (
+                      ''
+                    ) : (
+                      <span className="text-warning">{formatQuantity(row.wasted)}</span>
+                    )}
                   </td>
                   <td className="px-3 py-2 text-right tabular-nums">
-                    {adjusted === 0 ? '' : adjusted.toLocaleString('en-IN', { maximumFractionDigits: 3 })}
+                    {isZeroQuantity(adjusted) ? '' : formatQuantity(adjusted)}
                   </td>
-                  <td
-                    className={`px-3 py-2 text-right font-semibold tabular-nums ${
-                      negative ? 'text-error-foreground' : ''
-                    }`}
-                  >
-                    {qty(row.closing)}
+                  <td className={`px-3 py-2 text-right font-semibold tabular-nums ${negative ? 'text-danger' : ''}`}>
+                    {formatQuantity(row.closing)}
                   </td>
                 </tr>
               );

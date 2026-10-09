@@ -2,7 +2,7 @@
 
 import { ScrollText } from 'lucide-react';
 import { useState } from 'react';
-import { formatDate, STOCK_MOVEMENT_TYPES } from '@brics/shared';
+import { formatDate, formatQuantity, isNegativeQuantity, isZeroQuantity, STOCK_MOVEMENT_TYPES } from '@brics/shared';
 import { Pagination } from '@/components/shared/pagination';
 import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -34,11 +34,6 @@ const TYPE_TONE: Record<string, 'default' | 'success' | 'warning' | 'muted'> = {
   adjustment: 'warning',
   transfer: 'muted',
 };
-
-function qty(value: string): string {
-  const n = Number(value);
-  return Number.isFinite(n) ? n.toLocaleString('en-IN', { maximumFractionDigits: 3 }) : value;
-}
 
 /** INV-07 — every movement, with a running balance once it means something. */
 export default function StockRegisterPage() {
@@ -214,18 +209,18 @@ function RegisterTable({ rows, showBalance }: { rows: StockRegisterRow[]; showBa
               <td className="px-3 py-2 font-medium">{row.subjectName}</td>
               <td className="hidden px-3 py-2 text-muted-foreground md:table-cell">{row.warehouseName}</td>
               <td className="px-3 py-2 text-right tabular-nums">
-                {Number(row.quantityIn) === 0 ? '' : qty(row.quantityIn)}
+                {isZeroQuantity(row.quantityIn) ? '' : formatQuantity(row.quantityIn)}
               </td>
               <td className="px-3 py-2 text-right tabular-nums">
-                {Number(row.quantityOut) === 0 ? '' : qty(row.quantityOut)}
+                {isZeroQuantity(row.quantityOut) ? '' : formatQuantity(row.quantityOut)}
               </td>
               {showBalance && (
                 <td
                   className={`px-3 py-2 text-right font-medium tabular-nums ${
-                    Number(row.runningBalance) < 0 ? 'text-error-foreground' : ''
+                    isNegativeQuantity(row.runningBalance) ? 'text-danger' : ''
                   }`}
                 >
-                  {row.runningBalance === null ? '—' : qty(row.runningBalance)}
+                  {formatQuantity(row.runningBalance)}
                 </td>
               )}
             </tr>

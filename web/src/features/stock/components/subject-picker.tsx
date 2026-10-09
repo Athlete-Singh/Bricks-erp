@@ -30,8 +30,8 @@ export function SubjectPicker({
   disabled?: boolean;
 }) {
   // Pickers need the whole list, not a table page.
-  const { data: items } = useItems({ limit: 100, isActive: 'true' });
-  const { data: grades } = useBrickTypes({ limit: 100, isActive: 'true' });
+  const { data: items, isError: itemsFailed } = useItems({ limit: 100, isActive: 'true' });
+  const { data: grades, isError: gradesFailed } = useBrickTypes({ limit: 100, isActive: 'true' });
 
   return (
     <div className="grid gap-3 sm:grid-cols-2">
@@ -64,6 +64,13 @@ export function SubjectPicker({
           </option>
         ))}
       </Select>
+
+      {(itemsFailed || gradesFailed) && (
+        <p className="text-xs text-danger sm:col-span-2">
+          Could not load{' '}
+          {itemsFailed && gradesFailed ? 'items or brick grades' : itemsFailed ? 'items' : 'brick grades'}. Try again.
+        </p>
+      )}
     </div>
   );
 }
