@@ -20,6 +20,10 @@ export const createWageRateSchema = z.object({
     .regex(AMOUNT_PATTERN, 'Enter a rate like 650.00')
     .refine((v) => Number(v) > 0, 'Rate amount must be positive')
     .transform((v) => Number(v).toFixed(2)),
+  effectiveFrom: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD')
+    .optional(),
   isActive: z.boolean().default(true),
 });
 export type CreateWageRateDto = z.infer<typeof createWageRateSchema>;

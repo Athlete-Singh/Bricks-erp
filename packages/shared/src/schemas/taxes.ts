@@ -21,6 +21,10 @@ export const createHsnRateSchema = z.object({
   cgstRate: gstRate,
   sgstRate: gstRate,
   igstRate: gstRate,
+  effectiveFrom: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD')
+    .optional(),
   isActive: z.boolean().default(true),
 });
 export type CreateHsnRateDto = z.infer<typeof createHsnRateSchema>;

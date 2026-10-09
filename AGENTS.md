@@ -67,19 +67,19 @@
 
 ## Commands
 
-| Task                                             | Command                                                                                                                                   |
-| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Install                                          | `pnpm install` (root) · M track also `cd mobile && flutter pub get`                                                                       |
-| DB                                               | `docker compose -f infra/docker-compose.yml up -d`                                                                                        |
-| Run API                                          | `pnpm --filter @brics/backend dev` → `http://localhost:4000/api/v1/health`, docs `/api/docs`                                              |
-| Run web                                          | `pnpm --filter @brics/web dev` → `http://localhost:3000`                                                                                  |
-| Run mobile                                       | `cd mobile && flutter run --dart-define=API_BASE_URL=http://10.0.2.2:4000/api/v1`                                                         |
-| Gate (P track)                                   | `pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm --filter @brics/backend test:e2e`                                         |
-| Seed                                             | `pnpm seed` (9 roles; optional first Owner via `SEED_OWNER_*`)                                                                            |
-| Gate (M track — only where Flutter is installed) | `cd mobile && dart run build_runner build -d && flutter analyze && flutter test`                                                          |
-| Migrations                                       | `pnpm --filter @brics/backend migration:generate src/database/migrations/<Name>` · `migration:run`                                        |
-| Tracker                                          | `pnpm status`                                                                                                                             |
-| First Flutter setup                              | `cd mobile && flutter create --org com.brics --project-name brics_mobile --platforms=android,ios .` (org id pending — OPEN_QUESTIONS #12) |
+| Task                                             | Command                                                                                                                                       |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Install                                          | `pnpm install` (root) · M track also `cd mobile && flutter pub get`                                                                           |
+| DB                                               | `docker compose -f infra/docker-compose.yml up -d`                                                                                            |
+| Run API                                          | `pnpm --filter @brics/backend dev` → `http://localhost:4000/api/v1/health`, docs `/api/docs`                                                  |
+| Run web                                          | `pnpm --filter @brics/web dev` → `http://localhost:3000`                                                                                      |
+| Run mobile                                       | `cd mobile && flutter run --dart-define=API_BASE_URL=http://10.0.2.2:4000/api/v1`                                                             |
+| Gate (P track)                                   | `pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm --filter @brics/backend test:e2e`                                             |
+| Seed                                             | `pnpm seed` (9 roles; optional first Owner via `SEED_OWNER_*`)                                                                                |
+| Gate (M track — only where Flutter is installed) | `cd mobile && dart run build_runner build -d && flutter analyze && flutter test`                                                              |
+| Migrations                                       | `pnpm --filter @brics/backend migration:create src/database/migrations/<Name>` · `migration:run` · **never `migration:generate`** — see below |
+| Tracker                                          | `pnpm status`                                                                                                                                 |
+| First Flutter setup                              | `cd mobile && flutter create --org com.brics --project-name brics_mobile --platforms=android,ios .` (org id pending — OPEN_QUESTIONS #12)     |
 
 ## Where to put new code
 
@@ -90,12 +90,33 @@
 | Stock logic                         | `backend/src/inventory/`                                                                   |
 | Guards/pipes/decorators/base entity | `backend/src/common/`                                                                      |
 | Migration / seed                    | `backend/src/database/migrations/` · `seeds/`                                              |
-| Shared type / Zod schema / enum     | `packages/shared/src/`                                                                     |
-| Web route                           | `web/src/app/(dashboard)/<route>/page.tsx` (routes only)                                   |
-| Web feature logic                   | `web/src/features/<feature>/{api,hooks,components,schemas}`                                |
-| Web primitive / composed component  | `web/src/components/ui/` · `components/shared/`                                            |
-| Mobile feature                      | `mobile/lib/features/<feature>/{data,domain,presentation}`                                 |
-| Mobile reusable widget              | `mobile/lib/core/widgets/`                                                                 |
+
+### Migrations are written by hand — never generated
+
+`typeorm migration:generate` diffs the **entity classes** against the **database**. Our indexes, unique keys, partial
+indexes, expression indexes (`lower(name)`) and CHECK constraints are written in SQL in the migrations and are _not_
+declared on the entities — so the generator reads every one of them as drift and emits a `DROP`.
+
+This already happened once. `1791532862193-InventoryMasters` was generated, and its `up()` dropped **82** indexes and
+foreign keys across the whole schema — unique voucher numbers (GST invoice numbering), one active financial year, one
+ledger per party, ~30 foreign keys — while putting the `CREATE`s in `down()`. Nothing failed, because the application
+code checks the same rules in TypeScript. `1791600000000-RepairSchemaConstraints` undoes it.
+
+Rules:
+
+1. Use `migration:create` (an empty file) and write the SQL yourself.
+2. A new tenant table gets, in the same migration: an index on `company_id`, a FK to `companies` with `ON DELETE
+CASCADE`, and a unique business key — partial on `WHERE deleted_at IS NULL`, like every existing table.
+3. After any migration, run `backend/test/schema-integrity.e2e-spec.ts`. It asserts the constraints exist in Postgres
+   rather than trusting the API, which is the only kind of test that catches this.
+4. If you ever do run `generate` to see what it thinks, read every line before keeping it, and delete every `DROP` of
+   something you did not just remove on purpose.
+   | Shared type / Zod schema / enum | `packages/shared/src/` |
+   | Web route | `web/src/app/(dashboard)/<route>/page.tsx` (routes only) |
+   | Web feature logic | `web/src/features/<feature>/{api,hooks,components,schemas}` |
+   | Web primitive / composed component | `web/src/components/ui/` · `components/shared/` |
+   | Mobile feature | `mobile/lib/features/<feature>/{data,domain,presentation}` |
+   | Mobile reusable widget | `mobile/lib/core/widgets/` |
 
 ## Definition of done
 

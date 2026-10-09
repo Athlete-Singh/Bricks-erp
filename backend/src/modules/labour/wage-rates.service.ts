@@ -33,6 +33,7 @@ export class WageRatesService {
         activity: dto.activity,
         unit: dto.unit,
         rateAmount: dto.rateAmount,
+        ...(dto.effectiveFrom ? { effectiveFrom: dto.effectiveFrom } : {}),
         isActive: dto.isActive ?? true,
       });
 
@@ -67,6 +68,7 @@ export class WageRatesService {
       if (dto.activity !== undefined) wageRate.activity = dto.activity;
       if (dto.unit !== undefined) wageRate.unit = dto.unit;
       if (dto.rateAmount !== undefined) wageRate.rateAmount = dto.rateAmount;
+      if (dto.effectiveFrom !== undefined) wageRate.effectiveFrom = dto.effectiveFrom;
       if (dto.isActive !== undefined) wageRate.isActive = dto.isActive;
 
       wageRate.updatedBy = userId;

@@ -13,6 +13,10 @@ export class WageRate extends TenantBaseEntity {
   @Column({ name: 'rate_amount', type: 'numeric', precision: 18, scale: 2 })
   rateAmount: string;
 
+  /** A rate revision applies from a date; past payouts keep the old rate. */
+  @Column({ name: 'effective_from', type: 'date', default: () => 'CURRENT_DATE' })
+  effectiveFrom: string;
+
   @Column({ name: 'is_active', default: true })
   isActive: boolean;
 }

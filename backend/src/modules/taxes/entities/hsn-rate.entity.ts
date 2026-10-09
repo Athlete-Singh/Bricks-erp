@@ -18,6 +18,10 @@ export class HsnRate extends TenantBaseEntity {
   @Column({ name: 'igst_rate', type: 'numeric', precision: 5, scale: 2, default: 0 })
   igstRate: string;
 
+  /** ADR-018 — a rate change by notification must not re-rate issued invoices. */
+  @Column({ name: 'effective_from', type: 'date', default: () => 'CURRENT_DATE' })
+  effectiveFrom: string;
+
   @Column({ name: 'is_active', default: true })
   isActive: boolean;
 }

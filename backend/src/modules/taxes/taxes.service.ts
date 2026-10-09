@@ -35,6 +35,7 @@ export class TaxesService {
         cgstRate: dto.cgstRate ?? '0.00',
         sgstRate: dto.sgstRate ?? '0.00',
         igstRate: dto.igstRate ?? '0.00',
+        ...(dto.effectiveFrom ? { effectiveFrom: dto.effectiveFrom } : {}),
         isActive: dto.isActive ?? true,
       });
 
