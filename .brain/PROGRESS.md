@@ -4,7 +4,7 @@
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
-- **Last green commit:** schema repair (2026-10-09). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 119 unit + **176 e2e**, web 61, shared 63.
+- **Last green commit:** P3.1 fully audited and repaired (2026-10-09). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 119 unit + **183 e2e**, web 61, shared 63.
 - **What shipped:** all nine master modules — parties (+ auto-ledger), units, items, brick types, warehouses, drivers, vehicles, HSN/GST rates, wage rates — with CRUD, audit trail, RBAC and **proven** tenant isolation.
 - **Next step (exact):** **P3.2** — web master screens. Parties, Inventory and Transport screens exist in the working tree and compile; **Taxes and Labour screens are not written, and nothing is linked from the sidebar yet**.
 - **Still open:** Opening balance posting (Dr/Cr stored on party and ledger but no opening JNL posted yet — deferred to a dedicated import flow). PTY-04 (party ledger statement) is backend-ready via the existing Ledger statement report; a party-specific view lands in P3.2.
@@ -30,7 +30,7 @@ That creates the 9 roles, one company, one kiln and one Owner. The bootstrap ref
 - **Half-done:** none.
 - **Next step (exact):** **P3.1 — backend masters**: parties (customer/supplier/Sardar/transporter/employee, each auto-getting a ledger under the right group — ADR-008, PTY-01…03), items, units, warehouses, brick types, vehicles, drivers, HSN/GST rates and wage rates. Everything from P4 onward needs these. The party→ledger link is the piece to get right: `ledgers.party_id` already exists with a unique index, and the group depends on the party type (Sundry Debtors / Sundry Creditors / Labour Payables).
 - **Still open before P3:** OPEN_QUESTIONS #7 (brick grades actually used) and #2 (GST rate for bricks) both land in P3.1 masters.
-- **Carried gaps:** the opening-balance *screen* is not built (the API is, and the Trial Balance surfaces the difference); list endpoints other than `/audit-logs`, `/vouchers` and `/reports/day-book` still do not paginate.
+- **Carried gaps:** the opening-balance *screen* is not built (the API is, and the Trial Balance surfaces the difference). **Every master list now paginates**; the remaining unpaginated lists are the P1 admin ones (companies, sites, financial years, ledgers, voucher types).
 - **Then:** P1.3 (mobile login + sync setup) → P2.1 (accounting engine) → …
 
 ### Why P1.1b existed (read before marking any step ✅)
@@ -78,7 +78,7 @@ correctness" — a step is ✅ only when a test proves a *second tenant is refus
 - List endpoints other than `/audit-logs` do not paginate; `CONVENTIONS.md` specifies `?page&limit` → `meta`.
 - Company/Site/FinancialYear responses are raw entities; only users go through a response DTO (`UserSummary`).
 - ~~`BusinessRuleException` never thrown~~ — **adopted in P2.1a** (`LEDGER_SYSTEM_REQUIRED`, `LEDGER_SYSTEM_GROUP_FIXED`, verified returning 422). Keep using it for posting rules.
-- `QueryFailedError` is not mapped in `AllExceptionsFilter`, so an unhandled DB constraint violation is a 500.
+- ~~`QueryFailedError` is not mapped~~ — **fixed 2026-10-09**: 23505 → 409 `DUPLICATE_VALUE`, 23503 → 409 `REFERENCE_CONFLICT`, 23514/23502 → 422. Anything else stays a logged 500.
 - No request/correlation id in error responses, so a 500 cannot be traced to its Pino log line.
 - **No "create company" screen.** `POST /companies` is built and tested but no UI calls it, so a second company can only be
   created through the API or the seed. ADM-01/ADM-02 do not ask for it in writing (the switcher and the multi-company schema
