@@ -7,3 +7,4 @@ export * from './format/money';
 export * from './format/date';
 export * from './schemas/health';
 export * from './schemas/auth';
+export * from './schemas/parties';

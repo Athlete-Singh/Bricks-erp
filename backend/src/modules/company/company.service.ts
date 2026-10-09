@@ -58,6 +58,7 @@ export class CompanyService {
           stateCode: dto.stateCode,
           address: dto.address ?? null,
           logoUrl: dto.logoUrl ?? null,
+          gstScheme: dto.gstScheme ?? 'regular_12_itc',
           createdBy: userId,
           updatedBy: userId,
         }),
@@ -113,6 +114,7 @@ export class CompanyService {
       stateCode: company.stateCode,
       address: company.address,
       logoUrl: company.logoUrl,
+      gstScheme: company.gstScheme,
       isActive: company.isActive,
     };
   }

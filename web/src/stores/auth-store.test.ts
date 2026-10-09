@@ -15,7 +15,7 @@ const session = (overrides: Partial<AuthResponseDto> = {}): AuthResponseDto => (
     permissions: ['company.view', 'users.manage'],
     isSuperAdmin: false,
   },
-  company: { id: 'c1', name: 'Shri Ram Bricks', gstin: null, stateCode: '09' },
+  company: { id: 'c1', name: 'Shri Ram Bricks', gstin: null, stateCode: '09', gstScheme: 'regular_12_itc' as const },
   sites: [
     { id: 's1', name: 'Kiln 1', code: 'K1', type: 'kiln' },
     { id: 's2', name: 'Kiln 2', code: 'K2', type: 'kiln' },
@@ -79,7 +79,7 @@ describe('auth store', () => {
 
     useAuthStore.getState().setSession(
       session({
-        company: { id: 'c2', name: 'Other Bricks', gstin: null, stateCode: '27' },
+        company: { id: 'c2', name: 'Other Bricks', gstin: null, stateCode: '27', gstScheme: 'regular_12_itc' as const },
         sites: [{ id: 's9', name: 'Other Kiln', code: 'K9', type: 'kiln' }],
       }),
     );

@@ -24,7 +24,7 @@ const sessionFor = (id: string, name: string): AuthResponseDto => ({
     permissions: [],
     isSuperAdmin: false,
   },
-  company: { id, name, gstin: null, stateCode: '09' },
+  company: { id, name, gstin: null, stateCode: '09', gstScheme: 'regular_12_itc' as const },
   sites: [],
 });
 

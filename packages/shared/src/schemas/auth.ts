@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ROLES } from '../constants/roles';
-import { SITE_TYPES } from '../constants/domain';
+import { GST_SCHEMES, SITE_TYPES } from '../constants/domain';
 
 /**
  * An optional field a form may submit as an empty string.
@@ -34,6 +34,8 @@ export const refreshTokenSchema = z.object({
 });
 export type RefreshTokenDto = z.infer<typeof refreshTokenSchema>;
 
+export const gstSchemeEnum = z.enum(GST_SCHEMES);
+
 export const createCompanySchema = z.object({
   name: z.string().min(2, 'Company name is required'),
   gstin: blankToNull(z.string().length(15, 'GSTIN must be 15 characters')),
@@ -41,6 +43,7 @@ export const createCompanySchema = z.object({
   stateCode: z.string().length(2, 'State code must be 2 characters (e.g. 09 for UP)'),
   address: blankToNull(z.string()),
   logoUrl: blankToNull(z.string().url('Must be a valid URL')),
+  gstScheme: gstSchemeEnum.default('regular_12_itc'),
 });
 export type CreateCompanyDto = z.infer<typeof createCompanySchema>;
 
@@ -145,6 +148,7 @@ export const authResponseSchema = z.object({
     name: z.string(),
     gstin: z.string().nullable(),
     stateCode: z.string(),
+    gstScheme: gstSchemeEnum,
   }),
   sites: z.array(
     z.object({

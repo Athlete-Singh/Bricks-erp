@@ -32,7 +32,7 @@ const session = {
     permissions: [],
     isSuperAdmin: false,
   },
-  company: { id: 'c1', name: 'Kiln Co', gstin: null, stateCode: '09' },
+  company: { id: 'c1', name: 'Kiln Co', gstin: null, stateCode: '09', gstScheme: 'regular_12_itc' as const },
   sites: [],
 };
 

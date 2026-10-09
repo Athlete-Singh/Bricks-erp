@@ -16,6 +16,9 @@ export const VOUCHER_TYPES = {
 } as const;
 export type VoucherType = keyof typeof VOUCHER_TYPES;
 
+export const GST_SCHEMES = ['regular_12_itc', 'composition_6_no_itc'] as const;
+export type GstScheme = (typeof GST_SCHEMES)[number];
+
 export const PAYMENT_MODES = ['cash', 'bank', 'upi', 'credit'] as const;
 export type PaymentMode = (typeof PAYMENT_MODES)[number];
 

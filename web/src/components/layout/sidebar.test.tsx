@@ -23,7 +23,7 @@ const sessionWith = (permissions: string[], isSuperAdmin = false): AuthResponseD
     permissions,
     isSuperAdmin,
   },
-  company: { id: 'c1', name: 'Kiln Co', gstin: null, stateCode: '09' },
+  company: { id: 'c1', name: 'Kiln Co', gstin: null, stateCode: '09', gstScheme: 'regular_12_itc' as const },
   sites: [],
 });
 

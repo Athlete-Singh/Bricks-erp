@@ -1,4 +1,4 @@
-import type { CreateFinancialYearDto, CreateSiteDto, SiteType, UpdateCompanyDto } from '@brics/shared';
+import type { CreateFinancialYearDto, CreateSiteDto, GstScheme, SiteType, UpdateCompanyDto } from '@brics/shared';
 import { apiClient } from '@/lib/api-client';
 
 export interface Company {
@@ -9,6 +9,7 @@ export interface Company {
   stateCode: string;
   address: string | null;
   logoUrl: string | null;
+  gstScheme: GstScheme;
   isActive: boolean;
 }
 

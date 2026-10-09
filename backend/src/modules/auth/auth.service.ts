@@ -189,6 +189,7 @@ export class AuthService {
         name: company.name,
         gstin: company.gstin,
         stateCode: company.stateCode,
+        gstScheme: company.gstScheme,
       },
       sites: sites.map((s) => ({ id: s.id, name: s.name, code: s.code, type: s.type })),
     };

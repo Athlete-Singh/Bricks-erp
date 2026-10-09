@@ -12,6 +12,8 @@ export const PERMISSIONS = {
   AUDIT_VIEW: 'audit.view',
   ACCOUNTS_VIEW: 'accounts.view',
   ACCOUNTS_MANAGE: 'accounts.manage',
+  PARTIES_VIEW: 'parties.view',
+  PARTIES_MANAGE: 'parties.manage',
 } as const;
 
 export type PermissionCode = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -61,6 +63,18 @@ export const PERMISSION_CATALOGUE: readonly PermissionDefinition[] = [
     module: 'accounts',
     description: 'Create ledgers, set opening balances and post vouchers',
   },
+  {
+    code: PERMISSIONS.PARTIES_VIEW,
+    name: 'View parties',
+    module: 'parties',
+    description: 'Read party masters (customers, suppliers, Sardars, transporters, employees)',
+  },
+  {
+    code: PERMISSIONS.PARTIES_MANAGE,
+    name: 'Manage parties',
+    module: 'parties',
+    description: 'Create and edit parties',
+  },
 ] as const;
 
 export interface RoleDefinition {
@@ -87,6 +101,8 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.AUDIT_VIEW,
       PERMISSIONS.ACCOUNTS_VIEW,
       PERMISSIONS.ACCOUNTS_MANAGE,
+      PERMISSIONS.PARTIES_VIEW,
+      PERMISSIONS.PARTIES_MANAGE,
     ],
   },
   {
@@ -100,6 +116,8 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.AUDIT_VIEW,
       PERMISSIONS.ACCOUNTS_VIEW,
       PERMISSIONS.ACCOUNTS_MANAGE,
+      PERMISSIONS.PARTIES_VIEW,
+      PERMISSIONS.PARTIES_MANAGE,
     ],
   },
   {
@@ -111,13 +129,21 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.AUDIT_VIEW,
       PERMISSIONS.ACCOUNTS_VIEW,
       PERMISSIONS.ACCOUNTS_MANAGE,
+      PERMISSIONS.PARTIES_VIEW,
+      PERMISSIONS.PARTIES_MANAGE,
     ],
   },
   {
     code: 'manager',
     name: 'Manager',
     description: 'Day-to-day operations across modules',
-    permissions: [PERMISSIONS.COMPANY_VIEW, PERMISSIONS.USERS_MANAGE, PERMISSIONS.ACCOUNTS_VIEW],
+    permissions: [
+      PERMISSIONS.COMPANY_VIEW,
+      PERMISSIONS.USERS_MANAGE,
+      PERMISSIONS.ACCOUNTS_VIEW,
+      PERMISSIONS.PARTIES_VIEW,
+      PERMISSIONS.PARTIES_MANAGE,
+    ],
   },
   {
     code: 'production_manager',
@@ -135,13 +161,13 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
     code: 'sales_executive',
     name: 'Sales Executive',
     description: 'Quotations, orders and invoices',
-    permissions: [PERMISSIONS.COMPANY_VIEW],
+    permissions: [PERMISSIONS.COMPANY_VIEW, PERMISSIONS.PARTIES_VIEW],
   },
   {
     code: 'store_keeper',
     name: 'Store Keeper',
     description: 'Stock, GRN and issues',
-    permissions: [PERMISSIONS.COMPANY_VIEW],
+    permissions: [PERMISSIONS.COMPANY_VIEW, PERMISSIONS.PARTIES_VIEW],
   },
   {
     code: 'driver',

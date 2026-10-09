@@ -17,7 +17,7 @@ const session: AuthResponseDto = {
     permissions: [],
     isSuperAdmin: false,
   },
-  company: { id: 'c1', name: 'Shri Ram Bricks', gstin: null, stateCode: '09' },
+  company: { id: 'c1', name: 'Shri Ram Bricks', gstin: null, stateCode: '09', gstScheme: 'regular_12_itc' as const },
   sites: [
     { id: 's1', name: 'Kiln One', code: 'K1', type: 'kiln' },
     { id: 's2', name: 'Kiln Two', code: 'K2', type: 'kiln' },
