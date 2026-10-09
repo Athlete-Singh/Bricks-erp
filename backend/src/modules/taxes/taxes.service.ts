@@ -32,9 +32,9 @@ export class TaxesService {
         updatedBy: userId,
         hsnCode: dto.hsnCode,
         description: dto.description ?? null,
-        cgstRate: dto.cgstRate ?? 0,
-        sgstRate: dto.sgstRate ?? 0,
-        igstRate: dto.igstRate ?? 0,
+        cgstRate: dto.cgstRate ?? '0.00',
+        sgstRate: dto.sgstRate ?? '0.00',
+        igstRate: dto.igstRate ?? '0.00',
         isActive: dto.isActive ?? true,
       });
 

@@ -10,13 +10,13 @@ export class HsnRate extends TenantBaseEntity {
   description: string | null;
 
   @Column({ name: 'cgst_rate', type: 'numeric', precision: 5, scale: 2, default: 0 })
-  cgstRate: number;
+  cgstRate: string;
 
   @Column({ name: 'sgst_rate', type: 'numeric', precision: 5, scale: 2, default: 0 })
-  sgstRate: number;
+  sgstRate: string;
 
   @Column({ name: 'igst_rate', type: 'numeric', precision: 5, scale: 2, default: 0 })
-  igstRate: number;
+  igstRate: string;
 
   @Column({ name: 'is_active', default: true })
   isActive: boolean;

@@ -1,131 +1,165 @@
-import type { INestApplication } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
 import request from 'supertest';
-import type { App } from 'supertest/types';
-import * as bcrypt from 'bcryptjs';
-import { DataSource } from 'typeorm';
-import { AppModule } from '../src/app.module';
-import { setupApp } from '../src/setup-app';
-import { seedRbac } from '../src/database/seeds/seed-rbac';
-import { Company } from '../src/modules/company/entities/company.entity';
-import { User } from '../src/modules/auth/entities/user.entity';
-import { UserCompany } from '../src/modules/auth/entities/user-company.entity';
-import { Role } from '../src/modules/auth/entities/role.entity';
 import { Site } from '../src/modules/company/entities/site.entity';
+import { createTenantFixture, type TenantFixture } from './helpers/tenant-fixture';
 
 jest.setTimeout(30000);
 
-describe('Inventory Masters (e2e)', () => {
-  let app: INestApplication<App>;
-  let dataSource: DataSource;
-  let company: Company;
-  let site: Site;
-  let token: string;
+/** INV-01 / INV-02 / PRD-01 — units, items, brick grades and warehouses, per company. */
+describe('Inventory masters (e2e)', () => {
+  let fx: TenantFixture;
+  let siteA: Site;
+  let siteB: Site;
 
-  const PASSWORD = 'inventory-pw';
+  const api = (method: 'get' | 'post' | 'patch', path: string, token: string) =>
+    request(fx.app.getHttpServer())[method](`/api/v1/inventory${path}`).set('Authorization', `Bearer ${token}`);
 
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
-    app = moduleRef.createNestApplication();
-    setupApp(app);
-    await app.init();
+    fx = await createTenantFixture({
+      prefix: 'Inventory Test',
+      domain: 'inventory.test',
+      // Children first: items reference units, warehouses reference sites.
+      tables: ['items', 'warehouses', 'brick_types', 'units', 'tax_hsn_rates', 'sites'],
+      mobilePrefix: '910000005',
+    });
 
-    dataSource = app.get(DataSource);
-    await dataSource.transaction((manager) => seedRbac(manager));
-    const ownerRole = await dataSource.getRepository(Role).findOneByOrFail({ code: 'owner' });
-
-    const companyRepo = dataSource.getRepository(Company);
-    company = await companyRepo.save(companyRepo.create({ name: 'Inventory Test Co', stateCode: '09' }));
-
-    const siteRepo = dataSource.getRepository(Site);
-    site = await siteRepo.save(siteRepo.create({ companyId: company.id, code: 'MAIN', name: 'Main Site' }));
-
-    const userRepo = dataSource.getRepository(User);
-    const membershipRepo = dataSource.getRepository(UserCompany);
-    const passwordHash = await bcrypt.hash(PASSWORD, 10);
-
-    const owner = await userRepo.save(
-      userRepo.create({ email: 'owner@inventory.test', mobile: '9200000001', name: 'Inv Owner', passwordHash }),
-    );
-    await membershipRepo.save(
-      membershipRepo.create({ userId: owner.id, companyId: company.id, roleId: ownerRole.id, isDefault: true }),
-    );
-
-    const loginRes = await request(app.getHttpServer())
-      .post('/api/v1/auth/login')
-      .send({ emailOrMobile: 'owner@inventory.test', password: PASSWORD })
-      .expect(200);
-    token = (loginRes.body as { data: { accessToken: string } }).data.accessToken;
+    const siteRepo = fx.dataSource.getRepository(Site);
+    siteA = await siteRepo.save(siteRepo.create({ companyId: fx.companyA.id, name: 'Kiln A', code: 'KA' }));
+    siteB = await siteRepo.save(siteRepo.create({ companyId: fx.companyB.id, name: 'Kiln B', code: 'KB' }));
   });
 
   afterAll(async () => {
-    await dataSource.query(`
-      DELETE FROM "items" WHERE "company_id" = '${company.id}';
-      DELETE FROM "warehouses" WHERE "company_id" = '${company.id}';
-      DELETE FROM "brick_types" WHERE "company_id" = '${company.id}';
-      DELETE FROM "units" WHERE "company_id" = '${company.id}';
-      DELETE FROM "sites" WHERE "company_id" = '${company.id}';
-      DELETE FROM "user_companies" WHERE "user_id" IN (SELECT id FROM "users" WHERE "email" = 'owner@inventory.test');
-      DELETE FROM "users" WHERE "email" = 'owner@inventory.test';
-      DELETE FROM "audit_logs" WHERE "company_id" = '${company.id}';
-      DELETE FROM "companies" WHERE "id" = '${company.id}';
-    `);
-    await app.close();
+    await fx.close();
   });
 
-  const api = (method: 'get' | 'post' | 'patch', path: string) =>
-    request(app.getHttpServer())[method](`/api/v1/inventory${path}`).set('Authorization', `Bearer ${token}`);
-
-  describe('Units', () => {
+  describe('units', () => {
     it('creates a unit', async () => {
-      const res = await api('post', '/units').send({ name: 'Pieces', abbreviation: 'pcs' }).expect(201);
-
-      const body = res.body as { data: { id: string; name: string } };
-      expect(body.data).toHaveProperty('id');
-      expect(body.data.name).toBe('Pieces');
+      const res = await api('post', '/units', fx.tokenA).send({ name: 'Pieces', abbreviation: 'pcs' }).expect(201);
+      expect(res.body.data).toHaveProperty('id');
+      expect(res.body.data.name).toBe('Pieces');
     });
 
-    it('lists units', async () => {
-      const res = await api('get', '/units').expect(200);
-      const body = res.body as { data: { name: string }[] };
-
-      expect(body.data.length).toBeGreaterThan(0);
-      expect(body.data[0]).toHaveProperty('name', 'Pieces');
+    it('lists units, paginated', async () => {
+      const res = await api('get', '/units', fx.tokenA).expect(200);
+      expect(res.body.data.length).toBeGreaterThan(0);
+      // CONVENTIONS: every list carries `meta` so a page can be requested.
+      expect(res.body.meta).toMatchObject({ page: 1, total: expect.any(Number) });
     });
-  });
 
-  describe('Brick Types', () => {
-    it('creates a brick type', async () => {
-      const res = await api('post', '/brick-types').send({ grade: 'A1', description: 'Premium grade' }).expect(201);
+    it('updates a unit', async () => {
+      const created = await api('post', '/units', fx.tokenA)
+        .send({ name: 'Quintals', abbreviation: 'qtl' })
+        .expect(201);
 
-      const body = res.body as { data: { id: string; grade: string } };
-      expect(body.data).toHaveProperty('id');
-      expect(body.data.grade).toBe('A1');
+      const updated = await api('patch', `/units/${created.body.data.id}`, fx.tokenA)
+        .send({ abbreviation: 'q' })
+        .expect(200);
+
+      expect(updated.body.data.abbreviation).toBe('q');
     });
-  });
 
-  describe('Warehouses', () => {
-    it('creates a warehouse', async () => {
-      const res = await api('post', '/warehouses').send({ name: 'Main Yard', siteId: site.id }).expect(201);
-
-      const body = res.body as { data: { id: string; name: string } };
-      expect(body.data).toHaveProperty('id');
-      expect(body.data.name).toBe('Main Yard');
+    it('rejects an abbreviation longer than the column', async () => {
+      const res = await api('post', '/units', fx.tokenA)
+        .send({ name: 'Too long', abbreviation: 'abcdefghijk' })
+        .expect(400);
+      expect(res.body.error.details).toBeDefined();
     });
   });
 
-  describe('Items', () => {
-    it('creates an item', async () => {
-      const unitRes = await api('post', '/units').send({ name: 'Kilograms', abbreviation: 'kg' }).expect(201);
+  describe('brick types', () => {
+    it('creates a brick grade', async () => {
+      const res = await api('post', '/brick-types', fx.tokenA)
+        .send({ grade: 'A1', description: 'Premium grade' })
+        .expect(201);
+      expect(res.body.data.grade).toBe('A1');
+    });
 
-      const unitId = (unitRes.body as { data: { id: string } }).data.id;
+    it('accepts a grade with no description', async () => {
+      const res = await api('post', '/brick-types', fx.tokenA).send({ grade: 'B2' }).expect(201);
+      expect(res.body.data.description).toBeNull();
+    });
 
-      const res = await api('post', '/items').send({ name: 'Coal', category: 'raw_material', unitId }).expect(201);
+    it('rejects an empty grade', async () => {
+      await api('post', '/brick-types', fx.tokenA).send({ grade: '' }).expect(400);
+    });
+  });
 
-      const body = res.body as { data: { id: string; name: string; category: string } };
-      expect(body.data).toHaveProperty('id');
-      expect(body.data.name).toBe('Coal');
-      expect(body.data.category).toBe('raw_material');
+  describe('warehouses', () => {
+    it('creates a warehouse against a kiln of the calling company', async () => {
+      const res = await api('post', '/warehouses', fx.tokenA).send({ name: 'Main Yard', siteId: siteA.id }).expect(201);
+      expect(res.body.data.name).toBe('Main Yard');
+      expect(res.body.data.siteId).toBe(siteA.id);
+    });
+
+    it('refuses a warehouse pointed at another company kiln', async () => {
+      // Without this check a tenant could attach stock to a kiln it does not own.
+      const res = await api('post', '/warehouses', fx.tokenA).send({ name: 'Smuggled', siteId: siteB.id });
+      expect([400, 404, 422]).toContain(res.status);
+    });
+
+    it('rejects a siteId that is not a uuid', async () => {
+      await api('post', '/warehouses', fx.tokenA).send({ name: 'Bad', siteId: 'nope' }).expect(400);
+    });
+  });
+
+  describe('items', () => {
+    it('creates an item against a unit', async () => {
+      const unit = await api('post', '/units', fx.tokenA).send({ name: 'Kilograms', abbreviation: 'kg' }).expect(201);
+
+      const res = await api('post', '/items', fx.tokenA)
+        .send({ name: 'Coal', category: 'raw_material', unitId: unit.body.data.id })
+        .expect(201);
+
+      expect(res.body.data.name).toBe('Coal');
+      expect(res.body.data.category).toBe('raw_material');
+      expect(res.body.data.hsnId).toBeNull();
+    });
+
+    it('rejects an unknown category', async () => {
+      const unit = await api('post', '/units', fx.tokenA).send({ name: 'Litres', abbreviation: 'L' }).expect(201);
+
+      await api('post', '/items', fx.tokenA)
+        .send({ name: 'Diesel', category: 'fuel', unitId: unit.body.data.id })
+        .expect(400);
+    });
+  });
+
+  describe('tenant isolation', () => {
+    it('does not show company A masters to company B', async () => {
+      expect((await api('get', '/units', fx.tokenB).expect(200)).body.data).toHaveLength(0);
+      expect((await api('get', '/brick-types', fx.tokenB).expect(200)).body.data).toHaveLength(0);
+      expect((await api('get', '/warehouses', fx.tokenB).expect(200)).body.data).toHaveLength(0);
+      expect((await api('get', '/items', fx.tokenB).expect(200)).body.data).toHaveLength(0);
+    });
+
+    it('refuses to update another company unit', async () => {
+      const created = await api('post', '/units', fx.tokenA)
+        .send({ name: 'Protected', abbreviation: 'prt' })
+        .expect(201);
+
+      await api('patch', `/units/${created.body.data.id}`, fx.tokenB).send({ name: 'Hijacked' }).expect(404);
+    });
+
+    it('refuses to update another company brick type', async () => {
+      const created = await api('post', '/brick-types', fx.tokenA).send({ grade: 'Protected' }).expect(201);
+      await api('patch', `/brick-types/${created.body.data.id}`, fx.tokenB).send({ grade: 'X' }).expect(404);
+    });
+
+    it('refuses an item pointed at another company HSN rate', async () => {
+      const foreignHsn = await request(fx.app.getHttpServer())
+        .post('/api/v1/taxes/hsn-rates')
+        .set('Authorization', `Bearer ${fx.tokenB}`)
+        .send({ hsnCode: '6904', igstRate: '12' })
+        .expect(201);
+
+      const unit = await api('post', '/units', fx.tokenA).send({ name: 'Tonnes', abbreviation: 't' }).expect(201);
+
+      await api('post', '/items', fx.tokenA)
+        .send({ name: 'Smuggled', category: 'raw_material', unitId: unit.body.data.id, hsnId: foreignHsn.body.data.id })
+        .expect(404);
+    });
+
+    it('rejects a request with no bearer token', async () => {
+      await request(fx.app.getHttpServer()).get('/api/v1/inventory/units').expect(401);
     });
   });
 });

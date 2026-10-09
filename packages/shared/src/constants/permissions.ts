@@ -142,7 +142,8 @@ export interface RoleDefinition {
 
 /**
  * The 9 roles from the functional spec with their default permission sets (ADM-06).
- * Defaults chosen in P1.1b — see OPEN_QUESTIONS #13; the owner can confirm or adjust.
+ * Defaults chosen in P1.1b and widened in P3.1 when the master modules landed —
+ * see OPEN_QUESTIONS #13; the owner can confirm or adjust.
  * Super Admin additionally carries `users.is_super_admin`, which bypasses RolesGuard.
  */
 export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
@@ -203,6 +204,12 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.ACCOUNTS_MANAGE,
       PERMISSIONS.PARTIES_VIEW,
       PERMISSIONS.PARTIES_MANAGE,
+      // ADR-018 names the client's CA as the authority on HSN codes and GST
+      // rates, and the Accountant is that person's role here. Without
+      // `taxes.manage` the one role qualified to set the rates could not.
+      PERMISSIONS.TAXES_VIEW,
+      PERMISSIONS.TAXES_MANAGE,
+      PERMISSIONS.INVENTORY_VIEW,
     ],
   },
   {
@@ -215,25 +222,42 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.ACCOUNTS_VIEW,
       PERMISSIONS.PARTIES_VIEW,
       PERMISSIONS.PARTIES_MANAGE,
+      PERMISSIONS.INVENTORY_VIEW,
+      PERMISSIONS.TRANSPORT_VIEW,
+      PERMISSIONS.TAXES_VIEW,
+      PERMISSIONS.LABOUR_VIEW,
     ],
   },
   {
     code: 'production_manager',
     name: 'Production Manager',
     description: 'Production batches, firing and sorting',
-    permissions: [PERMISSIONS.COMPANY_VIEW],
+    // Brick grades (PRD-01) are an inventory master and this role's own subject.
+    permissions: [
+      PERMISSIONS.COMPANY_VIEW,
+      PERMISSIONS.INVENTORY_VIEW,
+      PERMISSIONS.INVENTORY_MANAGE,
+      PERMISSIONS.LABOUR_VIEW,
+    ],
   },
   {
     code: 'supervisor',
     name: 'Supervisor',
     description: 'Field entries from the mobile app',
-    permissions: [PERMISSIONS.COMPANY_VIEW],
+    permissions: [PERMISSIONS.COMPANY_VIEW, PERMISSIONS.INVENTORY_VIEW, PERMISSIONS.LABOUR_VIEW],
   },
   {
     code: 'sales_executive',
     name: 'Sales Executive',
     description: 'Quotations, orders and invoices',
-    permissions: [PERMISSIONS.COMPANY_VIEW, PERMISSIONS.PARTIES_VIEW],
+    // Needs the grades to quote and the GST rate to price.
+    permissions: [
+      PERMISSIONS.COMPANY_VIEW,
+      PERMISSIONS.PARTIES_VIEW,
+      PERMISSIONS.PARTIES_MANAGE,
+      PERMISSIONS.INVENTORY_VIEW,
+      PERMISSIONS.TAXES_VIEW,
+    ],
   },
   {
     code: 'store_keeper',
@@ -244,6 +268,8 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.PARTIES_VIEW,
       PERMISSIONS.INVENTORY_VIEW,
       PERMISSIONS.INVENTORY_MANAGE,
+      // Goods arrive and leave on a vehicle, so a GRN needs to name one.
+      PERMISSIONS.TRANSPORT_VIEW,
     ],
   },
   {

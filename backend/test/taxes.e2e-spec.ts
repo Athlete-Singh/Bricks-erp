@@ -1,104 +1,108 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import * as bcrypt from 'bcryptjs';
-import { AppModule } from '../src/app.module';
-import { setupApp } from '../src/setup-app';
-import { seedRbac } from '../src/database/seeds/seed-rbac';
-import { DataSource } from 'typeorm';
-import { Company } from '../src/modules/company/entities/company.entity';
-import { User } from '../src/modules/auth/entities/user.entity';
-import { UserCompany } from '../src/modules/auth/entities/user-company.entity';
-import { Role } from '../src/modules/auth/entities/role.entity';
+import { createTenantFixture, type TenantFixture } from './helpers/tenant-fixture';
 
-describe('TaxesController (e2e)', () => {
-  let app: INestApplication;
-  let dataSource: DataSource;
-  let adminToken: string;
-  let companyId: string;
+jest.setTimeout(30000);
 
-  const PASSWORD = 'taxes-test-pw';
+/** GST-01 — HSN/SAC master with its GST rates. Rates are per company (ADR-018). */
+describe('Taxes masters (e2e)', () => {
+  let fx: TenantFixture;
+  const url = '/api/v1/taxes/hsn-rates';
+
+  const post = (token: string, body: Record<string, unknown>) =>
+    request(fx.app.getHttpServer()).post(url).set('Authorization', `Bearer ${token}`).send(body);
+  const list = (token: string) => request(fx.app.getHttpServer()).get(url).set('Authorization', `Bearer ${token}`);
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    setupApp(app);
-    await app.init();
-
-    dataSource = app.get(DataSource);
-
-    await resetFixtures();
-    await dataSource.transaction((manager) => seedRbac(manager));
-
-    const ownerRole = await dataSource.getRepository(Role).findOneByOrFail({ code: 'owner' });
-    const companyRepo = dataSource.getRepository(Company);
-    const company = await companyRepo.save(companyRepo.create({ name: 'Taxes Test Company', stateCode: '09' }));
-    companyId = company.id;
-
-    const userRepo = dataSource.getRepository(User);
-    const membershipRepo = dataSource.getRepository(UserCompany);
-    const passwordHash = await bcrypt.hash(PASSWORD, 10);
-
-    const owner = await userRepo.save(
-      userRepo.create({ email: 'owner@taxes.test', mobile: '9100000012', name: 'Taxes Owner', passwordHash }),
-    );
-
-    await membershipRepo.save(
-      membershipRepo.create({ userId: owner.id, companyId: company.id, roleId: ownerRole.id, isDefault: true }),
-    );
-
-    const loginRes = await request(app.getHttpServer())
-      .post('/api/v1/auth/login')
-      .send({ emailOrMobile: 'owner@taxes.test', password: PASSWORD })
-      .expect(200);
-
-    adminToken = loginRes.body.data.accessToken;
+    fx = await createTenantFixture({
+      prefix: 'Taxes Test',
+      domain: 'taxes.test',
+      tables: ['tax_hsn_rates'],
+      mobilePrefix: '910000002',
+    });
   });
 
   afterAll(async () => {
-    await resetFixtures();
-    await app.close();
+    await fx.close();
   });
 
-  async function resetFixtures(): Promise<void> {
-    await dataSource.query(`
-      DELETE FROM "tax_hsn_rates" WHERE "company_id" IN (SELECT id FROM "companies" WHERE "name" LIKE 'Taxes Test %');
-      DELETE FROM "user_companies" WHERE "user_id" IN (SELECT id FROM "users" WHERE "email" LIKE '%@taxes.test');
-      DELETE FROM "refresh_tokens" WHERE "user_id" IN (SELECT id FROM "users" WHERE "email" LIKE '%@taxes.test');
-      DELETE FROM "audit_logs" WHERE "company_id" IN (SELECT id FROM "companies" WHERE "name" LIKE 'Taxes Test %');
-      DELETE FROM "users" WHERE "email" LIKE '%@taxes.test';
-      DELETE FROM "companies" WHERE "name" LIKE 'Taxes Test %';
-    `);
-  }
+  describe('create and read', () => {
+    it('creates an HSN rate and returns the rates as decimal strings', async () => {
+      const response = await post(fx.tokenA, {
+        hsnCode: '6904',
+        description: 'Clay building bricks',
+        cgstRate: '6',
+        sgstRate: '6',
+        igstRate: '12',
+      }).expect(201);
 
-  it('/taxes/hsn-rates (POST)', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/api/v1/taxes/hsn-rates')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({
-        hsnCode: '1234',
-        description: 'Test HSN',
-        cgstRate: 9,
-        sgstRate: 9,
-        igstRate: 18,
-        isActive: true,
-      })
-      .expect(201);
+      expect(response.body.data.id).toBeDefined();
+      expect(response.body.data.hsnCode).toBe('6904');
+      // Never a float: these feed GST calculations where 0.1 + 0.2 must be 0.3.
+      expect(response.body.data.cgstRate).toBe('6.00');
+      expect(response.body.data.igstRate).toBe('12.00');
+    });
 
-    expect(response.body.data.id).toBeDefined();
-    expect(response.body.data.hsnCode).toBe('1234');
+    it('defaults the rates to zero when they are omitted', async () => {
+      const response = await post(fx.tokenA, { hsnCode: '9999' }).expect(201);
+      expect(response.body.data.cgstRate).toBe('0.00');
+      expect(response.body.data.sgstRate).toBe('0.00');
+      expect(response.body.data.igstRate).toBe('0.00');
+    });
+
+    it('lists the rates of the calling company', async () => {
+      const response = await list(fx.tokenA).expect(200);
+      expect(Array.isArray(response.body.data)).toBe(true);
+      expect(response.body.data.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('updates a rate', async () => {
+      const created = await post(fx.tokenA, { hsnCode: '6905', igstRate: '12' }).expect(201);
+
+      const updated = await request(fx.app.getHttpServer())
+        .patch(`${url}/${created.body.data.id}`)
+        .set('Authorization', `Bearer ${fx.tokenA}`)
+        .send({ igstRate: '18', description: 'Revised by notification' })
+        .expect(200);
+
+      expect(updated.body.data.igstRate).toBe('18.00');
+      expect(updated.body.data.description).toBe('Revised by notification');
+    });
   });
 
-  it('/taxes/hsn-rates (GET)', async () => {
-    const response = await request(app.getHttpServer())
-      .get('/api/v1/taxes/hsn-rates')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .expect(200);
+  describe('validation', () => {
+    it('rejects a rate above 100 with a 400, not a 500', async () => {
+      const response = await post(fx.tokenA, { hsnCode: '6906', igstRate: '101' }).expect(400);
+      expect(response.body.error.details).toBeDefined();
+    });
 
-    expect(Array.isArray(response.body.data)).toBe(true);
-    expect(response.body.data.length).toBeGreaterThanOrEqual(1);
+    it('rejects a non-numeric rate', async () => {
+      await post(fx.tokenA, { hsnCode: '6907', igstRate: 'twelve' }).expect(400);
+    });
+
+    it('rejects an empty HSN code', async () => {
+      await post(fx.tokenA, { hsnCode: '' }).expect(400);
+    });
+  });
+
+  describe('tenant isolation', () => {
+    it('does not show company A rates to company B', async () => {
+      const response = await list(fx.tokenB).expect(200);
+      const codes = (response.body.data as { hsnCode: string }[]).map((r) => r.hsnCode);
+      expect(codes).not.toContain('6904');
+    });
+
+    it('refuses to update a rate belonging to another company', async () => {
+      const created = await post(fx.tokenA, { hsnCode: '7001' }).expect(201);
+
+      await request(fx.app.getHttpServer())
+        .patch(`${url}/${created.body.data.id}`)
+        .set('Authorization', `Bearer ${fx.tokenB}`)
+        .send({ igstRate: '28' })
+        .expect(404);
+    });
+
+    it('rejects a request with no bearer token', async () => {
+      await request(fx.app.getHttpServer()).get(url).expect(401);
+    });
   });
 });

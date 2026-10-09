@@ -19,6 +19,7 @@ import {
   updateUnitSchema,
   UpdateWarehouseDto,
   updateWarehouseSchema,
+  PERMISSIONS,
 } from '@brics/shared';
 
 import { CurrentCompany, CurrentUser, RequirePermissions } from '../../common/decorators/auth.decorators';
@@ -38,7 +39,7 @@ export class InventoryMastersController {
   // ── Units ─────────────────────────────────────────────────────────────────
 
   @Post('units')
-  @RequirePermissions('inventory.manage')
+  @RequirePermissions(PERMISSIONS.INVENTORY_MANAGE)
   @ApiOperation({ summary: 'Create a unit' })
   async createUnit(
     @CurrentCompany() companyId: string,
@@ -50,7 +51,7 @@ export class InventoryMastersController {
   }
 
   @Patch('units/:id')
-  @RequirePermissions('inventory.manage')
+  @RequirePermissions(PERMISSIONS.INVENTORY_MANAGE)
   @ApiOperation({ summary: 'Update a unit' })
   async updateUnit(
     @CurrentCompany() companyId: string,
@@ -63,7 +64,7 @@ export class InventoryMastersController {
   }
 
   @Get('units')
-  @RequirePermissions('inventory.view')
+  @RequirePermissions(PERMISSIONS.INVENTORY_VIEW)
   @ApiOperation({ summary: 'List units' })
   async listUnits(
     @CurrentCompany() companyId: string,
@@ -76,7 +77,7 @@ export class InventoryMastersController {
   // ── Brick Types ───────────────────────────────────────────────────────────
 
   @Post('brick-types')
-  @RequirePermissions('inventory.manage')
+  @RequirePermissions(PERMISSIONS.INVENTORY_MANAGE)
   @ApiOperation({ summary: 'Create a brick type' })
   async createBrickType(
     @CurrentCompany() companyId: string,
@@ -88,7 +89,7 @@ export class InventoryMastersController {
   }
 
   @Patch('brick-types/:id')
-  @RequirePermissions('inventory.manage')
+  @RequirePermissions(PERMISSIONS.INVENTORY_MANAGE)
   @ApiOperation({ summary: 'Update a brick type' })
   async updateBrickType(
     @CurrentCompany() companyId: string,
@@ -101,7 +102,7 @@ export class InventoryMastersController {
   }
 
   @Get('brick-types')
-  @RequirePermissions('inventory.view')
+  @RequirePermissions(PERMISSIONS.INVENTORY_VIEW)
   @ApiOperation({ summary: 'List brick types' })
   async listBrickTypes(
     @CurrentCompany() companyId: string,
@@ -114,7 +115,7 @@ export class InventoryMastersController {
   // ── Warehouses ────────────────────────────────────────────────────────────
 
   @Post('warehouses')
-  @RequirePermissions('inventory.manage')
+  @RequirePermissions(PERMISSIONS.INVENTORY_MANAGE)
   @ApiOperation({ summary: 'Create a warehouse' })
   async createWarehouse(
     @CurrentCompany() companyId: string,
@@ -126,7 +127,7 @@ export class InventoryMastersController {
   }
 
   @Patch('warehouses/:id')
-  @RequirePermissions('inventory.manage')
+  @RequirePermissions(PERMISSIONS.INVENTORY_MANAGE)
   @ApiOperation({ summary: 'Update a warehouse' })
   async updateWarehouse(
     @CurrentCompany() companyId: string,
@@ -139,7 +140,7 @@ export class InventoryMastersController {
   }
 
   @Get('warehouses')
-  @RequirePermissions('inventory.view')
+  @RequirePermissions(PERMISSIONS.INVENTORY_VIEW)
   @ApiOperation({ summary: 'List warehouses' })
   async listWarehouses(
     @CurrentCompany() companyId: string,
@@ -152,7 +153,7 @@ export class InventoryMastersController {
   // ── Items ─────────────────────────────────────────────────────────────────
 
   @Post('items')
-  @RequirePermissions('inventory.manage')
+  @RequirePermissions(PERMISSIONS.INVENTORY_MANAGE)
   @ApiOperation({ summary: 'Create an item' })
   async createItem(
     @CurrentCompany() companyId: string,
@@ -164,7 +165,7 @@ export class InventoryMastersController {
   }
 
   @Patch('items/:id')
-  @RequirePermissions('inventory.manage')
+  @RequirePermissions(PERMISSIONS.INVENTORY_MANAGE)
   @ApiOperation({ summary: 'Update an item' })
   async updateItem(
     @CurrentCompany() companyId: string,
@@ -177,7 +178,7 @@ export class InventoryMastersController {
   }
 
   @Get('items')
-  @RequirePermissions('inventory.view')
+  @RequirePermissions(PERMISSIONS.INVENTORY_VIEW)
   @ApiOperation({ summary: 'List items' })
   async listItems(
     @CurrentCompany() companyId: string,

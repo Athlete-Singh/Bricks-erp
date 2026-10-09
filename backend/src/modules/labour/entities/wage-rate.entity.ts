@@ -11,7 +11,7 @@ export class WageRate extends TenantBaseEntity {
   unit: string;
 
   @Column({ name: 'rate_amount', type: 'numeric', precision: 18, scale: 2 })
-  rateAmount: number;
+  rateAmount: string;
 
   @Column({ name: 'is_active', default: true })
   isActive: boolean;

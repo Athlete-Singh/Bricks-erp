@@ -16,6 +16,8 @@ import { Unit } from './entities/unit.entity';
 import { BrickType } from './entities/brick-type.entity';
 import { Warehouse } from './entities/warehouse.entity';
 import { Item } from './entities/item.entity';
+import { Site } from '../company/entities/site.entity';
+import { HsnRate } from '../taxes/entities/hsn-rate.entity';
 import { AuditService } from '../audit/audit.service';
 import { DataSource } from 'typeorm';
 
@@ -145,7 +147,25 @@ export class InventoryMastersService {
 
   // ── Warehouses ────────────────────────────────────────────────────────────
 
+  /**
+   * A foreign key arriving in a request body is attacker-controlled: without
+   * this check a tenant could attach a warehouse to a kiln it does not own, or
+   * an item to another company's HSN rate. `company_id` itself always comes
+   * from the JWT (ADR-013), but the ids it points at must be checked too.
+   */
+  private async assertBelongsToCompany(
+    entity: typeof Site | typeof HsnRate,
+    id: string,
+    companyId: string,
+    label: string,
+  ): Promise<void> {
+    const found = await this.dataSource.getRepository(entity).findOne({ where: { id, companyId } });
+    if (!found) throw new NotFoundException(`${label} not found`);
+  }
+
   async createWarehouse(companyId: string, userId: string, dto: CreateWarehouseDto): Promise<Warehouse> {
+    await this.assertBelongsToCompany(Site, dto.siteId, companyId, 'Kiln');
+
     return this.dataSource.transaction(async (manager) => {
       const repo = manager.getRepository(Warehouse);
       const wh = await repo.save(repo.create({ companyId, ...dto, createdBy: userId, updatedBy: userId }));
@@ -200,9 +220,9 @@ export class InventoryMastersService {
   // ── Items ─────────────────────────────────────────────────────────────────
 
   async createItem(companyId: string, userId: string, dto: CreateItemDto): Promise<Item> {
-    // Basic verification that the unit exists (HSN check deferred to P3.1c)
     const unit = await this.unitRepo.findOne({ where: { id: dto.unitId, companyId } });
     if (!unit) throw new NotFoundException('Unit not found');
+    if (dto.hsnId) await this.assertBelongsToCompany(HsnRate, dto.hsnId, companyId, 'HSN rate');
 
     return this.dataSource.transaction(async (manager) => {
       const repo = manager.getRepository(Item);
@@ -224,6 +244,9 @@ export class InventoryMastersService {
       if (dto.unitId && dto.unitId !== item.unitId) {
         const unit = await this.unitRepo.findOne({ where: { id: dto.unitId, companyId } });
         if (!unit) throw new NotFoundException('Unit not found');
+      }
+      if (dto.hsnId && dto.hsnId !== item.hsnId) {
+        await this.assertBelongsToCompany(HsnRate, dto.hsnId, companyId, 'HSN rate');
       }
 
       const oldValues = { ...item };

@@ -19,9 +19,11 @@ export const createDriverSchema = z.object({
   isActive: z.boolean().default(true),
 });
 export type CreateDriverDto = z.infer<typeof createDriverSchema>;
+export type CreateDriverInput = z.input<typeof createDriverSchema>;
 
 export const updateDriverSchema = createDriverSchema.partial();
 export type UpdateDriverDto = z.infer<typeof updateDriverSchema>;
+export type UpdateDriverInput = z.input<typeof updateDriverSchema>;
 
 export const createVehicleSchema = z.object({
   registrationNo: z.string().min(1, 'Registration number is required').max(50),
@@ -31,6 +33,8 @@ export const createVehicleSchema = z.object({
   isActive: z.boolean().default(true),
 });
 export type CreateVehicleDto = z.infer<typeof createVehicleSchema>;
+export type CreateVehicleInput = z.input<typeof createVehicleSchema>;
 
 export const updateVehicleSchema = createVehicleSchema.partial();
 export type UpdateVehicleDto = z.infer<typeof updateVehicleSchema>;
+export type UpdateVehicleInput = z.input<typeof updateVehicleSchema>;

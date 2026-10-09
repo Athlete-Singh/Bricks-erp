@@ -1,101 +1,117 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import * as bcrypt from 'bcryptjs';
-import { AppModule } from '../src/app.module';
-import { setupApp } from '../src/setup-app';
-import { seedRbac } from '../src/database/seeds/seed-rbac';
-import { DataSource } from 'typeorm';
-import { Company } from '../src/modules/company/entities/company.entity';
-import { User } from '../src/modules/auth/entities/user.entity';
-import { UserCompany } from '../src/modules/auth/entities/user-company.entity';
-import { Role } from '../src/modules/auth/entities/role.entity';
+import { createTenantFixture, type TenantFixture } from './helpers/tenant-fixture';
 
-describe('WageRatesController (e2e)', () => {
-  let app: INestApplication;
-  let dataSource: DataSource;
-  let adminToken: string;
-  let companyId: string;
+jest.setTimeout(30000);
 
-  const PASSWORD = 'labour-test-pw';
+/** LAB-03 — piece rates per activity and the daily wage, configured per company. */
+describe('Labour masters (e2e)', () => {
+  let fx: TenantFixture;
+  const url = '/api/v1/labour/wage-rates';
+
+  const post = (token: string, body: Record<string, unknown>) =>
+    request(fx.app.getHttpServer()).post(url).set('Authorization', `Bearer ${token}`).send(body);
+  const list = (token: string) => request(fx.app.getHttpServer()).get(url).set('Authorization', `Bearer ${token}`);
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    setupApp(app);
-    await app.init();
-
-    dataSource = app.get(DataSource);
-
-    await resetFixtures();
-    await dataSource.transaction((manager) => seedRbac(manager));
-
-    const ownerRole = await dataSource.getRepository(Role).findOneByOrFail({ code: 'owner' });
-    const companyRepo = dataSource.getRepository(Company);
-    const company = await companyRepo.save(companyRepo.create({ name: 'Labour Test Company', stateCode: '09' }));
-    companyId = company.id;
-
-    const userRepo = dataSource.getRepository(User);
-    const membershipRepo = dataSource.getRepository(UserCompany);
-    const passwordHash = await bcrypt.hash(PASSWORD, 10);
-
-    const owner = await userRepo.save(
-      userRepo.create({ email: 'owner@labour.test', mobile: '9100000013', name: 'Labour Owner', passwordHash }),
-    );
-
-    await membershipRepo.save(
-      membershipRepo.create({ userId: owner.id, companyId: company.id, roleId: ownerRole.id, isDefault: true }),
-    );
-
-    const loginRes = await request(app.getHttpServer())
-      .post('/api/v1/auth/login')
-      .send({ emailOrMobile: 'owner@labour.test', password: PASSWORD })
-      .expect(200);
-
-    adminToken = loginRes.body.data.accessToken;
+    fx = await createTenantFixture({
+      prefix: 'Labour Test',
+      domain: 'labour.test',
+      tables: ['labour_wage_rates'],
+      mobilePrefix: '910000003',
+    });
   });
 
   afterAll(async () => {
-    await resetFixtures();
-    await app.close();
+    await fx.close();
   });
 
-  async function resetFixtures(): Promise<void> {
-    await dataSource.query(`
-      DELETE FROM "labour_wage_rates" WHERE "company_id" IN (SELECT id FROM "companies" WHERE "name" LIKE 'Labour Test %');
-      DELETE FROM "user_companies" WHERE "user_id" IN (SELECT id FROM "users" WHERE "email" LIKE '%@labour.test');
-      DELETE FROM "refresh_tokens" WHERE "user_id" IN (SELECT id FROM "users" WHERE "email" LIKE '%@labour.test');
-      DELETE FROM "users" WHERE "email" LIKE '%@labour.test';
-      DELETE FROM "companies" WHERE "name" LIKE 'Labour Test %';
-    `);
-  }
+  describe('create and read', () => {
+    it('creates a piece rate and returns the amount as a decimal string', async () => {
+      const response = await post(fx.tokenA, {
+        activity: 'making',
+        unit: '1000 bricks',
+        rateAmount: '650',
+      }).expect(201);
 
-  it('/labour/wage-rates (POST)', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/api/v1/labour/wage-rates')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({
+      expect(response.body.data.id).toBeDefined();
+      expect(response.body.data.activity).toBe('making');
+      // NUMERIC(18,2) round-trips as a decimal string, never a float.
+      expect(response.body.data.rateAmount).toBe('650.00');
+    });
+
+    it('creates a daily wage', async () => {
+      const response = await post(fx.tokenA, {
+        activity: 'daily_wage',
+        unit: 'day',
+        rateAmount: '450.50',
+      }).expect(201);
+      expect(response.body.data.rateAmount).toBe('450.50');
+    });
+
+    it('lists the rates of the calling company', async () => {
+      const response = await list(fx.tokenA).expect(200);
+      expect(Array.isArray(response.body.data)).toBe(true);
+      expect(response.body.data.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('updates a rate and keeps the decimal shape', async () => {
+      const created = await post(fx.tokenA, {
+        activity: 'loading',
+        unit: '1000 bricks',
+        rateAmount: '120',
+      }).expect(201);
+
+      const updated = await request(fx.app.getHttpServer())
+        .patch(`${url}/${created.body.data.id}`)
+        .set('Authorization', `Bearer ${fx.tokenA}`)
+        .send({ rateAmount: '135' })
+        .expect(200);
+
+      expect(updated.body.data.rateAmount).toBe('135.00');
+    });
+  });
+
+  describe('validation', () => {
+    it('rejects a zero rate', async () => {
+      const response = await post(fx.tokenA, {
         activity: 'unloading',
         unit: '1000 bricks',
-        rateAmount: 150.5,
-        isActive: true,
-      })
-      .expect(201);
+        rateAmount: '0',
+      }).expect(400);
+      expect(response.body.error.details).toBeDefined();
+    });
 
-    expect(response.body.data.id).toBeDefined();
-    expect(response.body.data.activity).toBe('unloading');
+    it('rejects an activity outside the allowed set', async () => {
+      await post(fx.tokenA, { activity: 'dancing', unit: 'day', rateAmount: '100' }).expect(400);
+    });
+
+    it('rejects a rate that is not a number', async () => {
+      await post(fx.tokenA, { activity: 'making', unit: 'day', rateAmount: 'six hundred' }).expect(400);
+    });
   });
 
-  it('/labour/wage-rates (GET)', async () => {
-    const response = await request(app.getHttpServer())
-      .get('/api/v1/labour/wage-rates')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .expect(200);
+  describe('tenant isolation', () => {
+    it('does not show company A rates to company B', async () => {
+      const response = await list(fx.tokenB).expect(200);
+      expect(response.body.data).toHaveLength(0);
+    });
 
-    expect(Array.isArray(response.body.data)).toBe(true);
-    expect(response.body.data.length).toBeGreaterThanOrEqual(1);
+    it('refuses to update a rate belonging to another company', async () => {
+      const created = await post(fx.tokenA, {
+        activity: 'unloading',
+        unit: '1000 bricks',
+        rateAmount: '110',
+      }).expect(201);
+
+      await request(fx.app.getHttpServer())
+        .patch(`${url}/${created.body.data.id}`)
+        .set('Authorization', `Bearer ${fx.tokenB}`)
+        .send({ rateAmount: '1' })
+        .expect(404);
+    });
+
+    it('rejects a request with no bearer token', async () => {
+      await request(fx.app.getHttpServer()).get(url).expect(401);
+    });
   });
 });

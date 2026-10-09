@@ -23,6 +23,7 @@ export const updateUnitSchema = z.object({
   isActive: z.boolean().optional(),
 });
 export type UpdateUnitDto = z.infer<typeof updateUnitSchema>;
+export type UpdateUnitInput = z.input<typeof updateUnitSchema>;
 
 // ── Brick Types ─────────────────────────────────────────────────────────────
 
@@ -31,6 +32,7 @@ export const createBrickTypeSchema = z.object({
   description: blankToNull(z.string()),
 });
 export type CreateBrickTypeDto = z.infer<typeof createBrickTypeSchema>;
+export type CreateBrickTypeInput = z.input<typeof createBrickTypeSchema>;
 
 export const updateBrickTypeSchema = z.object({
   grade: z.string().min(1).optional(),
@@ -38,6 +40,7 @@ export const updateBrickTypeSchema = z.object({
   isActive: z.boolean().optional(),
 });
 export type UpdateBrickTypeDto = z.infer<typeof updateBrickTypeSchema>;
+export type UpdateBrickTypeInput = z.input<typeof updateBrickTypeSchema>;
 
 // ── Warehouses ──────────────────────────────────────────────────────────────
 
@@ -46,12 +49,14 @@ export const createWarehouseSchema = z.object({
   name: z.string().min(2, 'Warehouse name is required'),
 });
 export type CreateWarehouseDto = z.infer<typeof createWarehouseSchema>;
+export type CreateWarehouseInput = z.input<typeof createWarehouseSchema>;
 
 export const updateWarehouseSchema = z.object({
   name: z.string().min(2).optional(),
   isActive: z.boolean().optional(),
 });
 export type UpdateWarehouseDto = z.infer<typeof updateWarehouseSchema>;
+export type UpdateWarehouseInput = z.input<typeof updateWarehouseSchema>;
 
 // ── Items ───────────────────────────────────────────────────────────────────
 
@@ -74,6 +79,7 @@ export const updateItemSchema = z.object({
   isActive: z.boolean().optional(),
 });
 export type UpdateItemDto = z.infer<typeof updateItemSchema>;
+export type UpdateItemInput = z.input<typeof updateItemSchema>;
 
 // ── Common Query ────────────────────────────────────────────────────────────
 

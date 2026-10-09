@@ -1,129 +1,154 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import * as bcrypt from 'bcryptjs';
-import { AppModule } from '../src/app.module';
-import { setupApp } from '../src/setup-app';
-import { seedRbac } from '../src/database/seeds/seed-rbac';
-import { DataSource } from 'typeorm';
-import { Company } from '../src/modules/company/entities/company.entity';
-import { User } from '../src/modules/auth/entities/user.entity';
-import { UserCompany } from '../src/modules/auth/entities/user-company.entity';
-import { Role } from '../src/modules/auth/entities/role.entity';
+import { createTenantFixture, type TenantFixture } from './helpers/tenant-fixture';
 
-describe('TransportMastersController (e2e)', () => {
-  let app: INestApplication;
-  let dataSource: DataSource;
-  let adminToken: string;
-  let companyId: string;
+jest.setTimeout(30000);
 
-  const PASSWORD = 'transport-test-pw';
+/** VEH-01 — vehicles (own or hired) and the drivers who run them. */
+describe('Transport masters (e2e)', () => {
+  let fx: TenantFixture;
+  const drivers = '/api/v1/transport/drivers';
+  const vehicles = '/api/v1/transport/vehicles';
+
+  const post = (url: string, token: string, body: Record<string, unknown>) =>
+    request(fx.app.getHttpServer()).post(url).set('Authorization', `Bearer ${token}`).send(body);
+  const list = (url: string, token: string) =>
+    request(fx.app.getHttpServer()).get(url).set('Authorization', `Bearer ${token}`);
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    setupApp(app);
-    await app.init();
-
-    dataSource = app.get(DataSource);
-
-    await resetFixtures();
-    await dataSource.transaction((manager) => seedRbac(manager));
-
-    const ownerRole = await dataSource.getRepository(Role).findOneByOrFail({ code: 'owner' });
-    const companyRepo = dataSource.getRepository(Company);
-    const company = await companyRepo.save(companyRepo.create({ name: 'Transport Test Company', stateCode: '09' }));
-    companyId = company.id;
-
-    const userRepo = dataSource.getRepository(User);
-    const membershipRepo = dataSource.getRepository(UserCompany);
-    const passwordHash = await bcrypt.hash(PASSWORD, 10);
-
-    const owner = await userRepo.save(
-      userRepo.create({ email: 'owner@transport.test', mobile: '9100000011', name: 'Transport Owner', passwordHash }),
-    );
-
-    await membershipRepo.save(
-      membershipRepo.create({ userId: owner.id, companyId: company.id, roleId: ownerRole.id, isDefault: true }),
-    );
-
-    const loginRes = await request(app.getHttpServer())
-      .post('/api/v1/auth/login')
-      .send({ emailOrMobile: 'owner@transport.test', password: PASSWORD })
-      .expect(200);
-
-    adminToken = loginRes.body.data.accessToken;
+    fx = await createTenantFixture({
+      prefix: 'Transport Test',
+      domain: 'transport.test',
+      // Vehicles reference parties, drivers stand alone; neither references the other.
+      tables: ['transport_vehicles', 'transport_drivers'],
+      mobilePrefix: '910000004',
+    });
   });
 
   afterAll(async () => {
-    await resetFixtures();
-    await app.close();
+    await fx.close();
   });
 
-  async function resetFixtures(): Promise<void> {
-    await dataSource.query(`
-      DELETE FROM "transport_drivers" WHERE "company_id" IN (SELECT id FROM "companies" WHERE "name" LIKE 'Transport Test %');
-      DELETE FROM "transport_vehicles" WHERE "company_id" IN (SELECT id FROM "companies" WHERE "name" LIKE 'Transport Test %');
-      DELETE FROM "user_companies" WHERE "user_id" IN (SELECT id FROM "users" WHERE "email" LIKE '%@transport.test');
-      DELETE FROM "refresh_tokens" WHERE "user_id" IN (SELECT id FROM "users" WHERE "email" LIKE '%@transport.test');
-      DELETE FROM "audit_logs" WHERE "company_id" IN (SELECT id FROM "companies" WHERE "name" LIKE 'Transport Test %');
-      DELETE FROM "users" WHERE "email" LIKE '%@transport.test';
-      DELETE FROM "companies" WHERE "name" LIKE 'Transport Test %';
-    `);
-  }
+  describe('drivers', () => {
+    it('creates a driver', async () => {
+      const response = await post(drivers, fx.tokenA, {
+        name: 'Ramesh Kumar',
+        phone: '9876543210',
+        licenseNo: 'UP32-2019-0001234',
+      }).expect(201);
 
-  it('/transport/drivers (POST)', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/api/v1/transport/drivers')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({
-        name: 'John Driver',
-        phone: '1234567890',
-        licenseNo: 'DL-123',
-        isActive: true,
-      })
-      .expect(201);
+      expect(response.body.data.id).toBeDefined();
+      expect(response.body.data.name).toBe('Ramesh Kumar');
+      expect(response.body.data.isActive).toBe(true);
+    });
 
-    expect(response.body.data.id).toBeDefined();
-    expect(response.body.data.name).toBe('John Driver');
+    it('creates a driver with no phone or licence yet', async () => {
+      const response = await post(drivers, fx.tokenA, { name: 'Suresh' }).expect(201);
+      expect(response.body.data.phone).toBeNull();
+      expect(response.body.data.licenseNo).toBeNull();
+    });
+
+    it('lists the drivers of the calling company', async () => {
+      const response = await list(drivers, fx.tokenA).expect(200);
+      expect(response.body.data.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('updates a driver and can deactivate one', async () => {
+      const created = await post(drivers, fx.tokenA, { name: 'Temporary Driver' }).expect(201);
+
+      const updated = await request(fx.app.getHttpServer())
+        .patch(`${drivers}/${created.body.data.id}`)
+        .set('Authorization', `Bearer ${fx.tokenA}`)
+        .send({ phone: '9000000000', isActive: false })
+        .expect(200);
+
+      expect(updated.body.data.phone).toBe('9000000000');
+      expect(updated.body.data.isActive).toBe(false);
+    });
+
+    it('rejects a driver with no name', async () => {
+      const response = await post(drivers, fx.tokenA, { name: '' }).expect(400);
+      expect(response.body.error.details).toBeDefined();
+    });
   });
 
-  it('/transport/drivers (GET)', async () => {
-    const response = await request(app.getHttpServer())
-      .get('/api/v1/transport/drivers')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .expect(200);
-
-    expect(Array.isArray(response.body.data)).toBe(true);
-    expect(response.body.data.length).toBeGreaterThanOrEqual(1);
-  });
-
-  it('/transport/vehicles (POST)', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/api/v1/transport/vehicles')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({
-        registrationNo: 'AB-12-CD-3456',
+  describe('vehicles', () => {
+    it('creates an owned truck', async () => {
+      const response = await post(vehicles, fx.tokenA, {
+        registrationNo: 'UP32 AB 1234',
         type: 'truck',
         ownerType: 'own',
-        isActive: true,
-      })
-      .expect(201);
+      }).expect(201);
 
-    expect(response.body.data.id).toBeDefined();
-    expect(response.body.data.registrationNo).toBe('AB-12-CD-3456');
+      expect(response.body.data.registrationNo).toBe('UP32 AB 1234');
+      expect(response.body.data.ownerType).toBe('own');
+      expect(response.body.data.partyId).toBeNull();
+    });
+
+    it('creates a hired tractor', async () => {
+      const response = await post(vehicles, fx.tokenA, {
+        registrationNo: 'UP32 CD 5678',
+        type: 'tractor',
+        ownerType: 'hired',
+      }).expect(201);
+      expect(response.body.data.type).toBe('tractor');
+    });
+
+    it('lists the vehicles of the calling company', async () => {
+      const response = await list(vehicles, fx.tokenA).expect(200);
+      expect(response.body.data.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('rejects an unknown vehicle type', async () => {
+      await post(vehicles, fx.tokenA, {
+        registrationNo: 'UP32 XX 0001',
+        type: 'helicopter',
+        ownerType: 'own',
+      }).expect(400);
+    });
+
+    it('rejects a partyId that is not a uuid', async () => {
+      await post(vehicles, fx.tokenA, {
+        registrationNo: 'UP32 XX 0002',
+        type: 'truck',
+        ownerType: 'hired',
+        partyId: 'not-a-uuid',
+      }).expect(400);
+    });
   });
 
-  it('/transport/vehicles (GET)', async () => {
-    const response = await request(app.getHttpServer())
-      .get('/api/v1/transport/vehicles')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .expect(200);
+  describe('tenant isolation', () => {
+    it('does not show company A drivers or vehicles to company B', async () => {
+      expect((await list(drivers, fx.tokenB).expect(200)).body.data).toHaveLength(0);
+      expect((await list(vehicles, fx.tokenB).expect(200)).body.data).toHaveLength(0);
+    });
 
-    expect(Array.isArray(response.body.data)).toBe(true);
-    expect(response.body.data.length).toBeGreaterThanOrEqual(1);
+    it('refuses to update another company driver', async () => {
+      const created = await post(drivers, fx.tokenA, { name: 'Protected Driver' }).expect(201);
+
+      await request(fx.app.getHttpServer())
+        .patch(`${drivers}/${created.body.data.id}`)
+        .set('Authorization', `Bearer ${fx.tokenB}`)
+        .send({ name: 'Hijacked' })
+        .expect(404);
+    });
+
+    it('refuses to update another company vehicle', async () => {
+      const created = await post(vehicles, fx.tokenA, {
+        registrationNo: 'UP32 ZZ 9999',
+        type: 'tipper',
+        ownerType: 'own',
+      }).expect(201);
+
+      await request(fx.app.getHttpServer())
+        .patch(`${vehicles}/${created.body.data.id}`)
+        .set('Authorization', `Bearer ${fx.tokenB}`)
+        .send({ registrationNo: 'HIJACKED' })
+        .expect(404);
+    });
+
+    it('rejects requests with no bearer token', async () => {
+      await request(fx.app.getHttpServer()).get(drivers).expect(401);
+      await request(fx.app.getHttpServer()).get(vehicles).expect(401);
+    });
   });
 });
