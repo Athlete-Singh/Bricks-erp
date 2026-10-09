@@ -11,17 +11,17 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 101 | 6 | 6 | 1 | 88 | 0 |
+| CP1 MVP | 101 | 10 | 2 | 1 | 88 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 
-**CP1 done: 6 %** (6 of 101 features ✅)
+**CP1 done: 10 %** (10 of 101 features ✅)
 
 ### Per app
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
-| Backend | 97 | 7 | 5 | 0 | 0 | 85 |
-| Web | 94 | 7 | 0 | 0 | 0 | 87 |
+| Backend | 97 | 11 | 1 | 0 | 0 | 85 |
+| Web | 94 | 11 | 0 | 0 | 0 | 83 |
 | Mobile | 11 | 0 | 0 | 0 | 0 | 11 |
 | Tests | 101 | 12 | 0 | 0 | 0 | 89 |
 
@@ -138,11 +138,11 @@
 
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| ACC-01 | Chart of accounts + ledger groups (seeded Indian default, editable) | CP1 | P2 | 🧩 | ⬜ | — | ✅ | 🟨 | Tally-style chart seeded **per company at creation**, so no tenant can exist without one. 22 groups, 28 ledgers, 8 voucher types. Web screens in P2.2 |
-| ACC-02 | Posting engine: balanced, atomic, immutable, reversal | CP1 | P2 | 🧩 | ⬜ | — | ✅ | 🟨 | `PostingService.post(manager, …)` — balanced, FY-gated, tenant-checked, **in the caller's transaction** so a document and its journal are one atomic act. Reversal, never edit. Numbering gapless under concurrency |
-| ACC-03 | Manual vouchers: receipt, payment, contra, journal | CP1 | P2 | 🧩 | ⬜ | — | ✅ | 🟨 | `POST /vouchers` for receipt, payment, contra and journal; no update route by design. Web entry screen in P2.2 |
+| ACC-01 | Chart of accounts + ledger groups (seeded Indian default, editable) | CP1 | P2 | ✅ | ✅ | — | ✅ | ✅ | Seeded per company at creation. Web: chart list with group and opening balance |
+| ACC-02 | Posting engine: balanced, atomic, immutable, reversal | CP1 | P2 | ✅ | ✅ | — | ✅ | ✅ | `PostingService` — balanced, FY-gated, caller's transaction. Reversal from the Day Book, never an edit |
+| ACC-03 | Manual vouchers: receipt, payment, contra, journal | CP1 | P2 | ✅ | ✅ | — | ✅ | ✅ | Receipt/payment/contra/journal with a live Dr/Cr total that blocks posting until it balances |
 | ACC-04 | Opening balances for ledgers | CP1 | P2 | 🧩 | ⬜ | — | ✅ | 🟨 | Opening Dr/Cr per ledger, transactional. Deliberately accepts an unbalanced set and reports the difference — real opening figures rarely tie first time |
-| ACC-05 | Day Book, Ledger, Trial Balance | CP1 | P2 | 🧩 | ⬜ | — | ✅ | 🟨 | Day Book, Ledger statement with running balance, Trial Balance with Σ Dr = Σ Cr proved. Reversed vouchers stay in and net to zero. Web screens in P2.2 |
+| ACC-05 | Day Book, Ledger, Trial Balance | CP1 | P2 | ✅ | ✅ | — | ✅ | ✅ | Day Book, Ledger statement with running balance, Trial Balance with Σ Dr = Σ Cr and the difference surfaced |
 | ACC-06 | Sales & purchase vouchers auto-posted from documents; debit/credit notes | CP1 | P7/P8 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | ACC-07 | Cash Book, Bank Book | CP1 | P10 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | ACC-08 | Profit & Loss, Balance Sheet (closing stock valuation method: see open questions) | CP1 | P10 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |

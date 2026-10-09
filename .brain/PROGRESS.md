@@ -1,6 +1,6 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** P2.1c ✅ done → **next: P2.2** (web: voucher entry + the books) — **P2.1 backend complete** (web login page wired to auth API, company/kiln switcher, user/role management screens) · **CP1 features done:** 6 / 101 (6 %)
+**Client Phase:** CP1 (MVP) · **Current step:** P2.2 ✅ done → **next: P3.1** (backend masters) — **phase P2 complete, ACC-01…05 all ✅** (web login page wired to auth API, company/kiln switcher, user/role management screens) · **CP1 features done:** 10 / 101 (10 %)
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
@@ -19,14 +19,16 @@ That creates the 9 roles, one company, one kiln and one Owner. The bootstrap ref
   - P1.1a ✅ backend auth & RBAC skeleton: 11 entities, JWT access+refresh, guards, CRUD controllers, migration, first tests.
   - P1.2a ✅ web auth foundation: `api-client` (envelope unwrap, typed `ApiError`, single-flight 401→refresh→retry), token custody per ADR-016, auth store, login page, `AuthGuard`, sign-out. Verified in a real browser against the running API: login → dashboard, hard reload restores the session, sign-out clears both sides.
   - P1.2b ✅ web shell: user dropdown + change-password, company switcher, kiln switcher, permission-aware nav, and the company / kilns / financial-year screens. **ADM-01…04 are the first features to reach ✅.** Sidebar turned into a drawer below `md` — it was a 224 px rail on a 375 px phone, which broke the entry screens the new CONVENTIONS rule exists to protect.
+  - P2.2 ✅ accounting on the web: voucher entry with a live Dr/Cr total that blocks posting until it balances, Day Book with reversal, chart of accounts with a ledger statement, Trial Balance. **Phase P2 complete — ACC-01…05 all ✅, CP1 6 % → 10 %.** Two real bugs found by running it: blank amount fields failed validation, and a `date` column read through a raw query shifted a day in IST.
   - P2.1c ✅ the books: Day Book, Ledger statement with a running balance on the ledger's natural side, Trial Balance proving Σ Dr = Σ Cr. Verified on real journals — a reversal leaves the trial balance balanced because both entries stay in. e2e 38 → 53.
   - P2.1b ✅ **`PostingService`** — the spine. Balanced, FY-gated, tenant-checked, written in the **caller's** transaction so a document and its journal commit together. Gapless voucher numbering under 8 concurrent posts, and a rejected post does not burn a number. Reversal instead of editing; no update route exists. Manual vouchers (receipt/payment/contra/journal). Backend 64 → 97 unit, e2e 22 → 38.
   - P2.1a ✅ chart of accounts: 22 Tally-style groups, 28 ledgers, 8 voucher types, **seeded per company inside company creation** so a tenant cannot exist without somewhere to post. Opening balances (ACC-04) transactional, and honest about an unbalanced set rather than refusing it. Four DB CHECK constraints verified against Postgres. Backend tests 31 → 64.
   - P1.2c ✅ web admin: users list + create + edit (role, kiln access, active), and the Owner's audit viewer with filters and paging. **ADM-05…07 complete — P1 is done on the web side.** Fixed a shared-schema bug that made every optional text field reject a blank value.
   - P1.1b ✅ **repair of P1.1** — see "Why P1.1b existed" below. Tenant isolation, RBAC seed, audit trail, API contract, missing ADM endpoints, schema hardening. 31 unit + 22 e2e green.
 - **Half-done:** none.
-- **Next step (exact):** **P2.2 — the web side of accounting**, which closes ACC-01…05 and finishes phase P2. Voucher entry form (receipt/payment/contra/journal) with a live running Dr/Cr total that blocks submit until it balances and shows the difference; Day Book on `GET /reports/day-book`; Ledger statement on `GET /reports/ledgers/:id`; Trial Balance on `GET /reports/trial-balance` with the difference surfaced when openings do not tie; chart-of-accounts and opening-balance screens on the P2.1a endpoints. All of it reuses `DataTable`, `Dialog`, `Select` and `Pagination` from P1.2.
-- **Watch in P2.2:** money is a **string** end to end (CONVENTIONS) — never parse a voucher amount into a JS number for arithmetic in the browser either.
+- **Next step (exact):** **P3.1 — backend masters**: parties (customer/supplier/Sardar/transporter/employee, each auto-getting a ledger under the right group — ADR-008, PTY-01…03), items, units, warehouses, brick types, vehicles, drivers, HSN/GST rates and wage rates. Everything from P4 onward needs these. The party→ledger link is the piece to get right: `ledgers.party_id` already exists with a unique index, and the group depends on the party type (Sundry Debtors / Sundry Creditors / Labour Payables).
+- **Still open before P3:** OPEN_QUESTIONS #7 (brick grades actually used) and #2 (GST rate for bricks) both land in P3.1 masters.
+- **Carried gaps:** the opening-balance *screen* is not built (the API is, and the Trial Balance surfaces the difference); list endpoints other than `/audit-logs`, `/vouchers` and `/reports/day-book` still do not paginate.
 - **Then:** P1.3 (mobile login + sync setup) → P2.1 (accounting engine) → …
 
 ### Why P1.1b existed (read before marking any step ✅)
@@ -90,7 +92,7 @@ The P track is never blocked by the M track.
 | P2 | P2.1a | **Backend: chart of accounts** — ledger groups, ledgers, voucher types, migration, per-company seed, opening balances (ACC-01, ACC-04) | ✅ |
 | P2 | P2.1b | Backend: `PostingService` (balanced, atomic, FY-checked, immutable + reversal) and manual vouchers — receipt, payment, contra, journal (ACC-02, ACC-03) | ✅ |
 | P2 | P2.1c | Backend reports: Day Book, Ledger statement, Trial Balance (ACC-05) | ✅ |
-| P2 | P2.2 | Web: voucher entry, Day Book, Ledger, Trial Balance | ⬜ |
+| P2 | P2.2 | Web: voucher entry, Day Book, Ledger, Trial Balance | ✅ |
 | P3 | P3.1 | Backend masters (parties + auto ledger, items, units, warehouses, brick types, vehicles, drivers, HSN/GST, wage rates) | ⬜ |
 | P3 | P3.2 | Web master screens + party ledger | ⬜ |
 | P4 | P4.1 | Backend StockService, opening stock, adjustments + tests | ⬜ |

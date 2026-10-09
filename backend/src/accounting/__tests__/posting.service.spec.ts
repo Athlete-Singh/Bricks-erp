@@ -7,6 +7,7 @@ import { VoucherLine } from '../entities/voucher-line.entity';
 import { VoucherSequence } from '../entities/voucher-sequence.entity';
 import { VoucherType } from '../entities/voucher-type.entity';
 import { PostingService, type PostingLine } from '../posting.service';
+import { todayCalendarDate } from '../../common/time/calendar-date';
 
 const COMPANY_ID = '11111111-1111-1111-1111-111111111111';
 const USER_ID = '22222222-2222-2222-2222-222222222222';
@@ -417,7 +418,7 @@ describe('PostingService', () => {
 
       await service.reverse(manager, COMPANY_ID, USER_ID, original.voucher.id);
 
-      expect(saved.vouchers[1]?.voucherDate).toBe(new Date().toISOString().slice(0, 10));
+      expect(saved.vouchers[1]?.voucherDate).toBe(todayCalendarDate());
     });
 
     it('explains itself in the narration', async () => {

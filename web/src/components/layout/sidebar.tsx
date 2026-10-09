@@ -37,7 +37,7 @@ const NAV: NavItem[] = [
   { label: 'Labour', href: '/labour', icon: Users, comingIn: 'P6' },
   { label: 'Purchases', href: '/purchases', icon: ShoppingCart, comingIn: 'P7' },
   { label: 'Dispatch', href: '/dispatch', icon: Truck, comingIn: 'P9' },
-  { label: 'Accounts', href: '/accounts', icon: BookOpen, comingIn: 'P2' },
+  { label: 'Accounts', href: '/accounts', icon: BookOpen, permissions: [PERMISSIONS.ACCOUNTS_VIEW] },
   { label: 'Reports', href: '/reports', icon: BarChart2, comingIn: 'P11' },
   { label: 'Audit log', href: '/audit-logs', icon: ScrollText, permissions: [PERMISSIONS.AUDIT_VIEW] },
   { label: 'Settings', href: '/settings', icon: Settings, permissions: [PERMISSIONS.COMPANY_VIEW] },

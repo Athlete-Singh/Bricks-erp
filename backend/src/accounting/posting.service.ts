@@ -3,6 +3,7 @@ import Decimal from 'decimal.js';
 import { EntityManager } from 'typeorm';
 import { BusinessRuleException } from '../common/exceptions/business-rule.exception';
 import { Money } from '../common/money/money';
+import { todayCalendarDate } from '../common/time/calendar-date';
 import { FinancialYear } from '../modules/company/entities/financial-year.entity';
 import { Ledger } from './entities/ledger.entity';
 import { Voucher } from './entities/voucher.entity';
@@ -146,7 +147,7 @@ export class PostingService {
       voucherTypeCode: voucherType.code,
       // Defaults to today, not the original date: reversing into a period that
       // has been reported would change figures already given to the client.
-      voucherDate: options.voucherDate ?? new Date().toISOString().slice(0, 10),
+      voucherDate: options.voucherDate ?? todayCalendarDate(),
       lines: mirrored,
       narration: options.narration ?? `Reversal of ${original.number}`,
       siteId: original.siteId,

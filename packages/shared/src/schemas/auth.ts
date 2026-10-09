@@ -167,11 +167,20 @@ export const createLedgerSchema = z.object({
 export type CreateLedgerDto = z.infer<typeof createLedgerSchema>;
 export type CreateLedgerInput = z.input<typeof createLedgerSchema>;
 
-/** A money amount as a decimal string — never a float (CONVENTIONS). */
+const AMOUNT_PATTERN = /^\d{1,16}(\.\d{1,2})?$/;
+
+/**
+ * A money amount as a decimal string — never a float (CONVENTIONS).
+ *
+ * An untouched amount input submits `""`, and the pattern needs at least one
+ * digit, so a blank has to be accepted and normalised. Without this a perfectly
+ * ordinary voucher — debit on one line, credit on the other — failed validation
+ * on the two fields the user correctly left empty.
+ */
 const moneyString = z
-  .string()
-  .regex(/^\d{1,16}(\.\d{1,2})?$/, 'Enter an amount like 1250.00')
-  .default('0.00');
+  .union([z.literal(''), z.string().regex(AMOUNT_PATTERN, 'Enter an amount like 1250.00')])
+  .optional()
+  .transform((value) => (value === '' || value === undefined ? '0.00' : value));
 
 export const updateLedgerSchema = z.object({
   name: z.string().min(2).optional(),
@@ -211,10 +220,11 @@ export type SetOpeningBalancesDto = z.infer<typeof setOpeningBalancesSchema>;
 export const MANUAL_VOUCHER_TYPES = ['receipt', 'payment', 'contra', 'journal'] as const;
 export type ManualVoucherType = (typeof MANUAL_VOUCHER_TYPES)[number];
 
+/** Blank means "nothing on this side", not an invalid amount. */
 const amountString = z
-  .string()
-  .regex(/^\d{1,16}(\.\d{1,2})?$/, 'Enter an amount like 1250.00')
-  .optional();
+  .union([z.literal(''), z.string().regex(AMOUNT_PATTERN, 'Enter an amount like 1250.00')])
+  .optional()
+  .transform((value) => (value === '' ? undefined : value));
 
 export const voucherLineSchema = z
   .object({
@@ -281,6 +291,7 @@ export const dayBookQuerySchema = z.object({
   voucherType: z.string().min(1).optional(),
 });
 export type DayBookQueryDto = z.infer<typeof dayBookQuerySchema>;
+export type DayBookQueryInput = z.input<typeof dayBookQuerySchema>;
 
 export const ledgerStatementQuerySchema = z.object({
   from: isoDate.optional(),
@@ -300,3 +311,5 @@ export const trialBalanceQuerySchema = z.object({
     .transform((v) => v === 'true'),
 });
 export type TrialBalanceQueryDto = z.infer<typeof trialBalanceQuerySchema>;
+/** What goes on the wire — `includeZero` is text there, boolean after parsing. */
+export type TrialBalanceQueryInput = z.input<typeof trialBalanceQuerySchema>;

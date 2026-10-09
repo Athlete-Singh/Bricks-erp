@@ -6,6 +6,7 @@ import type { DayBookQueryDto, LedgerStatementQueryDto, TrialBalanceQueryDto } f
 import { normalBalanceSide, type LedgerNature } from '@brics/shared';
 import type { Paginated } from '../common/interceptors/response-envelope.interceptor';
 import { Money } from '../common/money/money';
+import { toCalendarDate, todayCalendarDate } from '../common/time/calendar-date';
 import { LedgerGroup } from './entities/ledger-group.entity';
 import { Ledger } from './entities/ledger.entity';
 import { Voucher } from './entities/voucher.entity';
@@ -19,6 +20,8 @@ export interface DayBookEntry {
   voucherType: string;
   status: string;
   narration: string | null;
+  /** Set when this voucher is itself a reversal — it cannot be reversed again. */
+  reversalOfId: string | null;
   lines: Array<{ ledgerId: string; ledgerName: string; debit: string; credit: string; narration: string | null }>;
   totalDebit: string;
 }
@@ -158,10 +161,11 @@ export class ReportsService {
       return {
         voucherId: voucher.id,
         number: voucher.number,
-        voucherDate: voucher.voucherDate,
+        voucherDate: toCalendarDate(voucher.voucherDate),
         voucherType: typeCodes.get(voucher.voucherTypeId) ?? 'unknown',
         status: voucher.status,
         narration: voucher.narration,
+        reversalOfId: voucher.reversalOfId,
         lines: lines.map((l) => ({
           ledgerId: l.ledgerId,
           ledgerName: l.ledgerName,
@@ -229,7 +233,7 @@ export class ReportsService {
       return {
         voucherId: line.voucherId,
         number: line.number,
-        voucherDate: toIsoDate(line.voucherDate),
+        voucherDate: toCalendarDate(line.voucherDate),
         voucherType: line.voucherType,
         narration: line.narration,
         debit: Money.toString(line.debit),
@@ -262,7 +266,7 @@ export class ReportsService {
    * owner can see what is still unexplained.
    */
   async trialBalance(companyId: string, query: TrialBalanceQueryDto): Promise<TrialBalance> {
-    const asOf = query.asOf ?? new Date().toISOString().slice(0, 10);
+    const asOf = query.asOf ?? todayCalendarDate();
 
     const [ledgers, groups] = await Promise.all([
       this.ledgerRepo.find({ where: { companyId } }),
@@ -399,9 +403,4 @@ function splitSides(net: Decimal): { debit: string; credit: string } {
   return net.isNegative()
     ? { debit: '0.00', credit: Money.toString(net.negated()) }
     : { debit: Money.toString(net), credit: '0.00' };
-}
-
-/** `pg` hands back a `date` column as a string here and a Date elsewhere. */
-function toIsoDate(value: string | Date): string {
-  return value instanceof Date ? value.toISOString().slice(0, 10) : String(value).slice(0, 10);
 }
