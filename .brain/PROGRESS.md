@@ -1,11 +1,13 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** P3.1a ✅ done → **next: P3.1b** (backend masters part 2) — **phase P3 started, PTY-01…03 all ✅** (backend party master with auto-ledger)
+**Client Phase:** CP1 (MVP) · **Current step:** P3.1a ✅ done → **next: P3.1b** (backend masters part 2: units, items, brick types, warehouses) — **phase P3 started, PTY-01…03 backend ✅** (party master with auto-ledger)
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
-- **Last green commit:** `<p3.1a>` — `docs(brain): update tracking after P3.1a` (2026-10-09). Gate green: lint ✓ typecheck ✓ test ✓ build ✓, backend e2e tests passing with tenancy and auto-ledger.
-- **Verified against a running API** (seeded DB, `node dist/main.js`): login returns a single-wrapped `{data}`, role `owner` with its 4 permission codes, the bootstrap company and kiln; `GET /users` contains no password hash; `GET /audit-logs` returns `{data, meta}` with the LOGIN entry; an invalid login body returns 400 `VALIDATION_FAILED` with per-field details.
+- **Last green commit:** P3.1a (2026-10-09). Gate green: lint ✓ typecheck ✓ test (119 unit + 72 e2e) ✓ build ✓.
+- **What shipped:** `parties` table with `party_types[]` array, GSTIN, PAN, state, address, phone, opening Dr/Cr. Auto-ledger per ADR-020 (type precedence → group). Company `gst_scheme` column (ADR-019). 4 CRUD endpoints behind `parties.view`/`parties.manage`. Zod schemas in `@brics/shared`. 16 unit tests for `PartyService` + `ledgerGroupCodeForTypes`. 19 e2e tests including 4 tenant-isolation.
+- **Next step (exact):** **P3.1b** — backend: units, items, brick types, warehouses (INV-01, INV-02, PRD-01). These are simpler masters — no auto-ledger logic, just CRUD + seeds.
+- **Still open:** Opening balance posting (Dr/Cr stored on party and ledger but no opening JNL posted yet — deferred to a dedicated import flow). PTY-04 (party ledger statement) is backend-ready via the existing Ledger statement report; a party-specific view lands in P3.2.
 
 ### First run on a fresh database
 `pnpm db:up` → `pnpm --filter @brics/backend migration:run` → set `SEED_OWNER_MOBILE` + `SEED_OWNER_PASSWORD` in `backend/.env` → `pnpm seed`.

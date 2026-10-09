@@ -5,7 +5,7 @@
 
 ## Where we are
 
-**Client Phase:** CP1 (MVP) · **Current step:** P3.1a ✅ done → **next: P3.1b** (backend masters part 2) — **phase P3 started, PTY-01…03 all ✅** (backend party master with auto-ledger)
+**Client Phase:** CP1 (MVP) · **Current step:** P3.1a ✅ done → **next: P3.1b** (backend masters part 2: units, items, brick types, warehouses) — **phase P3 started, PTY-01…03 backend ✅** (party master with auto-ledger)
 
 **Client Phase 1 (MVP) progress: 10 %** (10 of 101 features done)
 
