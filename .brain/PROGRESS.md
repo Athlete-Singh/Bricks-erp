@@ -4,7 +4,7 @@
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
-- **Last green commit:** P3.1 repair (2026-10-09). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 119 unit + **123 e2e**, web 61, shared **63**.
+- **Last green commit:** schema repair (2026-10-09). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 119 unit + **176 e2e**, web 61, shared 63.
 - **What shipped:** all nine master modules — parties (+ auto-ledger), units, items, brick types, warehouses, drivers, vehicles, HSN/GST rates, wage rates — with CRUD, audit trail, RBAC and **proven** tenant isolation.
 - **Next step (exact):** **P3.2** — web master screens. Parties, Inventory and Transport screens exist in the working tree and compile; **Taxes and Labour screens are not written, and nothing is linked from the sidebar yet**.
 - **Still open:** Opening balance posting (Dr/Cr stored on party and ledger but no opening JNL posted yet — deferred to a dedicated import flow). PTY-04 (party ledger statement) is backend-ready via the existing Ledger statement report; a party-specific view lands in P3.2.
@@ -41,6 +41,22 @@ every permissioned route; the audit log a table with no writer; and ADM-02 switc
 all simply absent. `pnpm status` could not catch the wiring gap because its generator ignored `BE 🧩`.
 **Lesson for every future step:** a column is ✅ only when a test proves it, not when the file exists. Tenancy and audit are in the
 "never cut correctness" list — give them an e2e test in the same step, as `backend/test/tenancy.e2e-spec.ts` now does.
+
+### The schema damage — the most serious thing found so far (2026-10-09)
+`1791532862193-InventoryMasters` (P3.1b) was produced by `typeorm migration:generate`. Our indexes, unique keys and
+CHECK constraints live in hand-written SQL and are **not** declared on the entity classes, so the generator read all of
+them as drift: its `up()` is **82 DROP statements with no adds**, and the CREATEs are in `down()`. Running it forward
+stripped the database of its own guarantees — unique voucher numbers (GST invoice numbering), the gapless-numbering
+lock row, one active financial year, one ledger per party, unique ledger names, ~30 foreign keys. Both live databases
+were checked: every master table had nothing but a primary key. **Every test still passed**, because the application
+code checks the same rules in TypeScript.
+Repaired by `1791600000000-RepairSchemaConstraints` (idempotent). A fresh database and a repaired one now match
+exactly: 63 indexes, 42 foreign keys, 10 checks.
+**Two rules came out of this, both now in AGENTS.md:**
+1. **Never run `migration:generate`** — use `migration:create` and write the SQL. AGENTS.md used to recommend
+   `generate`, which is why this happened.
+2. **Test the schema, not just the API.** `backend/test/schema-integrity.e2e-spec.ts` asserts the constraints exist in
+   Postgres. It is the only kind of test that could have caught this, and it runs with the e2e suite.
 
 ### What the P3.1 audit found (read before marking any step ✅)
 P3.1a (parties) was built properly — 20 e2e tests including cross-tenant read **and** write. P3.1b and P3.1c were not:
