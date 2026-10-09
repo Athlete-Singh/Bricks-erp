@@ -11,19 +11,19 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 101 | 10 | 11 | 1 | 79 | 0 |
+| CP1 MVP | 101 | 20 | 2 | 1 | 78 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 
-**CP1 done: 10 %** (10 of 101 features ✅)
+**CP1 done: 20 %** (20 of 101 features ✅)
 
 ### Per app
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
-| Backend | 97 | 20 | 1 | 0 | 0 | 76 |
-| Web | 94 | 11 | 0 | 0 | 0 | 83 |
+| Backend | 97 | 21 | 1 | 0 | 0 | 75 |
+| Web | 94 | 21 | 0 | 0 | 0 | 73 |
 | Mobile | 11 | 0 | 0 | 0 | 0 | 11 |
-| Tests | 101 | 21 | 0 | 0 | 0 | 80 |
+| Tests | 101 | 22 | 0 | 0 | 0 | 79 |
 
 ## Client Phase 1 — MVP
 
@@ -47,16 +47,16 @@
 
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| PTY-01 | One party master with types: customer, supplier, Sardar/labour contractor, transporter, employee, other | CP1 | P3 | ✅ | ⬜ | — | ✅ | 🟨 |  |
-| PTY-02 | GSTIN, PAN, state, address, phone, opening balance (Dr/Cr) per party | CP1 | P3 | ✅ | ⬜ | — | ✅ | 🟨 |  |
-| PTY-03 | Every party auto-gets a ledger account in the right group | CP1 | P3 | ✅ | ⬜ | — | ✅ | 🟨 |  |
-| PTY-04 | Party ledger statement, outstanding balance and transaction history (fills in as modules post) | CP1 | P3 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| PTY-01 | One party master with types: customer, supplier, Sardar/labour contractor, transporter, employee, other | CP1 | P3 | ✅ | ✅ | — | ✅ | ✅ |  |
+| PTY-02 | GSTIN, PAN, state, address, phone, opening balance (Dr/Cr) per party | CP1 | P3 | ✅ | ✅ | — | ✅ | ✅ |  |
+| PTY-03 | Every party auto-gets a ledger account in the right group | CP1 | P3 | ✅ | ✅ | — | ✅ | ✅ |  |
+| PTY-04 | Party ledger statement, outstanding balance and transaction history (fills in as modules post) | CP1 | P3 | ✅ | ✅ | — | ✅ | ✅ |  |
 
 ### M03 Production (SOW #3)
 
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| PRD-01 | Brick types / grades master (configurable, e.g. Class 1/2/3) | CP1 | P3 | ✅ | ⬜ | — | ✅ | 🟨 |  |
+| PRD-01 | Brick types / grades master (configurable, e.g. Class 1/2/3) | CP1 | P3 | ✅ | ✅ | — | ✅ | ✅ |  |
 | PRD-02 | Production batch per kiln + chamber + date | CP1 | P5 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | PRD-03 | Stage entries: brick making (green bricks, labour group) → drying → firing (chamber, fuel) → sorting (fired, broken/rejected, good by grade) | CP1 | P5 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | PRD-04 | Fuel/raw material consumption (coal, soil) reduces raw stock | CP1 | P5 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
@@ -70,7 +70,7 @@
 |---|---|---|---|---|---|---|---|---|---|
 | LAB-01 | Labour groups under a Sardar; worker master | CP1 | P6 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | LAB-02 | Daily attendance by group/worker (web + mobile offline) | CP1 | P6 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |  |
-| LAB-03 | Wage-rate config: piece rate per 1,000 bricks by activity (making, loading, unloading) and daily wage | CP1 | P6 | ✅ | ⬜ | — | ✅ | 🟨 |  |
+| LAB-03 | Wage-rate config: piece rate per 1,000 bricks by activity (making, loading, unloading) and daily wage | CP1 | P6 | ✅ | ✅ | — | ✅ | ✅ |  |
 | LAB-04 | Auto wage entries from production and loading counts | CP1 | P6 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | LAB-05 | Cash advances and loans to Sardar/workers (cash/bank/UPI) | CP1 | P6 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | LAB-06 | Deductions: advance recovery, loan instalment, **food/ration (khurak), fines and penalties** | CP1 | P6 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
@@ -81,8 +81,8 @@
 
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| INV-01 | Items master: raw materials (soil, coal, sand, diesel), consumables, machinery/electrical/repair items; units; HSN | CP1 | P3 | ✅ | ⬜ | — | ✅ | 🟨 |  |
-| INV-02 | Warehouses / stock locations per kiln | CP1 | P3 | ✅ | ⬜ | — | ✅ | 🟨 |  |
+| INV-01 | Items master: raw materials (soil, coal, sand, diesel), consumables, machinery/electrical/repair items; units; HSN | CP1 | P3 | ✅ | ✅ | — | ✅ | ✅ |  |
+| INV-02 | Warehouses / stock locations per kiln | CP1 | P3 | ✅ | ✅ | — | ✅ | ✅ |  |
 | INV-03 | Opening stock entry | CP1 | P4 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | INV-04 | Stock movement ledger via a single `StockService` (every in/out linked to its source document) | CP1 | P4 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | INV-05 | Automatic updates from GRN, production, dispatch and wastage (wired in P5/P7/P9) | CP1 | P4 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
@@ -93,7 +93,7 @@
 
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| VEH-01 | Vehicles (own/hired; truck/tractor/tipper) and drivers | CP1 | P3 | ✅ | ⬜ | — | ✅ | 🟨 |  |
+| VEH-01 | Vehicles (own/hired; truck/tractor/tipper) and drivers | CP1 | P3 | ✅ | ✅ | — | ✅ | ✅ |  |
 | VEH-02 | Trip log: vehicle, driver, route, linked dispatch, freight income | CP1 | P9 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | VEH-03 | Diesel entries per vehicle/trip | CP1 | P9 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | VEH-04 | Maintenance/repair expense per vehicle | CP1 | P9 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
@@ -153,7 +153,7 @@
 
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| GST-01 | HSN/SAC master + GST rate config (configurable; clay building bricks usually HSN 6904, confirm with the client's CA) | CP1 | P3 | ✅ | ⬜ | — | ✅ | 🟨 |  |
+| GST-01 | HSN/SAC master + GST rate config (configurable; clay building bricks usually HSN 6904, confirm with the client's CA) | CP1 | P3 | ✅ | ✅ | — | ✅ | ✅ |  |
 | GST-02 | CGST+SGST vs IGST by place of supply | CP1 | P8 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | GST-03 | GST input on purchases | CP1 | P7 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | GST-04 | GSTR-1 register (B2B, B2C, HSN summary) with Excel export | CP1 | P10 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |

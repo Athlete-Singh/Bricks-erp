@@ -1,13 +1,13 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** P3.1 ✅ done **and audited** → **next: P3.2** (web master screens)
+**Client Phase:** CP1 (MVP) · **Current step:** P3.2 ✅ done → **next: P4.1** (stock: opening stock + StockService)
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
-- **Last green commit:** P3.1 fully audited and repaired (2026-10-09). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 119 unit + **183 e2e**, web 61, shared 63.
-- **What shipped:** all nine master modules — parties (+ auto-ledger), units, items, brick types, warehouses, drivers, vehicles, HSN/GST rates, wage rates — with CRUD, audit trail, RBAC and **proven** tenant isolation.
-- **Next step (exact):** **P3.2** — web master screens. Parties, Inventory and Transport screens exist in the working tree and compile; **Taxes and Labour screens are not written, and nothing is linked from the sidebar yet**.
-- **Still open:** Opening balance posting (Dr/Cr stored on party and ledger but no opening JNL posted yet — deferred to a dedicated import flow). PTY-04 (party ledger statement) is backend-ready via the existing Ledger statement report; a party-specific view lands in P3.2.
+- **Last green commit:** P3.2 web master screens (2026-10-09). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 119 unit + 183 e2e, web **71**, shared 63.
+- **What shipped:** **phase P3 is complete.** All nine master modules on the backend, and a Masters section on the web with a tab per module: parties (with the opening balance and the PTY-04 ledger statement), inventory, transport, taxes/HSN and wage rates. **PTY-01…04, PRD-01, INV-01/02, VEH-01, GST-01, LAB-03 are all ✅ on BE, Web and Tests.**
+- **Next step (exact):** **P4.1 — stock**: `StockService` as the single writer of stock movement (INV-04), opening stock entry (INV-03), and manual adjustment with a reason (INV-06). Same shape as `PostingService`: one service, the caller's `EntityManager`, every movement linked to its source document. P5/P7/P9 all post through it.
+- **Still open:** Opening balance posting — a party's Dr/Cr is stored on the party and its ledger, but no opening journal is written, so the Trial Balance shows it as a difference. Deferred to a dedicated import flow.
 
 ### First run on a fresh database
 `pnpm db:up` → `pnpm --filter @brics/backend migration:run` → set `SEED_OWNER_MOBILE` + `SEED_OWNER_PASSWORD` in `backend/.env` → `pnpm seed`.
@@ -21,6 +21,8 @@ That creates the 9 roles, one company, one kiln and one Owner. The bootstrap ref
   - P1.1a ✅ backend auth & RBAC skeleton: 11 entities, JWT access+refresh, guards, CRUD controllers, migration, first tests.
   - P1.2a ✅ web auth foundation: `api-client` (envelope unwrap, typed `ApiError`, single-flight 401→refresh→retry), token custody per ADR-016, auth store, login page, `AuthGuard`, sign-out. Verified in a real browser against the running API: login → dashboard, hard reload restores the session, sign-out clears both sides.
   - P1.2b ✅ web shell: user dropdown + change-password, company switcher, kiln switcher, permission-aware nav, and the company / kilns / financial-year screens. **ADM-01…04 are the first features to reach ✅.** Sidebar turned into a drawer below `md` — it was a 224 px rail on a 375 px phone, which broke the entry screens the new CONVENTIONS rule exists to protect.
+  - P3.2 ✅ web masters: a Masters section with a tab per module. Parties with opening balance and the **PTY-04** ledger statement (which leads with "They owe you" / "You owe them" rather than a raw Dr/Cr), inventory, transport, taxes/HSN with a 5/12/18/28 split helper, and wage rates that fill in each activity's usual unit. **Phase P3 complete.** Driven in a real browser, which caught a duplicate-error message that read "A record with this hsn rates company code already exists".
+  - P3.1 ✅ backend masters, then **audited line by line and repaired** — see the two sections below. Nine modules, 183 e2e.
   - P2.2 ✅ accounting on the web: voucher entry with a live Dr/Cr total that blocks posting until it balances, Day Book with reversal, chart of accounts with a ledger statement, Trial Balance. **Phase P2 complete — ACC-01…05 all ✅, CP1 6 % → 10 %.** Two real bugs found by running it: blank amount fields failed validation, and a `date` column read through a raw query shifted a day in IST.
   - P2.1c ✅ the books: Day Book, Ledger statement with a running balance on the ledger's natural side, Trial Balance proving Σ Dr = Σ Cr. Verified on real journals — a reversal leaves the trial balance balanced because both entries stay in. e2e 38 → 53.
   - P2.1b ✅ **`PostingService`** — the spine. Balanced, FY-gated, tenant-checked, written in the **caller's** transaction so a document and its journal commit together. Gapless voucher numbering under 8 concurrent posts, and a rejected post does not burn a number. Reversal instead of editing; no update route exists. Manual vouchers (receipt/payment/contra/journal). Backend 64 → 97 unit, e2e 22 → 38.
@@ -28,8 +30,7 @@ That creates the 9 roles, one company, one kiln and one Owner. The bootstrap ref
   - P1.2c ✅ web admin: users list + create + edit (role, kiln access, active), and the Owner's audit viewer with filters and paging. **ADM-05…07 complete — P1 is done on the web side.** Fixed a shared-schema bug that made every optional text field reject a blank value.
   - P1.1b ✅ **repair of P1.1** — see "Why P1.1b existed" below. Tenant isolation, RBAC seed, audit trail, API contract, missing ADM endpoints, schema hardening. 31 unit + 22 e2e green.
 - **Half-done:** none.
-- **Next step (exact):** **P3.1 — backend masters**: parties (customer/supplier/Sardar/transporter/employee, each auto-getting a ledger under the right group — ADR-008, PTY-01…03), items, units, warehouses, brick types, vehicles, drivers, HSN/GST rates and wage rates. Everything from P4 onward needs these. The party→ledger link is the piece to get right: `ledgers.party_id` already exists with a unique index, and the group depends on the party type (Sundry Debtors / Sundry Creditors / Labour Payables).
-- **Still open before P3:** OPEN_QUESTIONS #7 (brick grades actually used) and #2 (GST rate for bricks) both land in P3.1 masters.
+- **OPEN_QUESTIONS #2 and #7 are answered by design, not by a reply:** ADR-018 makes brick grades and GST rates per-company rows the owner and their CA fill in, so neither blocks a build step.
 - **Carried gaps:** the opening-balance *screen* is not built (the API is, and the Trial Balance surfaces the difference). **Every master list now paginates**; the remaining unpaginated lists are the P1 admin ones (companies, sites, financial years, ledgers, voucher types).
 - **Then:** P1.3 (mobile login + sync setup) → P2.1 (accounting engine) → …
 
