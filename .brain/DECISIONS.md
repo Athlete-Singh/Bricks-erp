@@ -62,3 +62,15 @@ Why: the backend returns both tokens in the response body, so an httpOnly cookie
 **ADR-017 — The API client unwraps the envelope — 2026-10-08**
 Decision: `apiClient.get<T>()` returns the `data` payload, not `{ data }`. Paginated endpoints use `apiClient.getPaged<T>()`, which returns `{ items, meta }`.
 Why: every endpoint returns the envelope, so unwrapping once in the client keeps `.data.data` out of every hook and component. Decided now rather than after P1.2b/c wrote screens against the raw shape.
+
+**ADR-018 — Masters are per company, seeded with defaults, owner-editable — 2026-10-09**
+Decision: brick types, HSN codes, GST rates and wage rates are per-company rows (like the chart of accounts), seeded with sensible defaults and editable. Nothing about them is hardcoded.
+Why: one owner may run several companies that genuinely differ — different brick grades, different products, different GST elections. The people who know the right values are the client's **CA** (GST, HSN) and the **owner/production manager** (grades, wage rates), not us. This is why OPEN_QUESTIONS #2 and #7 do not block P3: the answer is "whatever they enter". GST rates carry `effective_from`, so a rate change by notification does not silently re-rate invoices already issued.
+
+**ADR-019 — The GST scheme is a property of the company, not of a product — 2026-10-09**
+Decision: `companies.gst_scheme` is `regular_12_itc` or `composition_6_no_itc`, set per company.
+Why: brick manufacturers elect a scheme; two companies of the same owner can be on different ones. It is not a per-item rate. It decides whether GST paid on inputs is **claimable credit or a cost** — and since coal is ~42% of the cost per 1,000 bricks, getting it wrong makes `CST-01` materially wrong. The field was missing from the P3 plan entirely until it was raised.
+
+**ADR-020 — One ledger per party, group chosen by type precedence — 2026-10-09**
+Decision: every party auto-creates exactly one ledger (`ledgers.party_id`, already uniquely indexed), inside the same transaction as the party. The group is picked by precedence over the party's types: customer → Sundry Debtors; else supplier or transporter → Sundry Creditors; else Sardar or employee → Labour Payables; else other → Sundry Creditors.
+Why: ADR-008 keeps one `parties` table with `party_types[]`, so a party can be both customer and supplier, but must still have **one** ledger or their statement would be split across two accounts. Precedence gives a deterministic home. A balance landing on the contrary side is not a problem: the Trial Balance already presents each balance on its natural side, so a customer in credit reads correctly.

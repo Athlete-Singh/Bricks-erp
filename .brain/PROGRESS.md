@@ -93,7 +93,9 @@ The P track is never blocked by the M track.
 | P2 | P2.1b | Backend: `PostingService` (balanced, atomic, FY-checked, immutable + reversal) and manual vouchers — receipt, payment, contra, journal (ACC-02, ACC-03) | ✅ |
 | P2 | P2.1c | Backend reports: Day Book, Ledger statement, Trial Balance (ACC-05) | ✅ |
 | P2 | P2.2 | Web: voucher entry, Day Book, Ledger, Trial Balance | ✅ |
-| P3 | P3.1 | Backend masters (parties + auto ledger, items, units, warehouses, brick types, vehicles, drivers, HSN/GST, wage rates) | ⬜ |
+| P3 | P3.1a | **Backend: parties + auto ledger** (PTY-01…03) and the company GST scheme | ⬜ |
+| P3 | P3.1b | Backend: units, items, brick types, warehouses (INV-01, INV-02, PRD-01) | ⬜ |
+| P3 | P3.1c | Backend: vehicles, drivers, HSN + GST rates, wage rates (VEH-01, GST-01, LAB-03) | ⬜ |
 | P3 | P3.2 | Web master screens + party ledger | ⬜ |
 | P4 | P4.1 | Backend StockService, opening stock, adjustments + tests | ⬜ |
 | P4 | P4.2 | Web stock screens + reports | ⬜ |
@@ -152,6 +154,8 @@ Exit criteria per phase: see BRICS_MASTER_PROMPT.md §12.
 A1 banking/accounting adv · A2 adv GST (if approved) · A3 profitability/leakage · A4 admin extras · A5 AI anomaly · A6 IoT · A7 approved extras — all ⏭️
 
 ## Splits recorded
+- **P3.1 → P3.1a + P3.1b + P3.1c** (2026-10-09). Nine master tables is three sessions. Parties go first and alone because
+  each one auto-creates a ledger in the chart of accounts, which is the only part with real logic.
 - **P2.1 → P2.1a + P2.1b + P2.1c** (2026-10-08). The chart of accounts, the posting engine and the reports are each a session's
   work, and `PostingService` is the one piece the whole product rests on — it gets a step to itself so its tests are not rushed.
 - **P1.2 → P1.2a + P1.2b + P1.2c** (2026-10-08). One session could not cover auth plumbing, shell wiring and three admin
