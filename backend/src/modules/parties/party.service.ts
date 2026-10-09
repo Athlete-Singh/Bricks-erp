@@ -6,6 +6,7 @@ import { AuditService } from '../audit/audit.service';
 import { LedgerGroup } from '../../accounting/entities/ledger-group.entity';
 import { Ledger } from '../../accounting/entities/ledger.entity';
 import { Party } from './entities/party.entity';
+import { FinancialYear } from '../company/entities/financial-year.entity';
 
 export interface Paginated<T> {
   items: T[];
@@ -44,6 +45,7 @@ export class PartyService {
     @InjectRepository(Party) private partyRepo: Repository<Party>,
     @InjectRepository(LedgerGroup) private groupRepo: Repository<LedgerGroup>,
     @InjectRepository(Ledger) private ledgerRepo: Repository<Ledger>,
+    @InjectRepository(FinancialYear) private fyRepo: Repository<FinancialYear>,
     private audit: AuditService,
     private dataSource: DataSource,
   ) {}
@@ -62,9 +64,14 @@ export class PartyService {
       throw new Error(`Ledger group '${groupCode}' missing for company ${companyId}. Re-run the chart seed.`);
     }
 
+    const activeFy = await this.fyRepo.findOne({ where: { companyId, isActive: true } });
+
     return this.dataSource.transaction(async (manager) => {
       const ledgerRepo = manager.getRepository(Ledger);
       const partyRepo = manager.getRepository(Party);
+
+      const openingDebit = dto.openingDebit ?? '0.00';
+      const openingCredit = dto.openingCredit ?? '0.00';
 
       const ledger = await ledgerRepo.save(
         ledgerRepo.create({
@@ -73,6 +80,9 @@ export class PartyService {
           name: dto.name,
           code: null,
           isSystem: false,
+          openingDebit,
+          openingCredit,
+          openingFinancialYearId: activeFy?.id ?? null,
           createdBy: userId,
           updatedBy: userId,
         }),

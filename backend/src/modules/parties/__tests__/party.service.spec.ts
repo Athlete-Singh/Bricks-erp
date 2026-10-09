@@ -9,6 +9,7 @@ import { LedgerGroup } from '../../../accounting/entities/ledger-group.entity';
 import { Ledger } from '../../../accounting/entities/ledger.entity';
 import { Party } from '../entities/party.entity';
 import { PartyService, ledgerGroupCodeForTypes } from '../party.service';
+import { FinancialYear } from '../../company/entities/financial-year.entity';
 
 const COMPANY_ID = 'c-111';
 const USER_ID = 'u-222';
@@ -87,6 +88,7 @@ describe('PartyService', () => {
   let partyRepo: jest.Mocked<Repository<Party>>;
   let groupRepo: jest.Mocked<Repository<LedgerGroup>>;
   let ledgerRepo: jest.Mocked<Repository<Ledger>>;
+  let fyRepo: jest.Mocked<Repository<FinancialYear>>;
   let audit: jest.Mocked<AuditService>;
   let dataSource: jest.Mocked<DataSource>;
 
@@ -106,6 +108,7 @@ describe('PartyService', () => {
         { provide: getRepositoryToken(Party), useValue: { findOne: jest.fn(), createQueryBuilder: jest.fn() } },
         { provide: getRepositoryToken(LedgerGroup), useValue: { findOne: jest.fn() } },
         { provide: getRepositoryToken(Ledger), useValue: { update: jest.fn() } },
+        { provide: getRepositoryToken(FinancialYear), useValue: { findOne: jest.fn() } },
         { provide: AuditService, useValue: { record: jest.fn() } },
         {
           provide: DataSource,
@@ -120,6 +123,7 @@ describe('PartyService', () => {
     partyRepo = module.get(getRepositoryToken(Party));
     groupRepo = module.get(getRepositoryToken(LedgerGroup));
     ledgerRepo = module.get(getRepositoryToken(Ledger));
+    fyRepo = module.get(getRepositoryToken(FinancialYear));
     audit = module.get(AuditService);
     dataSource = module.get(DataSource);
   });
