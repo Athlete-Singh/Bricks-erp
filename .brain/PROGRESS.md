@@ -1,12 +1,12 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** P4.1a ✅ done → **next: P4.1b** (stock reports)
+**Client Phase:** CP1 (MVP) · **Current step:** P4.1b ✅ done → **next: P4.2** (web stock screens)
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
-- **Last green commit:** P4.1a stock ledger (2026-10-09). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend **134** unit + **220 e2e**, web 71, shared 63.
+- **Last green commit:** P4.1b stock reports (2026-10-09). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 134 unit + **238 e2e**, web 71, shared 63.
 - **What shipped:** **phase P3 is complete.** All nine master modules on the backend, and a Masters section on the web with a tab per module: parties (with the opening balance and the PTY-04 ledger statement), inventory, transport, taxes/HSN and wage rates. **PTY-01…04, PRD-01, INV-01/02, VEH-01, GST-01, LAB-03 are all ✅ on BE, Web and Tests.**
-- **Next step (exact):** **P4.1b — stock reports (INV-07)**: current stock by kiln / warehouse / grade / item, and the movement register with a running balance. The identity to prove is `Opening + Production + Purchase − Sales − Wastage = Closing`, which `movement_type` already makes a sum rather than a case analysis. Same shape as `reports.service.ts` in accounting.
+- **Next step (exact):** **P4.2 — web stock screens**: current stock (the leakage report an owner actually opens), the movement register, opening-stock entry and the adjustment form. The adjustment form must be gated on `inventory.adjust`, not `inventory.manage` — that separation is the control, and hiding it behind the wrong permission would quietly undo it.
 - **Still open:** Opening balance posting — a party's Dr/Cr is stored on the party and its ledger, but no opening journal is written, so the Trial Balance shows it as a difference. Deferred to a dedicated import flow.
 
 ### First run on a fresh database
@@ -21,6 +21,7 @@ That creates the 9 roles, one company, one kiln and one Owner. The bootstrap ref
   - P1.1a ✅ backend auth & RBAC skeleton: 11 entities, JWT access+refresh, guards, CRUD controllers, migration, first tests.
   - P1.2a ✅ web auth foundation: `api-client` (envelope unwrap, typed `ApiError`, single-flight 401→refresh→retry), token custody per ADR-016, auth store, login page, `AuthGuard`, sign-out. Verified in a real browser against the running API: login → dashboard, hard reload restores the session, sign-out clears both sides.
   - P1.2b ✅ web shell: user dropdown + change-password, company switcher, kiln switcher, permission-aware nav, and the company / kilns / financial-year screens. **ADM-01…04 are the first features to reach ✅.** Sidebar turned into a drawer below `md` — it was a 224 px rail on a 375 px phone, which broke the entry screens the new CONVENTIONS rule exists to protect.
+  - P4.1b ✅ **stock reports (INV-07)** — current stock with the identity spelled out column by column (`opening + purchased + produced + adjustedIn − sold − wasted − adjustedOut = closing`), so an owner who distrusts the closing figure can see which kind of movement produced it. `asOf` answers as at a past date; `from` folds everything earlier into opening, the same convention the Trial Balance uses. The movement register carries a **running balance only when narrowed to one subject in one warehouse** — across different items in different yards it would be a number that means nothing — and it continues correctly onto page 2 rather than restarting. e2e 220 → 238.
   - P4.1a ✅ **the stock ledger** — `StockService`, the only writer of `stock_movements`, taking the **caller's** `EntityManager` so a document and its stock commit together (the `PostingService` pattern). One table for items and grades (ADR-023), one-sided quantities (ADR-024), quantity only and no value (ADR-025), and no negative stock except by a reasoned adjustment (ADR-026). `inventory.adjust` is a **separate, restricted permission**: a store keeper may record stock but may not write off a shortfall, and there is a test for exactly that. Backend 119 → 134 unit, e2e 183 → 220.
   - P3.2 ✅ web masters: a Masters section with a tab per module. Parties with opening balance and the **PTY-04** ledger statement (which leads with "They owe you" / "You owe them" rather than a raw Dr/Cr), inventory, transport, taxes/HSN with a 5/12/18/28 split helper, and wage rates that fill in each activity's usual unit. **Phase P3 complete.** Driven in a real browser, which caught a duplicate-error message that read "A record with this hsn rates company code already exists".
   - P3.1 ✅ backend masters, then **audited line by line and repaired** — see the two sections below. Nine modules, 183 e2e.

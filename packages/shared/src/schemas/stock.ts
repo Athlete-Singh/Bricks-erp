@@ -88,3 +88,29 @@ export const stockMovementQuerySchema = z.object({
 });
 export type StockMovementQueryDto = z.infer<typeof stockMovementQuerySchema>;
 export type StockMovementQueryInput = z.input<typeof stockMovementQuerySchema>;
+
+/**
+ * INV-07 — current stock. `asOf` lets an owner ask what the yard held at a past
+ * date, which is how a physical count on the 1st is reconciled on the 5th.
+ */
+export const currentStockQuerySchema = z.object({
+  asOf: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD')
+    .optional(),
+  from: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD')
+    .optional(),
+  siteId: uuid.optional(),
+  warehouseId: uuid.optional(),
+  /** `item`, `brick` or both — a storekeeper and an owner want different halves. */
+  subject: z.enum(['item', 'brick', 'all']).default('all'),
+  /** Rows that have never moved and sit at zero are noise by default. */
+  includeZero: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
+});
+export type CurrentStockQueryDto = z.infer<typeof currentStockQuerySchema>;
+export type CurrentStockQueryInput = z.input<typeof currentStockQuerySchema>;

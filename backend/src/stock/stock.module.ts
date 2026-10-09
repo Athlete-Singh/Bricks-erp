@@ -7,6 +7,7 @@ import { Item } from '../modules/inventory/entities/item.entity';
 import { BrickType } from '../modules/inventory/entities/brick-type.entity';
 import { StockMovement } from './entities/stock-movement.entity';
 import { StockController } from './stock.controller';
+import { StockReportsService } from './stock-reports.service';
 import { StockService } from './stock.service';
 
 @Module({
@@ -14,7 +15,7 @@ import { StockService } from './stock.service';
   controllers: [StockController],
   // Exported because P5 production, P7 purchases and P9 dispatch all post
   // through it — nothing else may write `stock_movements`.
-  providers: [StockService],
+  providers: [StockService, StockReportsService],
   exports: [StockService],
 })
 export class StockModule {}

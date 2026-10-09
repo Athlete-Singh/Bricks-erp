@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import PartiesPage from '@/app/(dashboard)/masters/parties/page';
@@ -62,8 +62,12 @@ async function openStatement() {
   renderPage();
   // DataTable renders a table and a card list, hiding one by CSS, so the name
   // matches twice. Either opens the same panel.
-  await waitFor(() => expect(screen.getAllByRole('button', { name: 'Shyam Traders' })[0]).toBeInTheDocument());
-  await user.click(screen.getAllByRole('button', { name: 'Shyam Traders' })[0]!);
+  //
+  // `findAllByRole` rather than a bare `getAllByRole`: the list arrives through
+  // react-query, and under a full parallel `pnpm test` the render lands later
+  // than a synchronous query allows — which is exactly how this failed once.
+  const [button] = await screen.findAllByRole('button', { name: 'Shyam Traders' });
+  await user.click(button!);
 }
 
 /**
