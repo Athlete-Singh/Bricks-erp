@@ -64,9 +64,25 @@ describe('Sidebar', () => {
     useAuthStore.getState().setSession(sessionWith(['company.view']));
     render(<Sidebar />);
 
-    // Production has no route yet; linking to it would 404.
+    // Purchases has no route yet; linking to it would 404. (Production used to
+    // be the example here and now ships, which is why this names a phase that
+    // is still ahead rather than asserting on whichever module is next.)
+    expect(screen.queryByRole('link', { name: /purchases/i })).not.toBeInTheDocument();
+    expect(screen.getByTitle('Available in P7')).toHaveAttribute('aria-disabled');
+  });
+
+  it('hides a built module from someone without its permission', () => {
+    // Production now has a route, so the question is no longer "does it exist"
+    // but "may this user see it" — a different guard, worth its own case.
+    useAuthStore.getState().setSession(sessionWith(['company.view']));
+    render(<Sidebar />);
     expect(screen.queryByRole('link', { name: /production/i })).not.toBeInTheDocument();
-    expect(screen.getByTitle('Available in P5')).toHaveAttribute('aria-disabled');
+  });
+
+  it('shows Production to someone who may view it', () => {
+    useAuthStore.getState().setSession(sessionWith(['company.view', 'production.view']));
+    render(<Sidebar />);
+    expect(screen.getByRole('link', { name: /production/i })).toHaveAttribute('href', '/production');
   });
 
   it('closes the mobile drawer when a link is followed', () => {

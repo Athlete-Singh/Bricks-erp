@@ -35,7 +35,7 @@ interface NavItem {
 
 const NAV: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'Production', href: '/production', icon: Flame, comingIn: 'P5' },
+  { label: 'Production', href: '/production', icon: Flame, permissions: [PERMISSIONS.PRODUCTION_VIEW] },
   { label: 'Labour', href: '/labour', icon: Users, comingIn: 'P6' },
   { label: 'Purchases', href: '/purchases', icon: ShoppingCart, comingIn: 'P7' },
   { label: 'Dispatch', href: '/dispatch', icon: Truck, comingIn: 'P9' },
