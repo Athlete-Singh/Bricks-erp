@@ -7,7 +7,8 @@ import { cn } from '@/lib/cn';
 
 const TABS = [
   { label: 'Batches', href: '/production/batches' },
-  { label: 'Yield variance', href: '/production/variance' },
+  { label: 'Yield & fuel variance', href: '/production/variance' },
+  { label: 'Production report', href: '/production/report' },
 ];
 
 export default function ProductionLayout({ children }: { children: React.ReactNode }) {
