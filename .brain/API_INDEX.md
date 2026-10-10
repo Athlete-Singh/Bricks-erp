@@ -35,13 +35,13 @@ Add the row when you **plan** an endpoint (BE ⬜), and update it the moment any
 - `POST /items`: Web ⬜ _(INV-01, P3)_
 - `PATCH /items/:id`: Web ⬜ _(INV-01, P3)_
 - `GET /stock/balance`: Web ⬜ _(INV-04, P4)_
-- `POST /production/batches`: Web ⬜ _(PRD-02, P5.1a)_
+- `POST /production/batches`: Web ⬜ _(PRD-02/SYN-01, P5.1a/c)_
 - `GET /production/batches`: Web ⬜ _(PRD-02, P5.1a)_
-- `GET /production/batches/:id`: Web ⬜ _(PRD-02, P5.1a)_
-- `POST /production/batches/:id/making`: Web ⬜ _(PRD-03/PRD-04, P5.1a/b)_
-- `POST /production/batches/:id/drying`: Web ⬜ _(PRD-03, P5.1a)_
-- `POST /production/batches/:id/firing`: Web ⬜ _(PRD-03/PRD-04, P5.1a/b)_
-- `POST /production/batches/:id/sorting`: Web ⬜ _(PRD-03/PRD-05, P5.1a)_
+- `GET /production/batches/:id`: Web ⬜ _(PRD-02/PRD-04, P5.1a/b)_
+- `POST /production/batches/:id/making`: Web ⬜ _(PRD-03/PRD-04/SYN-01, P5.1a/b/c)_
+- `POST /production/batches/:id/drying`: Web ⬜ _(PRD-03/SYN-01, P5.1a/c)_
+- `POST /production/batches/:id/firing`: Web ⬜ _(PRD-03/PRD-04/SYN-01, P5.1a/b/c)_
+- `POST /production/batches/:id/sorting`: Web ⬜ _(PRD-03/PRD-05/SYN-01, P5.1a/c)_
 - `GET /production/yield-variance`: Web ⬜ _(LEK-01, P5.1a)_
 - `GET /production/fuel-variance`: Web ⬜ _(LEK-02, P5.1b)_
 
@@ -125,25 +125,29 @@ Add the row when you **plan** an endpoint (BE ⬜), and update it the moment any
 | GET | /labour/wage-rates | All wage rates | labour.view | LAB-03 | P3 | ✅ | ✅ | — |
 | POST | /labour/wage-rates | Create a wage rate | labour.manage | LAB-03 | P3 | ✅ | ✅ | — |
 | PATCH | /labour/wage-rates/:id | Update a wage rate | labour.manage | LAB-03 | P3 | ✅ | ✅ | — |
-| POST | /production/batches | Open a production batch (kiln + chamber + date) | production.manage | PRD-02 | P5.1a | ✅ | ⬜ | — |
+| POST | /production/batches | Open a production batch (kiln + chamber + date). **Idempotency-Key** honoured (SYN-01) | production.manage | PRD-02/SYN-01 | P5.1a/c | ✅ | ⬜ | — |
 | GET | /production/batches | List batches with filters (site/chamber/status/date range) | production.view | PRD-02 | P5.1a | ✅ | ⬜ | — |
-| GET | /production/batches/:id | Batch detail: stages and sorting outputs | production.view | PRD-02 | P5.1a | ✅ | ⬜ | — |
-| POST | /production/batches/:id/making | Record green bricks moulded + optional soil consumption (stock OUT in-tx) | production.manage | PRD-03/PRD-04 | P5.1a/b | ✅ | ⬜ | — |
-| POST | /production/batches/:id/drying | Mark drying stage done | production.manage | PRD-03 | P5.1a | ✅ | ⬜ | — |
-| POST | /production/batches/:id/firing | Record fired bricks + optional coal consumption (stock OUT in-tx); batch → firing | production.manage | PRD-03/PRD-04 | P5.1a/b | ✅ | ⬜ | — |
-| POST | /production/batches/:id/sorting | Sort into grades + wastage; good → stock IN per grade in-tx | production.manage | PRD-03/PRD-05 | P5.1a | ✅ | ⬜ | — |
+| GET | /production/batches/:id | Batch detail: stages, sorting outputs, consumptions | production.view | PRD-02/PRD-04 | P5.1a/b | ✅ | ⬜ | — |
+| POST | /production/batches/:id/making | Record green bricks + optional soil consumption (stock OUT in-tx). **Idempotency-Key** honoured | production.manage | PRD-03/PRD-04/SYN-01 | P5.1a/b/c | ✅ | ⬜ | — |
+| POST | /production/batches/:id/drying | Mark drying stage done. **Idempotency-Key** honoured | production.manage | PRD-03/SYN-01 | P5.1a/c | ✅ | ⬜ | — |
+| POST | /production/batches/:id/firing | Record fired bricks + optional coal consumption (stock OUT in-tx); batch → firing. **Idempotency-Key** honoured | production.manage | PRD-03/PRD-04/SYN-01 | P5.1a/b/c | ✅ | ⬜ | — |
+| POST | /production/batches/:id/sorting | Sort into grades + wastage; good → stock IN per grade in-tx. **Idempotency-Key** honoured | production.manage | PRD-03/PRD-05/SYN-01 | P5.1a/c | ✅ | ⬜ | — |
 | GET | /production/yield-variance | LEK-01 — green − (good + broken + rejects) per batch/chamber/sardar | production.view | LEK-01 | P5.1a | ✅ | ⬜ | — |
 | GET | /production/fuel-variance | LEK-02 — fuel per 1,000 fired per batch/kiln/month; outliers flagged | production.view | LEK-02 | P5.1b | ✅ | ⬜ | — |
 ## Notes
 - **Tenancy:** no endpoint accepts a `company_id` from the client. Anything below a company reads it from the JWT; `/companies/:id` asserts membership. Proved by `backend/test/tenancy.e2e-spec.ts`.
 - **Envelope:** handlers return payloads raw; `ResponseEnvelopeInterceptor` adds `{ data }`, or `{ data, meta }` when a service returns `Paginated`.
 - **Errors:** `{ error: { code, message, details? } }`. Zod failures are `400 VALIDATION_FAILED` with a `details` array of `{ field, message }`.
-- **Idempotency (`SYN-01`, due in P5.1):** every create endpoint the mobile app will call must accept an `Idempotency-Key`
-  header (the client-generated row UUID) and return the original result on a repeat instead of inserting again. The app
-  resends queued entries when the network returns, so without this one retry = one duplicate production entry / GRN /
-  dispatch. Applies to the creates in P5, P6, P7 and P9. Add the column to this table (`Idem`) when those rows are added.
-- **Delta pull (`SYN-02`):** cached masters (kilns, parties, items, brick types, wage rates) need `?since=` so the app's
-  first sync is small on a field connection.
+- **Idempotency (`SYN-01`, shipped P5.1c):** mobile-facing POSTs accept an `Idempotency-Key` header (the client-generated
+  row UUID). A repeat with the same key returns the stored result and inserts nothing; the same key with a different body
+  is `422 IDEMPOTENCY_KEY_REUSED`. Key rows are tenant-scoped by `(company_id, endpoint, key)` and written in the business
+  transaction (`IdempotencyService.runOnce`). Currently wired on the 5 production POSTs (`/production/batches` and the 4
+  stages). GRN (P7), dispatch (P9) and attendance (M-track) will wire theirs when they ship — the header stays optional
+  so a web caller omitting it is unchanged.
+- **Delta pull (`SYN-02`, shipped P5.1c):** cached masters accept `?since=<ISO>` — currently `GET /sites`, `GET /parties`,
+  `GET /inventory/items`, `GET /inventory/brick-types`, `GET /inventory/warehouses` and `GET /labour/wage-rates`. Rows
+  whose `updated_at` or `deleted_at` is strictly after `since` come back, each with `deleted: true|false` so the mobile
+  reconciles tombstones. Without `since`, the lists are unchanged (soft-deleted rows are excluded as before).
 - **Posting:** there is deliberately **no update route for a voucher**. A posted voucher is immutable; a correction is
   `POST /vouchers/:id/reverse`, which writes the mirror and leaves both in the books (ACC-02).
 - **Paging:** `/audit-logs` and `/vouchers` so far. The other list endpoints still return plain arrays — see PROGRESS "Known gaps".

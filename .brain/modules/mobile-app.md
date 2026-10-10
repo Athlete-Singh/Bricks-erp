@@ -46,10 +46,14 @@ go_router, dio, Drift and l10n moved to M0.
 | M6 | Offline hardening, Android APK, **iOS build (MOB-06, contracted in SOW §1)** | all |
 
 ## The contract the backend owes mobile (build it with the module, not afterwards)
-1. **`Idempotency-Key` on every create endpoint the app calls** (`SYN-01`, scheduled in P5.1). The app queues entries offline and
-   resends on reconnect; without this, one retry = one duplicate production entry / GRN / dispatch. Key = the client-generated
-   row UUID; a repeat returns the original result, it does not create a second row.
-2. **Delta pull** (`?since=`) for cached masters: kilns, parties, items, brick types, wage rates (`SYN-02`).
+1. **`Idempotency-Key` on every create endpoint the app calls** (`SYN-01`, shipped P5.1c on the five production POSTs). The app
+   queues entries offline and resends on reconnect; without this, one retry = one duplicate production entry / GRN / dispatch.
+   Key = the client-generated row UUID; a repeat returns the original result, it does not create a second row. GRN (P7),
+   dispatch (P9) and attendance (M-track) wire theirs when they ship — `IdempotencyService.runOnce(manager, …)` wraps the work
+   inside the same transaction as the business insert.
+2. **Delta pull** (`?since=`) for cached masters (`SYN-02`, shipped P5.1c): `GET /sites`, `GET /parties`, `GET /inventory/items`,
+   `GET /inventory/brick-types`, `GET /inventory/warehouses`, `GET /labour/wage-rates`. Rows carry `deleted: true|false` so the
+   app reconciles tombstones.
 3. **Lean payloads** on anything the app calls — field connections are poor.
 4. **Money as strings**, brick quantities as integers (CONVENTIONS) — Dart `decimal` on the other side.
 5. The envelope is `{ data }` / `{ data, meta }`; errors are `{ error: { code, message, details? } }`. Validation failures are

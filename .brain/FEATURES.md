@@ -11,19 +11,19 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 95 | 24 | 2 | 1 | 68 | 0 |
+| CP1 MVP | 93 | 24 | 2 | 1 | 66 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 
-**CP1 done: 25 %** (24 of 95 features ✅)
+**CP1 done: 26 %** (24 of 93 features ✅)
 
 ### Per app
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
-| Backend | 91 | 25 | 1 | 0 | 0 | 65 |
+| Backend | 89 | 25 | 1 | 0 | 0 | 63 |
 | Web | 88 | 25 | 0 | 0 | 0 | 63 |
 | Mobile | 11 | 0 | 0 | 0 | 0 | 11 |
-| Tests | 95 | 26 | 0 | 0 | 0 | 69 |
+| Tests | 93 | 26 | 0 | 0 | 0 | 67 |
 
 ## Client Phase 1 — MVP
 
@@ -181,8 +181,8 @@
 
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| SYN-01 | `Idempotency-Key` header on every mobile-facing create endpoint + `idempotency_keys` table; a repeat with the same key returns the original result instead of creating a duplicate | CP1 | P5 | ⬜ | — | — | ⬜ | ⬜ | **Build with the first mobile-facing creates (P5), then keep it for P6/P7/P9.** Without it, offline retry = duplicate production entries |
-| SYN-02 | Delta pull endpoints (`?since=`) for the masters the app caches: kilns, parties, items, brick types, wage rates | CP1 | P5 | ⬜ | — | — | ⬜ | ⬜ | Keeps the first sync small on a field connection |
+| SYN-01 | `Idempotency-Key` header on every mobile-facing create endpoint + `idempotency_keys` table; a repeat with the same key returns the original result instead of creating a duplicate | CP1 | P5.1c | ✅ | — | — | ✅ | 🧩 BE done on all 5 production POSTs; applies to P6/P7/P9 as those modules ship |
+| SYN-02 | Delta pull endpoints (`?since=`) for the masters the app caches: kilns, parties, items, brick types, wage rates | CP1 | P5.1c | ✅ | — | — | ✅ | ✅ BE on all 5 masters; tombstones carry `deleted: true` |
 
 ### M12 Supervisor Mobile App (SOW #12)
 

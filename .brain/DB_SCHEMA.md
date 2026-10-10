@@ -16,7 +16,7 @@ Status: ⬜ planned · ✅ migrated. Update when migrations land.
 | Sales | quotations (+items) · sales_orders (+items) · sales_invoices (+items, place_of_supply, cgst/sgst/igst) · credit_notes · debit_notes · receipt_allocations | P8 |
 | Dispatch/Transport | dispatches (invoice_id/so_id, vehicle_id, driver_id, status, ack_*) · dispatch_items · trips · fuel_entries · vehicle_maintenance | P9 |
 | Expenses/Bank | expense_categories · expenses (payment_mode) · bank_accounts (ledger_id) | P10 |
-| System | idempotency_keys (key, company_id, response) · sync_logs | P1/P12 |
+| System | idempotency_keys (company_id, endpoint, key, request_hash, response_status, response_body — unique on (company_id, endpoint, key)) · sync_logs | P5.1c/P12 |
 
 ## Migrated
 | Migration | Tables / changes |
@@ -26,5 +26,7 @@ Status: ⬜ planned · ✅ migrated. Update when migrations land.
 | `1700000200000-ChartOfAccounts` | `ledger_groups` (company_id, code, parent_id, nature, is_direct) · `ledgers` (group_id, code, party_id?, opening_debit/credit, opening_financial_year_id) · `voucher_types` (code, prefix). Per company. CHECKs: nature in the four values · opening amounts non-negative · a ledger opens on **one side only**. Unique per company among live rows: group code, group name, ledger name, ledger code, voucher-type code; one ledger per party |
 | `1700000100000-AuthHardening` | indexes on every `company_id`/FK used by tenant reads · unique `(user_id, company_id)`, `(user_id, site_id)`, `(role_id, permission_id)` · unique `(company_id, code)` on live sites · partial unique "one active FY per company" · `roles` unique moved from `(code)` to `(code, company_id)` · `created_at` on `user_companies`, `user_sites`, `refresh_tokens` |
 | `1700000400000-Parties` | `parties` (party_types, gstin, pan, state_code, address, phone, email, opening_debit/credit, ledger_id) · `companies.gst_scheme`. CHECKs: opening on one side only, non-negative. Unique: ledger_id, name per company among live rows |
+| `1791900000000-ProductionConsumptions` | `production_consumptions` (entry_id, item_id, warehouse_id, quantity, stock_movement_id). CHECK quantity > 0. Partial unique on (entry_id, item_id, warehouse_id). FKs to production_entries CASCADE, items/warehouses/stock_movements RESTRICT. |
+| `1792000000000-IdempotencyKeys` | `idempotency_keys` (company_id, user_id, key, endpoint, request_hash sha-256, response_status, response_body jsonb). Unique on (company_id, endpoint, key). FK company_id → companies CASCADE. CHECK status in [100,599]. |
 
 Seed: `pnpm seed` fills `roles`, `permissions`, `role_permissions` (9 roles, idempotent).

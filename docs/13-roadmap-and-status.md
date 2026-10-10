@@ -5,23 +5,23 @@
 
 ## Where we are
 
-**Client Phase:** CP1 (MVP) · **Current step:** P5.1b ✅ done — **next: P5.1c** (SYN-01 idempotency + SYN-02 `?since=`)
+**Client Phase:** CP1 (MVP) · **Current step:** P5.1c ✅ done — **P5.1 ✅ COMPLETE** — **next: P5.2** (web production + variance screens)
 
-**Client Phase 1 (MVP) progress: 25 %** (24 of 95 features done)
+**Client Phase 1 (MVP) progress: 26 %** (24 of 93 features done)
 
 |              | Total | ✅  | 🟨  | ⚠️  | ⬜  | ⏭️  |
 | ------------ | ----- | --- | --- | --- | --- | --- |
-| CP1 MVP      | 95    | 24  | 2   | 1   | 68  | 0   |
+| CP1 MVP      | 93    | 24  | 2   | 1   | 66  | 0   |
 | CP2 Advanced | 10    | 0   | 0   | 0   | 0   | 10  |
 
 ### Progress per app (CP1)
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 | ----------------------------------- | ---------- | ------- | ---------------- | -------------- | ---------- | -------------- |
-| Backend                             | 91         | 25      | 1                | 0              | 0          | 65             |
+| Backend                             | 89         | 25      | 1                | 0              | 0          | 63             |
 | Web                                 | 88         | 25      | 0                | 0              | 0          | 63             |
 | Mobile                              | 11         | 0       | 0                | 0              | 0          | 11             |
-| Tests                               | 95         | 26      | 0                | 0              | 0          | 69             |
+| Tests                               | 93         | 26      | 0                | 0              | 0          | 67             |
 
 ## Client phases
 
@@ -63,13 +63,13 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 - `POST /items`: Web ⬜ _(INV-01, P3)_
 - `PATCH /items/:id`: Web ⬜ _(INV-01, P3)_
 - `GET /stock/balance`: Web ⬜ _(INV-04, P4)_
-- `POST /production/batches`: Web ⬜ _(PRD-02, P5.1a)_
+- `POST /production/batches`: Web ⬜ _(PRD-02/SYN-01, P5.1a/c)_
 - `GET /production/batches`: Web ⬜ _(PRD-02, P5.1a)_
-- `GET /production/batches/:id`: Web ⬜ _(PRD-02, P5.1a)_
-- `POST /production/batches/:id/making`: Web ⬜ _(PRD-03/PRD-04, P5.1a/b)_
-- `POST /production/batches/:id/drying`: Web ⬜ _(PRD-03, P5.1a)_
-- `POST /production/batches/:id/firing`: Web ⬜ _(PRD-03/PRD-04, P5.1a/b)_
-- `POST /production/batches/:id/sorting`: Web ⬜ _(PRD-03/PRD-05, P5.1a)_
+- `GET /production/batches/:id`: Web ⬜ _(PRD-02/PRD-04, P5.1a/b)_
+- `POST /production/batches/:id/making`: Web ⬜ _(PRD-03/PRD-04/SYN-01, P5.1a/b/c)_
+- `POST /production/batches/:id/drying`: Web ⬜ _(PRD-03/SYN-01, P5.1a/c)_
+- `POST /production/batches/:id/firing`: Web ⬜ _(PRD-03/PRD-04/SYN-01, P5.1a/b/c)_
+- `POST /production/batches/:id/sorting`: Web ⬜ _(PRD-03/PRD-05/SYN-01, P5.1a/c)_
 - `GET /production/yield-variance`: Web ⬜ _(LEK-01, P5.1a)_
 - `GET /production/fuel-variance`: Web ⬜ _(LEK-02, P5.1b)_
 
@@ -83,86 +83,86 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 
 #### All endpoints
 
-| Method | Path                              | Feature       | Backend | Web | Mobile |
-| ------ | --------------------------------- | ------------- | ------- | --- | ------ |
-| GET    | `/health`                         | —             | ✅      | ✅  | ⬜     |
-| POST   | `/auth/login`                     | ADM-05        | ✅      | ✅  | ⬜     |
-| POST   | `/auth/refresh`                   | ADM-05        | ✅      | ✅  | ⬜     |
-| POST   | `/auth/logout`                    | ADM-05        | ✅      | ✅  | ⬜     |
-| POST   | `/auth/switch-company`            | ADM-02        | ✅      | ✅  | —      |
-| POST   | `/auth/change-password`           | ADM-05        | ✅      | ✅  | ⬜     |
-| GET    | `/auth/me`                        | ADM-05        | ✅      | ✅  | ⬜     |
-| GET    | `/companies`                      | ADM-02        | ✅      | ✅  | —      |
-| GET    | `/companies/current`              | ADM-01        | ✅      | ✅  | —      |
-| GET    | `/companies/:id`                  | ADM-01        | 🧩      | ⬜  | —      |
-| POST   | `/companies`                      | ADM-01        | 🧩      | ⬜  | —      |
-| PUT    | `/companies/:id`                  | ADM-01        | ✅      | ✅  | —      |
-| GET    | `/sites`                          | ADM-03        | ✅      | ✅  | ⬜     |
-| POST   | `/sites`                          | ADM-03        | ✅      | ✅  | —      |
-| GET    | `/financial-years`                | ADM-04        | ✅      | ✅  | —      |
-| POST   | `/financial-years`                | ADM-04        | ✅      | ✅  | —      |
-| PATCH  | `/financial-years/:id/activate`   | ADM-04        | ✅      | ✅  | —      |
-| GET    | `/users`                          | ADM-05        | ✅      | ✅  | —      |
-| POST   | `/users`                          | ADM-06        | ✅      | ✅  | —      |
-| PATCH  | `/users/:id`                      | ADM-06        | ✅      | ✅  | —      |
-| GET    | `/users/roles`                    | ADM-06        | ✅      | ✅  | —      |
-| GET    | `/ledger-groups`                  | ACC-01        | ✅      | ✅  | —      |
-| GET    | `/ledgers`                        | ACC-01        | ✅      | ✅  | —      |
-| POST   | `/ledgers`                        | ACC-01        | 🧩      | ⬜  | —      |
-| PATCH  | `/ledgers/:id`                    | ACC-01        | 🧩      | ⬜  | —      |
-| GET    | `/voucher-types`                  | ACC-01        | ✅      | ✅  | —      |
-| GET    | `/opening-balances`               | ACC-04        | 🧩      | ⬜  | —      |
-| POST   | `/opening-balances`               | ACC-04        | 🧩      | ⬜  | —      |
-| GET    | `/vouchers`                       | ACC-05        | ✅      | ✅  | —      |
-| GET    | `/vouchers/:id`                   | ACC-03        | 🧩      | ⬜  | —      |
-| POST   | `/vouchers`                       | ACC-03        | ✅      | ✅  | —      |
-| POST   | `/vouchers/:id/reverse`           | ACC-02        | ✅      | ✅  | —      |
-| GET    | `/reports/day-book`               | ACC-05        | ✅      | ✅  | —      |
-| GET    | `/reports/ledgers/:id`            | ACC-05        | ✅      | ✅  | —      |
-| GET    | `/reports/trial-balance`          | ACC-05        | ✅      | ✅  | —      |
-| GET    | `/audit-logs`                     | ADM-07        | ✅      | ✅  | —      |
-| GET    | `/parties`                        | PTY-01        | ✅      | ✅  | —      |
-| GET    | `/parties/:id`                    | PTY-01        | ✅      | ✅  | —      |
-| POST   | `/parties`                        | PTY-01        | ✅      | ✅  | —      |
-| PATCH  | `/parties/:id`                    | PTY-01        | ✅      | ✅  | —      |
-| GET    | `/units`                          | INV-01        | 🧩      | ⬜  | —      |
-| POST   | `/units`                          | INV-01        | 🧩      | ⬜  | —      |
-| PATCH  | `/units/:id`                      | INV-01        | 🧩      | ⬜  | —      |
-| GET    | `/brick-types`                    | PRD-01        | 🧩      | ⬜  | —      |
-| POST   | `/brick-types`                    | PRD-01        | 🧩      | ⬜  | —      |
-| PATCH  | `/brick-types/:id`                | PRD-01        | 🧩      | ⬜  | —      |
-| GET    | `/warehouses`                     | INV-02        | 🧩      | ⬜  | —      |
-| POST   | `/warehouses`                     | INV-02        | 🧩      | ⬜  | —      |
-| PATCH  | `/warehouses/:id`                 | INV-02        | 🧩      | ⬜  | —      |
-| GET    | `/items`                          | INV-01        | 🧩      | ⬜  | —      |
-| POST   | `/items`                          | INV-01        | 🧩      | ⬜  | —      |
-| PATCH  | `/items/:id`                      | INV-01        | 🧩      | ⬜  | —      |
-| GET    | `/transport/drivers`              | VEH-01        | ✅      | ✅  | —      |
-| POST   | `/transport/drivers`              | VEH-01        | ✅      | ✅  | —      |
-| PATCH  | `/transport/drivers/:id`          | VEH-01        | ✅      | ✅  | —      |
-| GET    | `/transport/vehicles`             | VEH-01        | ✅      | ✅  | —      |
-| POST   | `/transport/vehicles`             | VEH-01        | ✅      | ✅  | —      |
-| PATCH  | `/transport/vehicles/:id`         | VEH-01        | ✅      | ✅  | —      |
-| GET    | `/taxes/hsn-rates`                | GST-01        | ✅      | ✅  | —      |
-| POST   | `/taxes/hsn-rates`                | GST-01        | ✅      | ✅  | —      |
-| PATCH  | `/taxes/hsn-rates/:id`            | GST-01        | ✅      | ✅  | —      |
-| POST   | `/stock/opening`                  | INV-03        | ✅      | ✅  | —      |
-| POST   | `/stock/adjustments`              | INV-06        | ✅      | ✅  | —      |
-| GET    | `/stock/current`                  | INV-07        | ✅      | ✅  | —      |
-| GET    | `/stock/register`                 | INV-07        | ✅      | ✅  | —      |
-| GET    | `/stock/balance`                  | INV-04        | ✅      | ⬜  | —      |
-| GET    | `/labour/wage-rates`              | LAB-03        | ✅      | ✅  | —      |
-| POST   | `/labour/wage-rates`              | LAB-03        | ✅      | ✅  | —      |
-| PATCH  | `/labour/wage-rates/:id`          | LAB-03        | ✅      | ✅  | —      |
-| POST   | `/production/batches`             | PRD-02        | ✅      | ⬜  | —      |
-| GET    | `/production/batches`             | PRD-02        | ✅      | ⬜  | —      |
-| GET    | `/production/batches/:id`         | PRD-02        | ✅      | ⬜  | —      |
-| POST   | `/production/batches/:id/making`  | PRD-03/PRD-04 | ✅      | ⬜  | —      |
-| POST   | `/production/batches/:id/drying`  | PRD-03        | ✅      | ⬜  | —      |
-| POST   | `/production/batches/:id/firing`  | PRD-03/PRD-04 | ✅      | ⬜  | —      |
-| POST   | `/production/batches/:id/sorting` | PRD-03/PRD-05 | ✅      | ⬜  | —      |
-| GET    | `/production/yield-variance`      | LEK-01        | ✅      | ⬜  | —      |
-| GET    | `/production/fuel-variance`       | LEK-02        | ✅      | ⬜  | —      |
+| Method | Path                              | Feature              | Backend | Web | Mobile |
+| ------ | --------------------------------- | -------------------- | ------- | --- | ------ |
+| GET    | `/health`                         | —                    | ✅      | ✅  | ⬜     |
+| POST   | `/auth/login`                     | ADM-05               | ✅      | ✅  | ⬜     |
+| POST   | `/auth/refresh`                   | ADM-05               | ✅      | ✅  | ⬜     |
+| POST   | `/auth/logout`                    | ADM-05               | ✅      | ✅  | ⬜     |
+| POST   | `/auth/switch-company`            | ADM-02               | ✅      | ✅  | —      |
+| POST   | `/auth/change-password`           | ADM-05               | ✅      | ✅  | ⬜     |
+| GET    | `/auth/me`                        | ADM-05               | ✅      | ✅  | ⬜     |
+| GET    | `/companies`                      | ADM-02               | ✅      | ✅  | —      |
+| GET    | `/companies/current`              | ADM-01               | ✅      | ✅  | —      |
+| GET    | `/companies/:id`                  | ADM-01               | 🧩      | ⬜  | —      |
+| POST   | `/companies`                      | ADM-01               | 🧩      | ⬜  | —      |
+| PUT    | `/companies/:id`                  | ADM-01               | ✅      | ✅  | —      |
+| GET    | `/sites`                          | ADM-03               | ✅      | ✅  | ⬜     |
+| POST   | `/sites`                          | ADM-03               | ✅      | ✅  | —      |
+| GET    | `/financial-years`                | ADM-04               | ✅      | ✅  | —      |
+| POST   | `/financial-years`                | ADM-04               | ✅      | ✅  | —      |
+| PATCH  | `/financial-years/:id/activate`   | ADM-04               | ✅      | ✅  | —      |
+| GET    | `/users`                          | ADM-05               | ✅      | ✅  | —      |
+| POST   | `/users`                          | ADM-06               | ✅      | ✅  | —      |
+| PATCH  | `/users/:id`                      | ADM-06               | ✅      | ✅  | —      |
+| GET    | `/users/roles`                    | ADM-06               | ✅      | ✅  | —      |
+| GET    | `/ledger-groups`                  | ACC-01               | ✅      | ✅  | —      |
+| GET    | `/ledgers`                        | ACC-01               | ✅      | ✅  | —      |
+| POST   | `/ledgers`                        | ACC-01               | 🧩      | ⬜  | —      |
+| PATCH  | `/ledgers/:id`                    | ACC-01               | 🧩      | ⬜  | —      |
+| GET    | `/voucher-types`                  | ACC-01               | ✅      | ✅  | —      |
+| GET    | `/opening-balances`               | ACC-04               | 🧩      | ⬜  | —      |
+| POST   | `/opening-balances`               | ACC-04               | 🧩      | ⬜  | —      |
+| GET    | `/vouchers`                       | ACC-05               | ✅      | ✅  | —      |
+| GET    | `/vouchers/:id`                   | ACC-03               | 🧩      | ⬜  | —      |
+| POST   | `/vouchers`                       | ACC-03               | ✅      | ✅  | —      |
+| POST   | `/vouchers/:id/reverse`           | ACC-02               | ✅      | ✅  | —      |
+| GET    | `/reports/day-book`               | ACC-05               | ✅      | ✅  | —      |
+| GET    | `/reports/ledgers/:id`            | ACC-05               | ✅      | ✅  | —      |
+| GET    | `/reports/trial-balance`          | ACC-05               | ✅      | ✅  | —      |
+| GET    | `/audit-logs`                     | ADM-07               | ✅      | ✅  | —      |
+| GET    | `/parties`                        | PTY-01               | ✅      | ✅  | —      |
+| GET    | `/parties/:id`                    | PTY-01               | ✅      | ✅  | —      |
+| POST   | `/parties`                        | PTY-01               | ✅      | ✅  | —      |
+| PATCH  | `/parties/:id`                    | PTY-01               | ✅      | ✅  | —      |
+| GET    | `/units`                          | INV-01               | 🧩      | ⬜  | —      |
+| POST   | `/units`                          | INV-01               | 🧩      | ⬜  | —      |
+| PATCH  | `/units/:id`                      | INV-01               | 🧩      | ⬜  | —      |
+| GET    | `/brick-types`                    | PRD-01               | 🧩      | ⬜  | —      |
+| POST   | `/brick-types`                    | PRD-01               | 🧩      | ⬜  | —      |
+| PATCH  | `/brick-types/:id`                | PRD-01               | 🧩      | ⬜  | —      |
+| GET    | `/warehouses`                     | INV-02               | 🧩      | ⬜  | —      |
+| POST   | `/warehouses`                     | INV-02               | 🧩      | ⬜  | —      |
+| PATCH  | `/warehouses/:id`                 | INV-02               | 🧩      | ⬜  | —      |
+| GET    | `/items`                          | INV-01               | 🧩      | ⬜  | —      |
+| POST   | `/items`                          | INV-01               | 🧩      | ⬜  | —      |
+| PATCH  | `/items/:id`                      | INV-01               | 🧩      | ⬜  | —      |
+| GET    | `/transport/drivers`              | VEH-01               | ✅      | ✅  | —      |
+| POST   | `/transport/drivers`              | VEH-01               | ✅      | ✅  | —      |
+| PATCH  | `/transport/drivers/:id`          | VEH-01               | ✅      | ✅  | —      |
+| GET    | `/transport/vehicles`             | VEH-01               | ✅      | ✅  | —      |
+| POST   | `/transport/vehicles`             | VEH-01               | ✅      | ✅  | —      |
+| PATCH  | `/transport/vehicles/:id`         | VEH-01               | ✅      | ✅  | —      |
+| GET    | `/taxes/hsn-rates`                | GST-01               | ✅      | ✅  | —      |
+| POST   | `/taxes/hsn-rates`                | GST-01               | ✅      | ✅  | —      |
+| PATCH  | `/taxes/hsn-rates/:id`            | GST-01               | ✅      | ✅  | —      |
+| POST   | `/stock/opening`                  | INV-03               | ✅      | ✅  | —      |
+| POST   | `/stock/adjustments`              | INV-06               | ✅      | ✅  | —      |
+| GET    | `/stock/current`                  | INV-07               | ✅      | ✅  | —      |
+| GET    | `/stock/register`                 | INV-07               | ✅      | ✅  | —      |
+| GET    | `/stock/balance`                  | INV-04               | ✅      | ⬜  | —      |
+| GET    | `/labour/wage-rates`              | LAB-03               | ✅      | ✅  | —      |
+| POST   | `/labour/wage-rates`              | LAB-03               | ✅      | ✅  | —      |
+| PATCH  | `/labour/wage-rates/:id`          | LAB-03               | ✅      | ✅  | —      |
+| POST   | `/production/batches`             | PRD-02/SYN-01        | ✅      | ⬜  | —      |
+| GET    | `/production/batches`             | PRD-02               | ✅      | ⬜  | —      |
+| GET    | `/production/batches/:id`         | PRD-02/PRD-04        | ✅      | ⬜  | —      |
+| POST   | `/production/batches/:id/making`  | PRD-03/PRD-04/SYN-01 | ✅      | ⬜  | —      |
+| POST   | `/production/batches/:id/drying`  | PRD-03/SYN-01        | ✅      | ⬜  | —      |
+| POST   | `/production/batches/:id/firing`  | PRD-03/PRD-04/SYN-01 | ✅      | ⬜  | —      |
+| POST   | `/production/batches/:id/sorting` | PRD-03/PRD-05/SYN-01 | ✅      | ⬜  | —      |
+| GET    | `/production/yield-variance`      | LEK-01               | ✅      | ⬜  | —      |
+| GET    | `/production/fuel-variance`       | LEK-02               | ✅      | ⬜  | —      |
 
 ## Implemented so far (CP1)
 
@@ -248,8 +248,6 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 - ⬜ **GST-07** GST reconciliation: books vs what was filed — GSTR-1 register against the sales register, GSTR-3B against the books, with the differences listed _(P10)_
 - ⬜ **LEK-03** Live Sardar advance exposure: advances drawn − wages earned to date, per Sardar; **warning shown at the moment a new advance is entered** _(P6)_
 - ⬜ **LEK-04** Gate reconciliation: dispatched qty vs invoiced qty vs stock movement, with unmatched dispatches listed _(P9)_
-- ⬜ **SYN-01** `Idempotency-Key` header on every mobile-facing create endpoint + `idempotency_keys` table; a repeat with the same key returns the original result instead of creating a duplicate _(P5)_
-- ⬜ **SYN-02** Delta pull endpoints (`?since=`) for the masters the app caches: kilns, parties, items, brick types, wage rates _(P5)_
 - ⬜ **MOB-01** Login, kiln selection, role-based home _(M1)_
 - ⬜ **MOB-02** Offline storage + sync queue + sync status badge (skeleton) _(M1)_
 - ⬜ **MOB-03** Feature screens: production, attendance, GRN, dispatch/delivery _(M2–M5)_
@@ -404,13 +402,6 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 | ------ | ----------------------------------------------------------------------------------------------------------------------------------------- | --- | ----- | ------- | --- | ------ | ----- | ------ |
 | LEK-03 | Live Sardar advance exposure: advances drawn − wages earned to date, per Sardar; **warning shown at the moment a new advance is entered** | CP1 | P6    | ⬜      | ⬜  | —      | ⬜    | ⬜     |
 | LEK-04 | Gate reconciliation: dispatched qty vs invoiced qty vs stock movement, with unmatched dispatches listed                                   | CP1 | P9    | ⬜      | ⬜  | —      | ⬜    | ⬜     |
-
-### M14 Sync & idempotency (backend only — no Flutter needed)
-
-| ID     | Feature                                                                                                                                                                            | CP  | Phase | Backend | Web | Mobile | Tests | Status |
-| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- | ----- | ------- | --- | ------ | ----- | ------ |
-| SYN-01 | `Idempotency-Key` header on every mobile-facing create endpoint + `idempotency_keys` table; a repeat with the same key returns the original result instead of creating a duplicate | CP1 | P5    | ⬜      | —   | —      | ⬜    | ⬜     |
-| SYN-02 | Delta pull endpoints (`?since=`) for the masters the app caches: kilns, parties, items, brick types, wage rates                                                                    | CP1 | P5    | ⬜      | —   | —      | ⬜    | ⬜     |
 
 ### M12 Supervisor Mobile App (SOW #12)
 
