@@ -1,10 +1,10 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** P5.1c ✅ done — **P5.1 ✅ COMPLETE** — **next: P5.2** (web production + variance screens)
+**Client Phase:** CP1 (MVP) · **Current step:** P5.1 ✅ complete **and audited/repaired** → **next: P5.2** (web production + variance screens)
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
-- **Last green commit:** `b3db876` P5.1c backend — SYN-01 idempotency + SYN-02 delta pull (2026-10-10). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 136 unit + **301** e2e (+12 from 289), web 89, shared 76. `/api/v1/health` responds `ok` on a cold start.
+- **Last green commit:** `84a0ea4` P5.1 audit repair (2026-10-10). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 136 unit + **327** e2e, web 89, shared 76.
 - **What shipped (P5.1c):** backend mobile-sync contract — **SYN-01**: new `idempotency_keys` table (unique on `(company_id, endpoint, key)`), `IdempotencyService.runOnce(manager, …)` wraps the business work in the same transaction, with a per-key advisory lock to serialise two concurrent retries. Wired on all 5 production POSTs. Repeat with the same key + same body returns the stored response (same id) and inserts nothing; same key + different body → `422 IDEMPOTENCY_KEY_REUSED`. Missing header is unchanged behaviour. Same key across two companies does not collide. **SYN-02**: `?since=<ISO>` on `GET /sites`, `GET /parties`, `GET /inventory/items`, `GET /inventory/brick-types`, `GET /inventory/warehouses`, `GET /labour/wage-rates` — returns rows whose `updated_at` or `deleted_at` is strictly after `since`, each carrying `deleted: true|false` so the mobile reconciles tombstones. 12 new e2e: 4 SYN-01 (replay / mismatch / no-header / cross-tenant) + 8 SYN-02 (per-master create/update/delete + strict-after + bad-since + no-since baseline).
 - **P5.1 is ✅ complete**: P5.1a (batches, stages, sorting → stock, LEK-01) + P5.1b (consumption, LEK-02) + P5.1c (SYN-01, SYN-02).
 - **Next step (exact):** **P5.2 — web production + variance screens.** Build the Production section on the web: batch list (filters site/chamber/status/date), batch detail with a stage drawer (making / drying / firing / sorting controls including the `consumption[]` block that P5.1b/c owe mobile but web should expose too), and two reports — LEK-01 yield variance and LEK-02 fuel variance (both already have backend endpoints). Drive it in a real browser, catch defects. No new backend work expected unless the UI surfaces a gap. **Also M-track becomes unblocked for M2 — the Flutter app may now begin on a machine with the SDK.**
@@ -97,6 +97,29 @@ Neither would have failed a unit test, and both were only visible by driving the
 - **`Dialog` used a hardcoded `id="dialog-title"`** for `aria-labelledby`. Any screen with two dialogs — most of them;
   the inventory masters page has four — announced the wrong title to a screen reader. Now `useId()` per instance, and
   `aria-describedby` wired up while there.
+
+### What the P5.1 audit found (2026-10-10)
+Audited before building the screens, as P3.1 and P4.1 were. The structure was sound — idempotency correct under
+concurrency, decimal discipline clean, tenant isolation everywhere, CHECK constraints in the database. **The two
+leakage reports were not**, and they are the product's ROI claim:
+- **LEK-01 reported every unsorted batch as 100 % leakage.** Proved it against the live endpoint: three ordinary
+  work-in-progress batches each returned `unexplained: "10000.000"` of 10,000 moulded, with nothing on the row to
+  distinguish that from theft. Null until sorted now (ADR-029).
+- **LEK-01 conflated drying loss with post-firing disappearance** into one permanently non-zero figure — the kind
+  that trains an owner to ignore the report. Split out (ADR-030).
+- **LEK-02 treated "no coal booked" as zero coal**, so one missed entry re-based the median for every other batch,
+  and a mostly-unbooked window flagged nothing at all. Excluded from the median now (ADR-031).
+- **LEK-02's outlier flag was nonsense at two rows** — a 20 % gap passed, a 36 % gap flagged the *efficient* batch.
+  Minimum three (ADR-031).
+- **LEK-02 bucketed fuel by batch date, not firing date**, so month-to-month was wrong at every boundary (ADR-032).
+- **PRD-07 was never built and had no home in the plan** — P5.1 was marked complete without it and P5.2 was scoped
+  as screens only. It would have been skipped silently. Built.
+- Production entries could be **dated in the future**; brick counts accepted **fractions** (ADR-033).
+- Sync: delta pull had **no watermark**, so a row committed during a sync could never be seen again; a revoked kiln
+  left a stale entry on the device forever.
+**Lesson:** the two worst defects were in what a row *means* when data is incomplete, not in the arithmetic — the
+arithmetic was right and every number in the tests was correct. Tests that only exercise a complete, happy batch
+cannot find this class of bug. Ask what the report says about work that is half-done.
 
 ### What the P4.1 audit found (2026-10-09)
 Audited before starting P4.2, the same way P3.1 was. Three defects, two of them real:
