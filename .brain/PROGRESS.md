@@ -1,13 +1,16 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** P5.1 ✅ complete **and audited/repaired** → **next: P5.2** (web production + variance screens)
+**Client Phase:** CP1 (MVP) · **Current step:** P5.2 ✅ done — **phase P5 complete** → **next: P6.1** (labour: attendance + wages)
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
-- **Last green commit:** `84a0ea4` P5.1 audit repair (2026-10-10). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 136 unit + **327** e2e, web 89, shared 76.
+- **Last green commit:** `5e1ecee` P5.2 web production screens (2026-10-10). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 136 unit + 327 e2e, web **96**, shared 76.
 - **What shipped (P5.1c):** backend mobile-sync contract — **SYN-01**: new `idempotency_keys` table (unique on `(company_id, endpoint, key)`), `IdempotencyService.runOnce(manager, …)` wraps the business work in the same transaction, with a per-key advisory lock to serialise two concurrent retries. Wired on all 5 production POSTs. Repeat with the same key + same body returns the stored response (same id) and inserts nothing; same key + different body → `422 IDEMPOTENCY_KEY_REUSED`. Missing header is unchanged behaviour. Same key across two companies does not collide. **SYN-02**: `?since=<ISO>` on `GET /sites`, `GET /parties`, `GET /inventory/items`, `GET /inventory/brick-types`, `GET /inventory/warehouses`, `GET /labour/wage-rates` — returns rows whose `updated_at` or `deleted_at` is strictly after `since`, each carrying `deleted: true|false` so the mobile reconciles tombstones. 12 new e2e: 4 SYN-01 (replay / mismatch / no-header / cross-tenant) + 8 SYN-02 (per-master create/update/delete + strict-after + bad-since + no-since baseline).
 - **P5.1 is ✅ complete**: P5.1a (batches, stages, sorting → stock, LEK-01) + P5.1b (consumption, LEK-02) + P5.1c (SYN-01, SYN-02).
-- **Next step (exact):** **P5.2 — web production + variance screens.** Build the Production section on the web: batch list (filters site/chamber/status/date), batch detail with a stage drawer (making / drying / firing / sorting controls including the `consumption[]` block that P5.1b/c owe mobile but web should expose too), and two reports — LEK-01 yield variance and LEK-02 fuel variance (both already have backend endpoints). Drive it in a real browser, catch defects. No new backend work expected unless the UI surfaces a gap. **Also M-track becomes unblocked for M2 — the Flutter app may now begin on a machine with the SDK.**
+- **P5.2 shipped:** Production section — batch list, batch detail with the four-stage workflow (a recorded stage is read-only, since correction is reversal), and the two leakage reports. The variance screen is where P5.1's repairs became visible: an unsorted batch reads "Not known yet", and drying loss sits in its own column so the theft number is not buried under ordinary breakage. Verified in a browser: full batch through all four stages, stock in and out, PRD-07 totals correct.
+- **M-track is unblocked** — the sync contract (SYN-01/02) is built, so the Flutter app may begin on a machine with the SDK, in parallel with web work.
+- **Next step (exact):** **P6.1 — labour**: attendance per gang per day (LAB-01), piece-rate and daily-wage payout from the wage rates already in masters (LAB-02/03), and advances against a Sardar (LAB-04). Payouts post through `PostingService` to Labour Payables, the same way sorting posts through `StockService` — one service, the caller's transaction.
+
 - **INV-05 is being wired across P5/P7/P9** — P5.1a added sorting IN (first instance), P5.1b adds the firing/making OUT, P7 will add GRN IN, P9 will add dispatch OUT.
 - **Still open:** opening balance posting — a party's Dr/Cr is stored on the party and its ledger, but no opening journal is written, so the Trial Balance shows it as a difference. Deferred to a dedicated import flow.
 
@@ -212,9 +215,9 @@ The P track is never blocked by the M track.
 | P4 | P4.1b | Backend stock reports: current stock and the movement register (INV-07) | ✅ |
 | P4 | P4.2 | Web stock screens + reports | ✅ |
 | P5 | P5.1a | Backend: batches, stage entries, sort → finished stock in-tx, **LEK-01 brick yield variance** | ✅ |
-| P5 | P5.1b | Backend: **PRD-04** coal + soil consumption from stock + **LEK-02 coal per 1,000** | ⬜ |
-| P5 | P5.1c | Backend: **SYN-01** `Idempotency-Key` + **SYN-02** `?since=` delta pull — gates mobile M2 | ⬜ |
-| P5 | P5.2 | Web production entry + the two variance reports | ⬜ |
+| P5 | P5.1b | Backend: **PRD-04** coal + soil consumption from stock + **LEK-02 coal per 1,000** | ✅ |
+| P5 | P5.1c | Backend: **SYN-01** `Idempotency-Key` + **SYN-02** `?since=` delta pull — gates mobile M2 | ✅ |
+| P5 | P5.2 | Web production entry + the two variance reports | ✅ |
 | P6 | P6.1 | Labour backend + **LEK-03 live advance exposure, with the warning at advance entry** | ⬜ |
 | P6 | P6.2 | Web attendance, wages, advances, settlement + exposure screen | ⬜ |
 | P7 | P7.1 / P7.2 | Purchases backend / web (PO → GRN → bill → payment) | ⬜ |
