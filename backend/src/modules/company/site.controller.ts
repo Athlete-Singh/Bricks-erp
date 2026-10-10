@@ -1,5 +1,5 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { BadRequestException, Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { createSiteSchema, PERMISSIONS, type CreateSiteDto } from '@brics/shared';
 import { CurrentCompany, CurrentUser, RequirePermissions } from '../../common/decorators/auth.decorators';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -7,6 +7,11 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { CompanyService } from './company.service';
+
+/** `2026-10-10T05:00:00Z` or `2026-10-10T05:00:00+05:30`. Date.parse covers both. */
+function isIsoInstant(value: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/.test(value) && !isNaN(Date.parse(value));
+}
 
 /**
  * Kilns / sites of the **JWT tenant** (ADM-03). The company id is never taken
@@ -22,7 +27,22 @@ export class SiteController {
   /** Bearer-only: the kilns this user may work on — the source for the kiln switcher. */
   @Get()
   @ApiOperation({ summary: 'List kilns/sites the signed-in user can access' })
-  async findAll(@CurrentCompany() companyId: string, @CurrentUser('sub') userId: string) {
+  @ApiQuery({
+    name: 'since',
+    required: false,
+    description: 'SYN-02 — ISO instant; returns updates and tombstones only',
+  })
+  async findAll(
+    @CurrentCompany() companyId: string,
+    @CurrentUser('sub') userId: string,
+    @Query('since') since?: string,
+  ) {
+    if (since !== undefined) {
+      if (!isIsoInstant(since)) {
+        throw new BadRequestException('since must be an ISO 8601 datetime');
+      }
+      return this.companyService.accessibleSitesSince(companyId, userId, since);
+    }
     return this.companyService.accessibleSites(companyId, userId);
   }
 

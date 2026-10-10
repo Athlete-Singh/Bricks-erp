@@ -168,6 +168,30 @@ export class CompanyService {
     return this.siteRepo.find({ where: { companyId, id: In(grantedIds) }, order: { name: 'ASC' } });
   }
 
+  /**
+   * SYN-02 delta pull for the mobile kiln list. Returns the accessible kilns
+   * updated or deleted strictly after `since`, each row with a `deleted` flag
+   * so the mobile reconciles its local store.
+   */
+  async accessibleSitesSince(
+    companyId: string,
+    userId: string,
+    since: string,
+  ): Promise<Array<Site & { deleted: boolean }>> {
+    const grantedIds = await this.membership.siteIdsFor(userId);
+    const qb = this.siteRepo
+      .createQueryBuilder('s')
+      .where('s.company_id = :companyId', { companyId })
+      .withDeleted()
+      .andWhere('(s.updated_at > :since OR s.deleted_at > :since)', { since })
+      .orderBy('s.name', 'ASC');
+    if (grantedIds.length > 0) {
+      qb.andWhere('s.id IN (:...grantedIds)', { grantedIds });
+    }
+    const rows = await qb.getMany();
+    return rows.map((s) => ({ ...s, deleted: s.deletedAt != null }));
+  }
+
   // ── Financial years (ADM-04) ────────────────────────────────────────────────
 
   async findFinancialYears(companyId: string): Promise<FinancialYear[]> {

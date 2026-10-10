@@ -56,6 +56,8 @@ export const partyQuerySchema = z.object({
     .optional()
     .transform((v) => (v === undefined ? undefined : v === 'true')),
   sort: z.string().optional().default('-created_at'),
+  /** SYN-02 — delta pull: ISO instant; deletes come back with `deleted: true`. */
+  since: z.string().datetime({ offset: true }).optional(),
 });
 export type PartyQueryDto = z.infer<typeof partyQuerySchema>;
 export type PartyQueryInput = z.input<typeof partyQuerySchema>;

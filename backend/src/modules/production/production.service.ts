@@ -13,6 +13,7 @@ import type {
   ProductionStage,
 } from '@brics/shared';
 import { BusinessRuleException } from '../../common/exceptions/business-rule.exception';
+import { IdempotencyService } from '../../common/idempotency/idempotency.service';
 import type { Paginated } from '../../common/interceptors/response-envelope.interceptor';
 import { Site } from '../company/entities/site.entity';
 import { AuditService } from '../audit/audit.service';
@@ -57,53 +58,76 @@ export class ProductionService {
     @InjectRepository(BrickType) private readonly brickTypeRepo: Repository<BrickType>,
     private readonly stock: StockService,
     private readonly audit: AuditService,
+    private readonly idempotency: IdempotencyService,
     private readonly dataSource: DataSource,
   ) {}
 
   // ---- Batches --------------------------------------------------------------
 
-  async createBatch(companyId: string, userId: string, dto: ProductionBatchCreateDto): Promise<ProductionBatch> {
-    const site = await this.siteRepo.findOne({ where: { id: dto.siteId, companyId } });
-    if (!site) throw new NotFoundException('That kiln does not exist');
+  async createBatch(
+    companyId: string,
+    userId: string,
+    dto: ProductionBatchCreateDto,
+    idempotencyKey: string | null = null,
+  ): Promise<ProductionBatch> {
+    return this.dataSource.transaction((manager) =>
+      this.idempotency.runOnce(
+        manager,
+        {
+          companyId,
+          userId,
+          endpoint: 'POST /production/batches',
+          key: idempotencyKey,
+          body: dto,
+        },
+        async () => {
+          const site = await manager.findOne(Site, { where: { id: dto.siteId, companyId } });
+          if (!site) throw new NotFoundException('That kiln does not exist');
 
-    const existing = await this.batchRepo.findOne({
-      where: {
-        companyId,
-        siteId: dto.siteId,
-        chamber: dto.chamber,
-        batchDate: dto.batchDate,
-      },
-    });
-    if (existing) {
-      throw new BusinessRuleException(
-        'PRODUCTION_BATCH_DUPLICATE',
-        `A batch already exists for ${dto.chamber} on ${dto.batchDate}`,
-      );
-    }
+          const existing = await manager.findOne(ProductionBatch, {
+            where: {
+              companyId,
+              siteId: dto.siteId,
+              chamber: dto.chamber,
+              batchDate: dto.batchDate,
+            },
+          });
+          if (existing) {
+            throw new BusinessRuleException(
+              'PRODUCTION_BATCH_DUPLICATE',
+              `A batch already exists for ${dto.chamber} on ${dto.batchDate}`,
+            );
+          }
 
-    const batch = await this.batchRepo.save(
-      this.batchRepo.create({
-        companyId,
-        createdBy: userId,
-        updatedBy: userId,
-        siteId: dto.siteId,
-        chamber: dto.chamber,
-        batchDate: dto.batchDate,
-        status: 'open',
-        notes: dto.notes ?? null,
-      }),
+          const batch = await manager.save(
+            manager.create(ProductionBatch, {
+              companyId,
+              createdBy: userId,
+              updatedBy: userId,
+              siteId: dto.siteId,
+              chamber: dto.chamber,
+              batchDate: dto.batchDate,
+              status: 'open',
+              notes: dto.notes ?? null,
+            }),
+          );
+
+          await this.audit.record(
+            {
+              companyId,
+              userId,
+              action: 'CREATE',
+              entityName: 'production_batches',
+              entityId: batch.id,
+              after: { siteId: batch.siteId, chamber: batch.chamber, batchDate: batch.batchDate },
+            },
+            manager,
+          );
+
+          return batch;
+        },
+      ),
     );
-
-    await this.audit.record({
-      companyId,
-      userId,
-      action: 'CREATE',
-      entityName: 'production_batches',
-      entityId: batch.id,
-      after: { siteId: batch.siteId, chamber: batch.chamber, batchDate: batch.batchDate },
-    });
-
-    return batch;
   }
 
   async listBatches(companyId: string, query: ProductionBatchQueryDto): Promise<Paginated<ProductionBatch>> {
@@ -175,6 +199,7 @@ export class ProductionService {
     userId: string,
     batchId: string,
     dto: ProductionMakingDto,
+    idempotencyKey: string | null = null,
   ): Promise<ProductionEntry> {
     if (dto.sardarPartyId) {
       const party = await this.partyRepo.findOne({ where: { id: dto.sardarPartyId, companyId } });
@@ -189,60 +214,72 @@ export class ProductionService {
 
     this.assertConsumptionShape(dto.consumption);
 
-    return this.dataSource.transaction(async (manager) => {
-      const batch = await this.loadBatchForWrite(manager, companyId, batchId);
-      await this.assertStageOrder(manager, batch.id, 'making');
-
-      const entry = await manager.save(
-        manager.create(ProductionEntry, {
-          companyId,
-          createdBy: userId,
-          updatedBy: userId,
-          batchId: batch.id,
-          stage: 'making',
-          entryDate: dto.entryDate,
-          greenBricks: toQuantity(dto.greenBricks),
-          firedBricks: '0.000',
-          brokenBricks: '0.000',
-          rejectBricks: '0.000',
-          sardarPartyId: dto.sardarPartyId ?? null,
-          warehouseId: null,
-          notes: dto.notes ?? null,
-        }),
-      );
-
-      const consumptions = await this.recordConsumptions(manager, {
-        companyId,
-        userId,
-        batch,
-        entry,
-        inputs: dto.consumption,
-        stageLabel: 'making',
-      });
-
-      await this.audit.record(
+    return this.dataSource.transaction((manager) =>
+      this.idempotency.runOnce(
+        manager,
         {
           companyId,
           userId,
-          action: 'CREATE',
-          entityName: 'production_entries',
-          entityId: entry.id,
-          after: {
-            batchId: batch.id,
-            stage: 'making',
-            greenBricks: entry.greenBricks,
-            consumption: consumptions.map((c) => ({
-              itemId: c.itemId,
-              warehouseId: c.warehouseId,
-              quantity: c.quantity,
-            })),
-          },
+          endpoint: 'POST /production/batches/:id/making',
+          key: idempotencyKey,
+          body: { batchId, ...dto },
         },
-        manager,
-      );
+        async () => {
+          const batch = await this.loadBatchForWrite(manager, companyId, batchId);
+          await this.assertStageOrder(manager, batch.id, 'making');
 
-      return entry;
-    });
+          const entry = await manager.save(
+            manager.create(ProductionEntry, {
+              companyId,
+              createdBy: userId,
+              updatedBy: userId,
+              batchId: batch.id,
+              stage: 'making',
+              entryDate: dto.entryDate,
+              greenBricks: toQuantity(dto.greenBricks),
+              firedBricks: '0.000',
+              brokenBricks: '0.000',
+              rejectBricks: '0.000',
+              sardarPartyId: dto.sardarPartyId ?? null,
+              warehouseId: null,
+              notes: dto.notes ?? null,
+            }),
+          );
+
+          const consumptions = await this.recordConsumptions(manager, {
+            companyId,
+            userId,
+            batch,
+            entry,
+            inputs: dto.consumption,
+            stageLabel: 'making',
+          });
+
+          await this.audit.record(
+            {
+              companyId,
+              userId,
+              action: 'CREATE',
+              entityName: 'production_entries',
+              entityId: entry.id,
+              after: {
+                batchId: batch.id,
+                stage: 'making',
+                greenBricks: entry.greenBricks,
+                consumption: consumptions.map((c) => ({
+                  itemId: c.itemId,
+                  warehouseId: c.warehouseId,
+                  quantity: c.quantity,
+                })),
+              },
+            },
+            manager,
+          );
+
+          return entry;
+        },
+      ),
+    );
   }
 
   async recordDrying(
@@ -250,43 +287,56 @@ export class ProductionService {
     userId: string,
     batchId: string,
     dto: ProductionDryingDto,
+    idempotencyKey: string | null = null,
   ): Promise<ProductionEntry> {
-    return this.dataSource.transaction(async (manager) => {
-      const batch = await this.loadBatchForWrite(manager, companyId, batchId);
-      await this.assertStageOrder(manager, batch.id, 'drying');
-
-      const entry = await manager.save(
-        manager.create(ProductionEntry, {
-          companyId,
-          createdBy: userId,
-          updatedBy: userId,
-          batchId: batch.id,
-          stage: 'drying',
-          entryDate: dto.entryDate,
-          greenBricks: '0.000',
-          firedBricks: '0.000',
-          brokenBricks: '0.000',
-          rejectBricks: '0.000',
-          sardarPartyId: null,
-          warehouseId: null,
-          notes: dto.notes ?? null,
-        }),
-      );
-
-      await this.audit.record(
+    return this.dataSource.transaction((manager) =>
+      this.idempotency.runOnce(
+        manager,
         {
           companyId,
           userId,
-          action: 'CREATE',
-          entityName: 'production_entries',
-          entityId: entry.id,
-          after: { batchId: batch.id, stage: 'drying' },
+          endpoint: 'POST /production/batches/:id/drying',
+          key: idempotencyKey,
+          body: { batchId, ...dto },
         },
-        manager,
-      );
+        async () => {
+          const batch = await this.loadBatchForWrite(manager, companyId, batchId);
+          await this.assertStageOrder(manager, batch.id, 'drying');
 
-      return entry;
-    });
+          const entry = await manager.save(
+            manager.create(ProductionEntry, {
+              companyId,
+              createdBy: userId,
+              updatedBy: userId,
+              batchId: batch.id,
+              stage: 'drying',
+              entryDate: dto.entryDate,
+              greenBricks: '0.000',
+              firedBricks: '0.000',
+              brokenBricks: '0.000',
+              rejectBricks: '0.000',
+              sardarPartyId: null,
+              warehouseId: null,
+              notes: dto.notes ?? null,
+            }),
+          );
+
+          await this.audit.record(
+            {
+              companyId,
+              userId,
+              action: 'CREATE',
+              entityName: 'production_entries',
+              entityId: entry.id,
+              after: { batchId: batch.id, stage: 'drying' },
+            },
+            manager,
+          );
+
+          return entry;
+        },
+      ),
+    );
   }
 
   async recordFiring(
@@ -294,70 +344,83 @@ export class ProductionService {
     userId: string,
     batchId: string,
     dto: ProductionFiringDto,
+    idempotencyKey: string | null = null,
   ): Promise<ProductionEntry> {
     this.assertConsumptionShape(dto.consumption);
 
-    return this.dataSource.transaction(async (manager) => {
-      const batch = await this.loadBatchForWrite(manager, companyId, batchId);
-      await this.assertStageOrder(manager, batch.id, 'firing');
-
-      const entry = await manager.save(
-        manager.create(ProductionEntry, {
-          companyId,
-          createdBy: userId,
-          updatedBy: userId,
-          batchId: batch.id,
-          stage: 'firing',
-          entryDate: dto.entryDate,
-          greenBricks: '0.000',
-          firedBricks: toQuantity(dto.firedBricks),
-          brokenBricks: '0.000',
-          rejectBricks: '0.000',
-          sardarPartyId: null,
-          warehouseId: null,
-          notes: dto.notes ?? null,
-        }),
-      );
-
-      const consumptions = await this.recordConsumptions(manager, {
-        companyId,
-        userId,
-        batch,
-        entry,
-        inputs: dto.consumption,
-        stageLabel: 'firing',
-      });
-
-      // open → firing. Sorting flips it to 'sorted'.
-      if (batch.status === 'open') {
-        batch.status = 'firing';
-        batch.updatedBy = userId;
-        await manager.save(batch);
-      }
-
-      await this.audit.record(
+    return this.dataSource.transaction((manager) =>
+      this.idempotency.runOnce(
+        manager,
         {
           companyId,
           userId,
-          action: 'CREATE',
-          entityName: 'production_entries',
-          entityId: entry.id,
-          after: {
-            batchId: batch.id,
-            stage: 'firing',
-            firedBricks: entry.firedBricks,
-            consumption: consumptions.map((c) => ({
-              itemId: c.itemId,
-              warehouseId: c.warehouseId,
-              quantity: c.quantity,
-            })),
-          },
+          endpoint: 'POST /production/batches/:id/firing',
+          key: idempotencyKey,
+          body: { batchId, ...dto },
         },
-        manager,
-      );
+        async () => {
+          const batch = await this.loadBatchForWrite(manager, companyId, batchId);
+          await this.assertStageOrder(manager, batch.id, 'firing');
 
-      return entry;
-    });
+          const entry = await manager.save(
+            manager.create(ProductionEntry, {
+              companyId,
+              createdBy: userId,
+              updatedBy: userId,
+              batchId: batch.id,
+              stage: 'firing',
+              entryDate: dto.entryDate,
+              greenBricks: '0.000',
+              firedBricks: toQuantity(dto.firedBricks),
+              brokenBricks: '0.000',
+              rejectBricks: '0.000',
+              sardarPartyId: null,
+              warehouseId: null,
+              notes: dto.notes ?? null,
+            }),
+          );
+
+          const consumptions = await this.recordConsumptions(manager, {
+            companyId,
+            userId,
+            batch,
+            entry,
+            inputs: dto.consumption,
+            stageLabel: 'firing',
+          });
+
+          // open → firing. Sorting flips it to 'sorted'.
+          if (batch.status === 'open') {
+            batch.status = 'firing';
+            batch.updatedBy = userId;
+            await manager.save(batch);
+          }
+
+          await this.audit.record(
+            {
+              companyId,
+              userId,
+              action: 'CREATE',
+              entityName: 'production_entries',
+              entityId: entry.id,
+              after: {
+                batchId: batch.id,
+                stage: 'firing',
+                firedBricks: entry.firedBricks,
+                consumption: consumptions.map((c) => ({
+                  itemId: c.itemId,
+                  warehouseId: c.warehouseId,
+                  quantity: c.quantity,
+                })),
+              },
+            },
+            manager,
+          );
+
+          return entry;
+        },
+      ),
+    );
   }
 
   async recordSorting(
@@ -365,6 +428,7 @@ export class ProductionService {
     userId: string,
     batchId: string,
     dto: ProductionSortingDto,
+    idempotencyKey: string | null = null,
   ): Promise<{
     entry: ProductionEntry;
     outputs: ProductionSortingOutput[];
@@ -384,105 +448,117 @@ export class ProductionService {
       seen.add(out.brickTypeId);
     }
 
-    return this.dataSource.transaction(async (manager) => {
-      const batch = await this.loadBatchForWrite(manager, companyId, batchId);
-      await this.assertStageOrder(manager, batch.id, 'sorting');
-
-      // Confirm every grade belongs to this company before the stock loop, so
-      // a mis-tenanted id is a 422 that undoes nothing, not a half-committed
-      // sort.
-      const grades = await manager.find(BrickType, {
-        where: { id: In(dto.outputs.map((o) => o.brickTypeId)), companyId },
-      });
-      if (grades.length !== seen.size) {
-        throw new BusinessRuleException(
-          'BRICK_TYPE_NOT_FOUND',
-          'One of the brick grades does not exist in this company',
-        );
-      }
-      for (const g of grades) {
-        if (!g.isActive) {
-          throw new BusinessRuleException('BRICK_TYPE_INACTIVE', `${g.grade} is no longer in use`);
-        }
-      }
-
-      const entry = await manager.save(
-        manager.create(ProductionEntry, {
-          companyId,
-          createdBy: userId,
-          updatedBy: userId,
-          batchId: batch.id,
-          stage: 'sorting',
-          entryDate: dto.entryDate,
-          greenBricks: '0.000',
-          firedBricks: '0.000',
-          brokenBricks: toQuantity(dto.brokenBricks),
-          rejectBricks: toQuantity(dto.rejectBricks),
-          sardarPartyId: null,
-          warehouseId: dto.warehouseId,
-          notes: dto.notes ?? null,
-        }),
-      );
-
-      const outputs: ProductionSortingOutput[] = [];
-      for (const out of dto.outputs) {
-        // One stock movement per grade, same transaction. `StockService.record`
-        // checks the warehouse/grade/company and refuses negative quantities.
-        const movement = await this.stock.record(manager, {
-          companyId,
-          userId,
-          warehouseId: dto.warehouseId,
-          brickTypeId: out.brickTypeId,
-          movementType: 'production',
-          direction: 'in',
-          quantity: toQuantity(out.quantity),
-          movementDate: dto.entryDate,
-          sourceType: 'production_batch',
-          sourceId: batch.id,
-          notes: `Sorted from ${batch.chamber} on ${batch.batchDate}`,
-        });
-
-        const output = await manager.save(
-          manager.create(ProductionSortingOutput, {
-            companyId,
-            createdBy: userId,
-            updatedBy: userId,
-            entryId: entry.id,
-            brickTypeId: out.brickTypeId,
-            quantity: toQuantity(out.quantity),
-            stockMovementId: movement.id,
-          }),
-        );
-        outputs.push(output);
-      }
-
-      batch.status = 'sorted';
-      batch.updatedBy = userId;
-      await manager.save(batch);
-
-      const goodTotal = outputs.reduce((acc, o) => acc.plus(new Decimal(o.quantity)), new Decimal(0)).toFixed(3);
-
-      await this.audit.record(
+    return this.dataSource.transaction((manager) =>
+      this.idempotency.runOnce(
+        manager,
         {
           companyId,
           userId,
-          action: 'CREATE',
-          entityName: 'production_entries',
-          entityId: entry.id,
-          after: {
-            batchId: batch.id,
-            stage: 'sorting',
-            goodTotal,
-            brokenBricks: entry.brokenBricks,
-            rejectBricks: entry.rejectBricks,
-            outputs: outputs.map((o) => ({ brickTypeId: o.brickTypeId, quantity: o.quantity })),
-          },
+          endpoint: 'POST /production/batches/:id/sorting',
+          key: idempotencyKey,
+          body: { batchId, ...dto },
         },
-        manager,
-      );
+        async () => {
+          const batch = await this.loadBatchForWrite(manager, companyId, batchId);
+          await this.assertStageOrder(manager, batch.id, 'sorting');
 
-      return { entry, outputs };
-    });
+          // Confirm every grade belongs to this company before the stock loop, so
+          // a mis-tenanted id is a 422 that undoes nothing, not a half-committed
+          // sort.
+          const grades = await manager.find(BrickType, {
+            where: { id: In(dto.outputs.map((o) => o.brickTypeId)), companyId },
+          });
+          if (grades.length !== seen.size) {
+            throw new BusinessRuleException(
+              'BRICK_TYPE_NOT_FOUND',
+              'One of the brick grades does not exist in this company',
+            );
+          }
+          for (const g of grades) {
+            if (!g.isActive) {
+              throw new BusinessRuleException('BRICK_TYPE_INACTIVE', `${g.grade} is no longer in use`);
+            }
+          }
+
+          const entry = await manager.save(
+            manager.create(ProductionEntry, {
+              companyId,
+              createdBy: userId,
+              updatedBy: userId,
+              batchId: batch.id,
+              stage: 'sorting',
+              entryDate: dto.entryDate,
+              greenBricks: '0.000',
+              firedBricks: '0.000',
+              brokenBricks: toQuantity(dto.brokenBricks),
+              rejectBricks: toQuantity(dto.rejectBricks),
+              sardarPartyId: null,
+              warehouseId: dto.warehouseId,
+              notes: dto.notes ?? null,
+            }),
+          );
+
+          const outputs: ProductionSortingOutput[] = [];
+          for (const out of dto.outputs) {
+            // One stock movement per grade, same transaction. `StockService.record`
+            // checks the warehouse/grade/company and refuses negative quantities.
+            const movement = await this.stock.record(manager, {
+              companyId,
+              userId,
+              warehouseId: dto.warehouseId,
+              brickTypeId: out.brickTypeId,
+              movementType: 'production',
+              direction: 'in',
+              quantity: toQuantity(out.quantity),
+              movementDate: dto.entryDate,
+              sourceType: 'production_batch',
+              sourceId: batch.id,
+              notes: `Sorted from ${batch.chamber} on ${batch.batchDate}`,
+            });
+
+            const output = await manager.save(
+              manager.create(ProductionSortingOutput, {
+                companyId,
+                createdBy: userId,
+                updatedBy: userId,
+                entryId: entry.id,
+                brickTypeId: out.brickTypeId,
+                quantity: toQuantity(out.quantity),
+                stockMovementId: movement.id,
+              }),
+            );
+            outputs.push(output);
+          }
+
+          batch.status = 'sorted';
+          batch.updatedBy = userId;
+          await manager.save(batch);
+
+          const goodTotal = outputs.reduce((acc, o) => acc.plus(new Decimal(o.quantity)), new Decimal(0)).toFixed(3);
+
+          await this.audit.record(
+            {
+              companyId,
+              userId,
+              action: 'CREATE',
+              entityName: 'production_entries',
+              entityId: entry.id,
+              after: {
+                batchId: batch.id,
+                stage: 'sorting',
+                goodTotal,
+                brokenBricks: entry.brokenBricks,
+                rejectBricks: entry.rejectBricks,
+                outputs: outputs.map((o) => ({ brickTypeId: o.brickTypeId, quantity: o.quantity })),
+              },
+            },
+            manager,
+          );
+
+          return { entry, outputs };
+        },
+      ),
+    );
   }
 
   // ---- Helpers --------------------------------------------------------------

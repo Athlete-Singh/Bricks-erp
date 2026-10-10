@@ -19,7 +19,13 @@ import {
   type ProductionSortingDto,
   type YieldVarianceQueryDto,
 } from '@brics/shared';
-import { CurrentCompany, CurrentUser, JwtPayload, RequirePermissions } from '../../common/decorators/auth.decorators';
+import {
+  CurrentCompany,
+  CurrentUser,
+  IdempotencyKey,
+  JwtPayload,
+  RequirePermissions,
+} from '../../common/decorators/auth.decorators';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
@@ -43,9 +49,10 @@ export class ProductionController {
   async createBatch(
     @CurrentCompany() companyId: string,
     @CurrentUser() user: JwtPayload,
+    @IdempotencyKey() idempotencyKey: string | null,
     @Body(new ZodValidationPipe(productionBatchCreateSchema)) dto: ProductionBatchCreateDto,
   ) {
-    return this.production.createBatch(companyId, user.sub, dto);
+    return this.production.createBatch(companyId, user.sub, dto, idempotencyKey);
   }
 
   @Get('batches')
@@ -71,10 +78,11 @@ export class ProductionController {
   async making(
     @CurrentCompany() companyId: string,
     @CurrentUser() user: JwtPayload,
+    @IdempotencyKey() idempotencyKey: string | null,
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body(new ZodValidationPipe(productionMakingSchema)) dto: ProductionMakingDto,
   ) {
-    return this.production.recordMaking(companyId, user.sub, id, dto);
+    return this.production.recordMaking(companyId, user.sub, id, dto, idempotencyKey);
   }
 
   @Post('batches/:id/drying')
@@ -83,10 +91,11 @@ export class ProductionController {
   async drying(
     @CurrentCompany() companyId: string,
     @CurrentUser() user: JwtPayload,
+    @IdempotencyKey() idempotencyKey: string | null,
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body(new ZodValidationPipe(productionDryingSchema)) dto: ProductionDryingDto,
   ) {
-    return this.production.recordDrying(companyId, user.sub, id, dto);
+    return this.production.recordDrying(companyId, user.sub, id, dto, idempotencyKey);
   }
 
   @Post('batches/:id/firing')
@@ -95,10 +104,11 @@ export class ProductionController {
   async firing(
     @CurrentCompany() companyId: string,
     @CurrentUser() user: JwtPayload,
+    @IdempotencyKey() idempotencyKey: string | null,
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body(new ZodValidationPipe(productionFiringSchema)) dto: ProductionFiringDto,
   ) {
-    return this.production.recordFiring(companyId, user.sub, id, dto);
+    return this.production.recordFiring(companyId, user.sub, id, dto, idempotencyKey);
   }
 
   @Post('batches/:id/sorting')
@@ -109,10 +119,11 @@ export class ProductionController {
   async sorting(
     @CurrentCompany() companyId: string,
     @CurrentUser() user: JwtPayload,
+    @IdempotencyKey() idempotencyKey: string | null,
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body(new ZodValidationPipe(productionSortingSchema)) dto: ProductionSortingDto,
   ) {
-    return this.production.recordSorting(companyId, user.sub, id, dto);
+    return this.production.recordSorting(companyId, user.sub, id, dto, idempotencyKey);
   }
 
   @Get('yield-variance')

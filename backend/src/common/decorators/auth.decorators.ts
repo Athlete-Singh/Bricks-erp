@@ -33,3 +33,16 @@ export const CurrentCompany = createParamDecorator((_data: unknown, ctx: Executi
   const request = ctx.switchToHttp().getRequest<RequestWithUser>();
   return request.companyId || request.user?.companyId;
 });
+
+/**
+ * SYN-01 — the client-supplied `Idempotency-Key` header (the mobile row UUID).
+ * Returns `null` when absent so the service can decide the header is optional
+ * for a given endpoint.
+ */
+export const IdempotencyKey = createParamDecorator((_data: unknown, ctx: ExecutionContext): string | null => {
+  const request = ctx.switchToHttp().getRequest<Request>();
+  const raw = request.header('Idempotency-Key');
+  if (!raw) return null;
+  const trimmed = raw.trim();
+  return trimmed.length > 0 ? trimmed : null;
+});

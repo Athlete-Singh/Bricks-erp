@@ -10,6 +10,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { CompanyModule } from './modules/company/company.module';
 import { UserModule } from './modules/user/user.module';
 import { AuditModule } from './modules/audit/audit.module';
+import { IdempotencyModule } from './common/idempotency/idempotency.module';
 import { AccountingModule } from './accounting/accounting.module';
 import { StockModule } from './stock/stock.module';
 import { PartyModule } from './modules/parties/party.module';
@@ -43,6 +44,7 @@ import { ProductionModule } from './modules/production/production.module';
       useFactory: (config: ConfigService<Env, true>) =>
         buildTypeOrmOptions(config.get('DATABASE_URL', { infer: true }), config.get('DATABASE_SSL', { infer: true })),
     }),
+    IdempotencyModule,
     HealthModule,
     AuthModule,
     CompanyModule,

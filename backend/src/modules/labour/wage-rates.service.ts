@@ -3,6 +3,7 @@ import { InjectEntityManager } from '@nestjs/typeorm';
 import { EntityManager } from 'typeorm';
 import { WageRate } from './entities/wage-rate.entity';
 import { AuditService } from '../audit/audit.service';
+import { applySince, withTombstone } from '../../common/sync/delta-pull';
 import { CreateWageRateDto, UpdateWageRateDto, MasterQueryDto } from '@brics/shared';
 
 @Injectable()
@@ -96,14 +97,15 @@ export class WageRatesService {
     const qb = this.em.createQueryBuilder(WageRate, 'w').where('w.companyId = :companyId', { companyId });
     if (query.search) qb.andWhere('w.activity ILIKE :search', { search: `%${query.search}%` });
     if (query.isActive !== undefined) qb.andWhere('w.isActive = :isActive', { isActive: query.isActive });
+    applySince(qb, 'w', query.since);
 
     const total = await qb.getCount();
-    const items = await qb
+    const rows = await qb
       .orderBy('w.activity', 'ASC')
       .skip((query.page - 1) * query.limit)
       .take(query.limit)
       .getMany();
 
-    return { items, meta: { page: query.page, limit: query.limit, total } };
+    return { items: rows.map(withTombstone), meta: { page: query.page, limit: query.limit, total } };
   }
 }

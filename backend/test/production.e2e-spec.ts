@@ -70,6 +70,7 @@ describe('Production (e2e)', () => {
         'production_sorting_outputs',
         'production_entries',
         'production_batches',
+        'idempotency_keys',
         'stock_movements',
         'parties',
         'ledgers',
@@ -679,6 +680,83 @@ describe('Production (e2e)', () => {
         chamber: 'X1',
         batchDate: BATCH_DATE,
       }).expect(403);
+    });
+  });
+
+  // ------------------------------------------------------------------
+  // SYN-01 idempotency on production creates
+  // ------------------------------------------------------------------
+
+  describe('SYN-01 idempotency', () => {
+    const postWithKey = (url: string, token: string, key: string | null, body: Record<string, unknown>) => {
+      const req = request(fx.app.getHttpServer()).post(url).set('Authorization', `Bearer ${token}`);
+      if (key) req.set('Idempotency-Key', key);
+      return req.send(body);
+    };
+
+    it('replays the same batch when the same key is sent twice', async () => {
+      const key = '11111111-1111-4111-8111-111111111111';
+      const body = { siteId: siteA.id, chamber: 'IDEM-A', batchDate: '2026-09-05' };
+      const first = await postWithKey('/api/v1/production/batches', fx.tokenA, key, body).expect(201);
+      const second = await postWithKey('/api/v1/production/batches', fx.tokenA, key, body).expect(201);
+      expect(second.body.data.id).toBe(first.body.data.id);
+
+      // Only one row actually in the DB — the duplicate (site, chamber, date)
+      // partial unique would otherwise have thrown PRODUCTION_BATCH_DUPLICATE.
+      const list = await request(fx.app.getHttpServer())
+        .get('/api/v1/production/batches')
+        .query({ limit: 100 })
+        .set('Authorization', `Bearer ${fx.tokenA}`)
+        .expect(200);
+      const matches = (list.body.data as Array<{ chamber: string }>).filter((b) => b.chamber === 'IDEM-A');
+      expect(matches).toHaveLength(1);
+    });
+
+    it('refuses the same key with a different body', async () => {
+      const key = '22222222-2222-4222-8222-222222222222';
+      await postWithKey('/api/v1/production/batches', fx.tokenA, key, {
+        siteId: siteA.id,
+        chamber: 'IDEM-B',
+        batchDate: '2026-09-06',
+      }).expect(201);
+      const res = await postWithKey('/api/v1/production/batches', fx.tokenA, key, {
+        siteId: siteA.id,
+        chamber: 'IDEM-B-OTHER',
+        batchDate: '2026-09-06',
+      }).expect(422);
+      expect(res.body.error.code).toBe('IDEMPOTENCY_KEY_REUSED');
+    });
+
+    it('without the header, two POSTs behave as two independent requests', async () => {
+      // No key → the second one trips PRODUCTION_BATCH_DUPLICATE from the
+      // business unique, which proves the second request actually hit the
+      // service and was not short-circuited.
+      await postWithKey('/api/v1/production/batches', fx.tokenA, null, {
+        siteId: siteA.id,
+        chamber: 'IDEM-C',
+        batchDate: '2026-09-07',
+      }).expect(201);
+      const res = await postWithKey('/api/v1/production/batches', fx.tokenA, null, {
+        siteId: siteA.id,
+        chamber: 'IDEM-C',
+        batchDate: '2026-09-07',
+      }).expect(422);
+      expect(res.body.error.code).toBe('PRODUCTION_BATCH_DUPLICATE');
+    });
+
+    it('the same key in two companies does not collide', async () => {
+      const key = '33333333-3333-4333-8333-333333333333';
+      const a = await postWithKey('/api/v1/production/batches', fx.tokenA, key, {
+        siteId: siteA.id,
+        chamber: 'IDEM-D',
+        batchDate: '2026-09-08',
+      }).expect(201);
+      const b = await postWithKey('/api/v1/production/batches', fx.tokenB, key, {
+        siteId: siteB.id,
+        chamber: 'IDEM-D',
+        batchDate: '2026-09-08',
+      }).expect(201);
+      expect(a.body.data.id).not.toBe(b.body.data.id);
     });
   });
 });

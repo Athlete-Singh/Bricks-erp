@@ -20,6 +20,7 @@ import { Site } from '../company/entities/site.entity';
 import { HsnRate } from '../taxes/entities/hsn-rate.entity';
 import { AuditService } from '../audit/audit.service';
 import { DataSource } from 'typeorm';
+import { applySince, withTombstone, type WithTombstone } from '../../common/sync/delta-pull';
 
 export interface Paginated<T> {
   items: T[];
@@ -77,18 +78,19 @@ export class InventoryMastersService {
     });
   }
 
-  async listUnits(companyId: string, query: InventoryMasterQueryDto): Promise<Paginated<Unit>> {
+  async listUnits(companyId: string, query: InventoryMasterQueryDto): Promise<Paginated<WithTombstone<Unit>>> {
     const qb = this.unitRepo.createQueryBuilder('u').where('u.companyId = :companyId', { companyId });
     if (query.search) qb.andWhere('u.name ILIKE :search', { search: `%${query.search}%` });
     if (query.isActive !== undefined) qb.andWhere('u.isActive = :isActive', { isActive: query.isActive });
+    applySince(qb, 'u', query.since);
 
     qb.orderBy('u.createdAt', query.sort?.startsWith('-') ? 'DESC' : 'ASC');
-    const [items, total] = await qb
+    const [rows, total] = await qb
       .skip((query.page - 1) * query.limit)
       .take(query.limit)
       .getManyAndCount();
 
-    return { items, meta: { page: query.page, limit: query.limit, total } };
+    return { items: rows.map(withTombstone), meta: { page: query.page, limit: query.limit, total } };
   }
 
   // ── Brick Types ───────────────────────────────────────────────────────────
@@ -131,18 +133,22 @@ export class InventoryMastersService {
     });
   }
 
-  async listBrickTypes(companyId: string, query: InventoryMasterQueryDto): Promise<Paginated<BrickType>> {
+  async listBrickTypes(
+    companyId: string,
+    query: InventoryMasterQueryDto,
+  ): Promise<Paginated<WithTombstone<BrickType>>> {
     const qb = this.brickTypeRepo.createQueryBuilder('bt').where('bt.companyId = :companyId', { companyId });
     if (query.search) qb.andWhere('bt.grade ILIKE :search', { search: `%${query.search}%` });
     if (query.isActive !== undefined) qb.andWhere('bt.isActive = :isActive', { isActive: query.isActive });
+    applySince(qb, 'bt', query.since);
 
     qb.orderBy('bt.createdAt', query.sort?.startsWith('-') ? 'DESC' : 'ASC');
-    const [items, total] = await qb
+    const [rows, total] = await qb
       .skip((query.page - 1) * query.limit)
       .take(query.limit)
       .getManyAndCount();
 
-    return { items, meta: { page: query.page, limit: query.limit, total } };
+    return { items: rows.map(withTombstone), meta: { page: query.page, limit: query.limit, total } };
   }
 
   // ── Warehouses ────────────────────────────────────────────────────────────
@@ -203,18 +209,22 @@ export class InventoryMastersService {
     });
   }
 
-  async listWarehouses(companyId: string, query: InventoryMasterQueryDto): Promise<Paginated<Warehouse>> {
+  async listWarehouses(
+    companyId: string,
+    query: InventoryMasterQueryDto,
+  ): Promise<Paginated<WithTombstone<Warehouse>>> {
     const qb = this.warehouseRepo.createQueryBuilder('w').where('w.companyId = :companyId', { companyId });
     if (query.search) qb.andWhere('w.name ILIKE :search', { search: `%${query.search}%` });
     if (query.isActive !== undefined) qb.andWhere('w.isActive = :isActive', { isActive: query.isActive });
+    applySince(qb, 'w', query.since);
 
     qb.orderBy('w.createdAt', query.sort?.startsWith('-') ? 'DESC' : 'ASC');
-    const [items, total] = await qb
+    const [rows, total] = await qb
       .skip((query.page - 1) * query.limit)
       .take(query.limit)
       .getManyAndCount();
 
-    return { items, meta: { page: query.page, limit: query.limit, total } };
+    return { items: rows.map(withTombstone), meta: { page: query.page, limit: query.limit, total } };
   }
 
   // ── Items ─────────────────────────────────────────────────────────────────
@@ -269,18 +279,19 @@ export class InventoryMastersService {
     });
   }
 
-  async listItems(companyId: string, query: InventoryMasterQueryDto): Promise<Paginated<Item>> {
+  async listItems(companyId: string, query: InventoryMasterQueryDto): Promise<Paginated<WithTombstone<Item>>> {
     const qb = this.itemRepo.createQueryBuilder('i').where('i.companyId = :companyId', { companyId });
     if (query.search) qb.andWhere('i.name ILIKE :search', { search: `%${query.search}%` });
     if (query.isActive !== undefined) qb.andWhere('i.isActive = :isActive', { isActive: query.isActive });
+    applySince(qb, 'i', query.since);
 
     qb.orderBy('i.createdAt', query.sort?.startsWith('-') ? 'DESC' : 'ASC');
-    const [items, total] = await qb
+    const [rows, total] = await qb
       .skip((query.page - 1) * query.limit)
       .take(query.limit)
       .getManyAndCount();
 
-    return { items, meta: { page: query.page, limit: query.limit, total } };
+    return { items: rows.map(withTombstone), meta: { page: query.page, limit: query.limit, total } };
   }
 
   private diffable(entity: unknown): Record<string, unknown> {

@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, ILike, Repository } from 'typeorm';
 import type { CreatePartyDto, PartyQueryDto, PartyType, UpdatePartyDto } from '@brics/shared';
 import { AuditService } from '../audit/audit.service';
+import { applySince, withTombstone, type WithTombstone } from '../../common/sync/delta-pull';
 import { LedgerGroup } from '../../accounting/entities/ledger-group.entity';
 import { Ledger } from '../../accounting/entities/ledger.entity';
 import { Party } from './entities/party.entity';
@@ -182,7 +183,7 @@ export class PartyService {
     return saved;
   }
 
-  async findAll(companyId: string, query: PartyQueryDto): Promise<Paginated<Party>> {
+  async findAll(companyId: string, query: PartyQueryDto): Promise<Paginated<WithTombstone<Party>>> {
     const qb = this.partyRepo.createQueryBuilder('p').where('p.company_id = :companyId', { companyId });
 
     if (query.search) {
@@ -195,6 +196,8 @@ export class PartyService {
       qb.andWhere('p.is_active = :isActive', { isActive: query.isActive });
     }
 
+    applySince(qb, 'p', query.since);
+
     const sortField = query.sort?.startsWith('-') ? query.sort.slice(1) : (query.sort ?? 'created_at');
     const sortDir = query.sort?.startsWith('-') ? 'DESC' : 'ASC';
     const allowed = ['name', 'created_at', 'updated_at'];
@@ -202,12 +205,12 @@ export class PartyService {
     qb.orderBy(`p.${col}`, sortDir);
 
     const total = await qb.getCount();
-    const items = await qb
+    const rows = await qb
       .skip((query.page - 1) * query.limit)
       .take(query.limit)
       .getMany();
 
-    return { items, meta: { page: query.page, limit: query.limit, total } };
+    return { items: rows.map(withTombstone), meta: { page: query.page, limit: query.limit, total } };
   }
 
   async findOne(companyId: string, id: string): Promise<Party> {

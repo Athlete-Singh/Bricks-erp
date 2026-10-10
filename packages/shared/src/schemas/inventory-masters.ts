@@ -92,6 +92,12 @@ export const inventoryMasterQuerySchema = z.object({
     .optional()
     .transform((v) => (v === undefined ? undefined : v === 'true')),
   sort: z.string().optional().default('-created_at'),
+  /**
+   * SYN-02 — delta pull. Only rows whose `updated_at` or `deleted_at` is
+   * strictly after this ISO instant are returned, with deleted rows carrying
+   * `deleted: true` so the mobile reconciles its local store.
+   */
+  since: z.string().datetime({ offset: true }).optional(),
 });
 export type InventoryMasterQueryDto = z.infer<typeof inventoryMasterQuerySchema>;
 
