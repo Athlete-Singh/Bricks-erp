@@ -11,19 +11,19 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 93 | 24 | 2 | 1 | 66 | 0 |
+| CP1 MVP | 101 | 24 | 10 | 1 | 66 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 
-**CP1 done: 26 %** (24 of 93 features ✅)
+**CP1 done: 24 %** (24 of 101 features ✅)
 
 ### Per app
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
-| Backend | 89 | 25 | 1 | 0 | 0 | 63 |
-| Web | 88 | 25 | 0 | 0 | 0 | 63 |
+| Backend | 97 | 33 | 1 | 0 | 0 | 63 |
+| Web | 94 | 25 | 0 | 0 | 0 | 69 |
 | Mobile | 11 | 0 | 0 | 0 | 0 | 11 |
-| Tests | 93 | 26 | 0 | 0 | 0 | 67 |
+| Tests | 101 | 34 | 0 | 0 | 0 | 67 |
 
 ## Client Phase 1 — MVP
 
@@ -57,10 +57,10 @@
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
 | PRD-01 | Brick types / grades master (configurable, e.g. Class 1/2/3) | CP1 | P3 | ✅ | ✅ | — | ✅ | ✅ |  |
-| PRD-02 | Production batch per kiln + chamber + date | CP1 | P5.1a | ✅ | ⬜ | — | ✅ | 🧩 BE done; web in P5.2 |
-| PRD-03 | Stage entries: brick making (green bricks, labour group) → drying → firing (chamber, fuel) → sorting (fired, broken/rejected, good by grade) | CP1 | P5.1a | ✅ | ⬜ | — | ✅ | 🧩 BE done (making/drying/firing/sorting + consumption); web in P5.2 |
-| PRD-04 | Fuel/raw material consumption (coal, soil) reduces raw stock | CP1 | P5.1b | ✅ | ⬜ | — | ✅ | 🧩 BE done; stage-same-tx OUT via StockService; web in P5.2 |
-| PRD-05 | Sorted good bricks enter finished stock by grade; wastage recorded | CP1 | P5.1a | ✅ | ⬜ | — | ✅ | 🧩 Sort → stock IN per grade, in the same transaction; broken + rejects are counts only |
+| PRD-02 | Production batch per kiln + chamber + date | CP1 | P5 | ✅ | ⬜ | — | ✅ | 🟨 | P5.1a — BE done; web in P5.2 |
+| PRD-03 | Stage entries: brick making (green bricks, labour group) → drying → firing (chamber, fuel) → sorting (fired, broken/rejected, good by grade) | CP1 | P5 | ✅ | ⬜ | — | ✅ | 🟨 | P5.1a — BE done (making/drying/firing/sorting + consumption); web in P5.2 |
+| PRD-04 | Fuel/raw material consumption (coal, soil) reduces raw stock | CP1 | P5 | ✅ | ⬜ | — | ✅ | 🟨 | P5.1b — BE done; stage-same-tx OUT via StockService; web in P5.2 |
+| PRD-05 | Sorted good bricks enter finished stock by grade; wastage recorded | CP1 | P5 | ✅ | ⬜ | — | ✅ | 🟨 | P5.1a — Sort → stock IN per grade, in the same transaction; broken + rejects are counts only |
 | PRD-06 | Production entry on mobile (offline) | CP1 | P5 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |  |
 | PRD-07 | Production report: day / month / year by kiln and grade | CP1 | P5 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 
@@ -169,8 +169,8 @@
 
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| LEK-01 | Brick yield variance: green moulded − (good + broken + rejects) per batch / chamber / Sardar gang, with an "unexplained" column | CP1 | P5.1a | ✅ | ⬜ | — | ✅ | 🧩 BE report shipped; web in P5.2 |
-| LEK-02 | Coal consumption per 1,000 bricks fired, compared batch-to-batch, kiln-to-kiln and month-to-month; outliers flagged | CP1 | P5.1b | ✅ | ⬜ | — | ✅ | 🧩 BE report shipped; caller names the fuel item; ±15% from median within the window; web in P5.2 |
+| LEK-01 | Brick yield variance: green moulded − (good + broken + rejects) per batch / chamber / Sardar gang, with an "unexplained" column | CP1 | P5 | ✅ | ⬜ | — | ✅ | 🟨 | P5.1a — BE report shipped; web in P5.2 |
+| LEK-02 | Coal consumption per 1,000 bricks fired, compared batch-to-batch, kiln-to-kiln and month-to-month; outliers flagged | CP1 | P5 | ✅ | ⬜ | — | ✅ | 🟨 | P5.1b — BE report shipped; caller names the fuel item; ±15% from median within the window; web in P5.2 |
 | LEK-03 | Live Sardar advance exposure: advances drawn − wages earned to date, per Sardar; **warning shown at the moment a new advance is entered** | CP1 | P6 | ⬜ | ⬜ | — | ⬜ | ⬜ | Highest value / lowest effort. Season-end settlement is too late to act |
 | LEK-04 | Gate reconciliation: dispatched qty vs invoiced qty vs stock movement, with unmatched dispatches listed | CP1 | P9 | ⬜ | ⬜ | — | ⬜ | ⬜ | Catches trucks leaving without a bill |
 
@@ -181,8 +181,8 @@
 
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| SYN-01 | `Idempotency-Key` header on every mobile-facing create endpoint + `idempotency_keys` table; a repeat with the same key returns the original result instead of creating a duplicate | CP1 | P5.1c | ✅ | — | — | ✅ | 🧩 BE done on all 5 production POSTs; applies to P6/P7/P9 as those modules ship |
-| SYN-02 | Delta pull endpoints (`?since=`) for the masters the app caches: kilns, parties, items, brick types, wage rates | CP1 | P5.1c | ✅ | — | — | ✅ | ✅ BE on all 5 masters; tombstones carry `deleted: true` |
+| SYN-01 | `Idempotency-Key` header on every mobile-facing create endpoint + `idempotency_keys` table; a repeat with the same key returns the original result instead of creating a duplicate | CP1 | P5 | ✅ | — | — | ✅ | 🟨 | P5.1c — BE done on all 5 production POSTs; applies to P6/P7/P9 as those modules ship |
+| SYN-02 | Delta pull endpoints (`?since=`) for the masters the app caches: kilns, parties, items, brick types, wage rates | CP1 | P5 | ✅ | — | — | ✅ | 🟨 | P5.1c — BE on all 5 masters; tombstones carry `deleted: true` |
 
 ### M12 Supervisor Mobile App (SOW #12)
 

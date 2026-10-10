@@ -40,7 +40,20 @@ for (const line of featuresText.split('\n')) {
     continue;
   }
   const m = line.match(FEATURE_ROW);
-  if (!m || !currentModule) continue;
+  if (!m) {
+    // A row that looks like a feature but does not parse used to be skipped in
+    // silence. Eight of them were — the whole of P5.1 — so `pnpm status` quietly
+    // dropped CP1 from 101 features to 93 and stopped tracking the work that had
+    // just been built. Malformed is now an error, not a shrug.
+    if (/^\| [A-Z]{3}-[0-9]{2} \|/.test(line)) {
+      errors.push(`FEATURES ${line.slice(2, 8)}: row does not parse — expected 10 columns, check for a merged cell`);
+    }
+    continue;
+  }
+  if (!currentModule) {
+    errors.push(`FEATURES ${m[1]}: sits above the first "### " module heading, so it is not counted`);
+    continue;
+  }
   const [, id, feature, cp, phase, be, web, mob, tests, status, notes] = m;
   const row = { id, feature, cp, phase, be, web, mob, tests, status, notes: notes.trim() };
   if (!STATUSES.includes(status)) errors.push(`FEATURES ${id}: status "${status}" (use ${STATUSES.join(' ')})`);
