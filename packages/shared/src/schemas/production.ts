@@ -5,6 +5,8 @@ export { PRODUCTION_STAGES };
 export type { ProductionStage } from '../constants/domain';
 
 const QUANTITY_PATTERN = /^\d{1,15}(\.\d{1,3})?$/;
+/** Bricks are counted, not weighed — CONVENTIONS: "Brick quantities = integers." */
+const BRICK_COUNT_PATTERN = /^\d{1,15}$/;
 const uuid = z.string().uuid('Invalid id');
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD');
 
@@ -22,6 +24,22 @@ const quantityOrZero = z
   .string()
   .regex(QUANTITY_PATTERN, 'Enter a quantity like 0 or 12.500')
   .refine((v) => Number(v) >= 0, 'Quantity cannot be negative');
+
+/**
+ * A brick count. Separate from `quantity` because the two were sharing one
+ * schema and should not: coal is weighed to three decimals (ADR-025), bricks
+ * are counted. `greenBricks: "10000.555"` used to be accepted and surfaced in
+ * the leakage report as an `unexplained` of 0.555 of a brick.
+ */
+const brickCount = z
+  .string()
+  .regex(BRICK_COUNT_PATTERN, 'Enter a whole number of bricks, like 10000')
+  .refine((v) => Number(v) > 0, 'Count must be more than zero');
+
+const brickCountOrZero = z
+  .string()
+  .regex(BRICK_COUNT_PATTERN, 'Enter a whole number of bricks, like 0')
+  .refine((v) => Number(v) >= 0, 'Count cannot be negative');
 
 /**
  * A chamber is a free text label (`Chamber 1`, `Khunta 3`). There is no
@@ -75,7 +93,7 @@ export type ProductionConsumptionInputDto = z.infer<typeof productionConsumption
  */
 export const productionMakingSchema = z.object({
   entryDate: isoDate,
-  greenBricks: quantity,
+  greenBricks: brickCount,
   sardarPartyId: uuid.nullish(),
   /** PRD-04 — soil (or other raw material) consumed to mould this batch. */
   consumption: z.array(productionConsumptionInputSchema).default([]),
@@ -99,7 +117,7 @@ export type ProductionDryingInput = z.input<typeof productionDryingSchema>;
  */
 export const productionFiringSchema = z.object({
   entryDate: isoDate,
-  firedBricks: quantity,
+  firedBricks: brickCount,
   /** PRD-04 — coal (or other fuel) consumed to fire this batch. */
   consumption: z.array(productionConsumptionInputSchema).default([]),
   notes: z.string().max(500).nullish(),
@@ -115,7 +133,8 @@ export type ProductionFiringInput = z.input<typeof productionFiringSchema>;
  */
 export const productionSortingOutputSchema = z.object({
   brickTypeId: uuid,
-  quantity,
+  // Good bricks of one grade — a count, not a weight.
+  quantity: brickCount,
 });
 export type ProductionSortingOutputDto = z.infer<typeof productionSortingOutputSchema>;
 
@@ -123,8 +142,8 @@ export const productionSortingSchema = z.object({
   entryDate: isoDate,
   warehouseId: uuid,
   outputs: z.array(productionSortingOutputSchema).min(1, 'List at least one grade'),
-  brokenBricks: quantityOrZero,
-  rejectBricks: quantityOrZero,
+  brokenBricks: brickCountOrZero,
+  rejectBricks: brickCountOrZero,
   notes: z.string().max(500).nullish(),
 });
 export type ProductionSortingDto = z.infer<typeof productionSortingSchema>;
@@ -165,3 +184,21 @@ export const yieldVarianceQuerySchema = z.object({
 });
 export type YieldVarianceQueryDto = z.infer<typeof yieldVarianceQuerySchema>;
 export type YieldVarianceQueryInput = z.input<typeof yieldVarianceQuerySchema>;
+
+/**
+ * PRD-07 — production report: day / month / year by kiln and grade.
+ *
+ * Reads the sorted output, which is the only count that means finished bricks.
+ * `groupBy` picks the time bucket; the result is broken down by kiln and by
+ * grade within it, because "how many Class 1 did that kiln make in March" is
+ * the question this report exists to answer.
+ */
+export const productionReportQuerySchema = z.object({
+  from: isoDate,
+  to: isoDate,
+  siteId: uuid.optional(),
+  brickTypeId: uuid.optional(),
+  groupBy: z.enum(['day', 'month', 'year']).default('month'),
+});
+export type ProductionReportQueryDto = z.infer<typeof productionReportQuerySchema>;
+export type ProductionReportQueryInput = z.input<typeof productionReportQuerySchema>;

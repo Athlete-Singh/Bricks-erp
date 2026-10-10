@@ -13,6 +13,7 @@ import type {
   ProductionStage,
 } from '@brics/shared';
 import { BusinessRuleException } from '../../common/exceptions/business-rule.exception';
+import { todayCalendarDate } from '../../common/time/calendar-date';
 import { IdempotencyService } from '../../common/idempotency/idempotency.service';
 import type { Paginated } from '../../common/interceptors/response-envelope.interceptor';
 import { Site } from '../company/entities/site.entity';
@@ -38,6 +39,21 @@ const STAGE_PREREQUISITES: Record<ProductionStage, ProductionStage | null> = {
 
 function toQuantity(value: Decimal.Value): string {
   return new Decimal(value).toFixed(3);
+}
+
+/**
+ * Bricks cannot have been moulded, fired or sorted tomorrow.
+ *
+ * `StockService` already refuses a future-dated movement (ADR-028), but only
+ * the stages that move stock went through it — so a batch or a drying entry
+ * could still be dated 2027, and a mistyped year would quietly misfile every
+ * report that buckets by date, including the month-to-month fuel comparison.
+ */
+function assertNotFuture(date: string, label: string): void {
+  const today = todayCalendarDate();
+  if (date > today) {
+    throw new BusinessRuleException('PRODUCTION_DATE_IN_FUTURE', `${label} cannot be dated after today (${today})`);
+  }
 }
 
 /**
@@ -70,6 +86,8 @@ export class ProductionService {
     dto: ProductionBatchCreateDto,
     idempotencyKey: string | null = null,
   ): Promise<ProductionBatch> {
+    assertNotFuture(dto.batchDate, 'A batch');
+
     return this.dataSource.transaction((manager) =>
       this.idempotency.runOnce(
         manager,
@@ -201,6 +219,8 @@ export class ProductionService {
     dto: ProductionMakingDto,
     idempotencyKey: string | null = null,
   ): Promise<ProductionEntry> {
+    assertNotFuture(dto.entryDate, 'Making');
+
     if (dto.sardarPartyId) {
       const party = await this.partyRepo.findOne({ where: { id: dto.sardarPartyId, companyId } });
       if (!party) throw new NotFoundException('That Sardar does not exist');
@@ -289,6 +309,8 @@ export class ProductionService {
     dto: ProductionDryingDto,
     idempotencyKey: string | null = null,
   ): Promise<ProductionEntry> {
+    assertNotFuture(dto.entryDate, 'Drying');
+
     return this.dataSource.transaction((manager) =>
       this.idempotency.runOnce(
         manager,
@@ -346,6 +368,8 @@ export class ProductionService {
     dto: ProductionFiringDto,
     idempotencyKey: string | null = null,
   ): Promise<ProductionEntry> {
+    assertNotFuture(dto.entryDate, 'Firing');
+
     this.assertConsumptionShape(dto.consumption);
 
     return this.dataSource.transaction((manager) =>
@@ -434,6 +458,7 @@ export class ProductionService {
     outputs: ProductionSortingOutput[];
   }> {
     // Validate up front, outside the tx, so an obviously-bad request fails fast.
+    assertNotFuture(dto.entryDate, 'Sorting');
     if (dto.outputs.length === 0) {
       throw new BusinessRuleException('PRODUCTION_SORTING_EMPTY', 'List at least one good brick grade');
     }

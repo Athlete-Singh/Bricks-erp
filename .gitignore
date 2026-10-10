@@ -27,3 +27,6 @@ mobile/android/.gradle/
 mobile/android/local.properties
 mobile/ios/Pods/
 mobile/ios/Flutter/Generated.xcconfig
+
+# Personal command cheat sheet, not shared
+RUN.md

@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import Decimal from 'decimal.js';
 import { Repository } from 'typeorm';
-import type { FuelVarianceQueryDto, YieldVarianceQueryDto } from '@brics/shared';
+import type { FuelVarianceQueryDto, ProductionReportQueryDto, YieldVarianceQueryDto } from '@brics/shared';
+import { BrickType } from '../inventory/entities/brick-type.entity';
 import { Item } from '../inventory/entities/item.entity';
 import { Party } from '../parties/entities/party.entity';
 import { Site } from '../company/entities/site.entity';
@@ -27,11 +28,32 @@ export interface YieldVarianceRow {
   broken: string;
   rejects: string;
   /**
-   * `greenMoulded − (goodTotal + broken + rejects)`. Positive means more bricks
-   * were reported moulded than ever came out of sorting — the exact leakage
-   * LEK-01 exists to show.
+   * `greenMoulded − (goodTotal + broken + rejects)` — the figure LEK-01 names.
+   *
+   * **`null` until the batch has been sorted.** Before sorting, good/broken/
+   * rejects are all zero because nobody has counted them yet, and subtracting
+   * them would report every batch still in the kiln as a total loss. A number
+   * here means the batch is closed and the figure is real.
    */
-  unexplained: string;
+  unexplained: string | null;
+  /** False while any batch in this row is still unsorted — `unexplained` is then null. */
+  sortingComplete: boolean;
+  /** How many batches this row covers, and how many are still waiting to be sorted. */
+  batchCount: number;
+  pendingSortCount: number;
+  /**
+   * `greenMoulded − fired`: bricks lost between moulding and firing. This is
+   * ordinary drying and handling breakage — large, seasonal and not theft —
+   * and it is split out so it stops masquerading as leakage.
+   */
+  preFiringLoss: string;
+  /**
+   * `fired − (goodTotal + broken + rejects)`: bricks that went into the kiln
+   * and never came out of sorting. **This is the theft signal**; unlike
+   * `unexplained` it is not inflated by normal pre-firing loss. Null until
+   * sorted.
+   */
+  postFiringLoss: string | null;
 }
 
 /**
@@ -43,6 +65,16 @@ export interface YieldVarianceRow {
  * groupBy=chamber (a chamber's cumulative yield across dates), or
  * groupBy=sardar (a gang's total output, which is the labour-leakage view).
  */
+/** One batch's fuel picture, before grouping. */
+interface FuelBatchRow {
+  batch: ProductionBatch;
+  fired: Decimal;
+  fuel: Decimal;
+  fuelRecorded: boolean;
+  /** The date the chamber was fired — the basis for the window and the month. */
+  firedDate: string;
+}
+
 export interface FuelVarianceRow {
   /** The grouping key — a batchId, a siteId, or a `YYYY-MM` string. */
   groupId: string;
@@ -52,14 +84,42 @@ export interface FuelVarianceRow {
   periodMonth: string | null;
   firedTotal: string;
   fuelConsumed: string;
-  /** `fuelConsumed / (firedTotal / 1000)`, or null when no bricks were fired. */
+  /**
+   * `fuelConsumed / (firedTotal / 1000)` — null when no bricks were fired, and
+   * null when **no fuel was recorded at all**. The second case used to report
+   * `0.000`, which is not a frugal kiln but a missing data-entry row, and it
+   * dragged the median down for every other batch in the window.
+   */
   ratio: string | null;
+  /** False when nothing was booked against this fuel item — chase the entry, do not read the ratio. */
+  fuelRecorded: boolean;
+  /** Which side of the median an outlier sits on; null when not an outlier. */
+  direction: 'over' | 'under' | null;
   /**
    * True when `|ratio − median| / median > 0.15` within the result set — a
    * batch using 15 % more or less fuel per 1,000 bricks than the median
    * batch in the window, which is far more than normal day-to-day drift.
    */
   isOutlier: boolean;
+}
+
+/** One line of PRD-07: a period, a kiln and a grade, with what was produced. */
+export interface ProductionReportRow {
+  /** `YYYY-MM-DD`, `YYYY-MM` or `YYYY`, following `groupBy`. */
+  period: string;
+  siteId: string;
+  siteName: string;
+  brickTypeId: string;
+  grade: string;
+  /** Good bricks of this grade that entered finished stock. */
+  goodBricks: string;
+  /** Batches that contributed, so a large number can be read in context. */
+  batchCount: number;
+}
+
+export interface ProductionReport {
+  rows: ProductionReportRow[];
+  totals: { goodBricks: string; batchCount: number };
 }
 
 @Injectable()
@@ -75,6 +135,82 @@ export class ProductionReportsService {
     @InjectRepository(Site) private readonly siteRepo: Repository<Site>,
     @InjectRepository(Party) private readonly partyRepo: Repository<Party>,
   ) {}
+
+  /**
+   * PRD-07 — what each kiln actually produced, by grade, over a period.
+   *
+   * Counted from sorting outputs rather than fired bricks: a brick is only
+   * production once it has been graded into finished stock. The period is the
+   * sorting entry's date, which is when the bricks became sellable.
+   */
+  async productionReport(companyId: string, query: ProductionReportQueryDto): Promise<ProductionReport> {
+    const qb = this.outputRepo
+      .createQueryBuilder('o')
+      .innerJoin(ProductionEntry, 'e', 'e.id = o.entry_id AND e.deleted_at IS NULL')
+      .innerJoin(ProductionBatch, 'b', 'b.id = e.batch_id AND b.deleted_at IS NULL')
+      .innerJoin(Site, 's', 's.id = b.site_id')
+      .innerJoin(BrickType, 'bt', 'bt.id = o.brick_type_id')
+      .where('o.company_id = :companyId', { companyId })
+      .andWhere('o.deleted_at IS NULL')
+      .andWhere('e.stage = :stage', { stage: 'sorting' })
+      .andWhere('e.entry_date BETWEEN :from AND :to', { from: query.from, to: query.to });
+
+    if (query.siteId) qb.andWhere('b.site_id = :siteId', { siteId: query.siteId });
+    if (query.brickTypeId) qb.andWhere('o.brick_type_id = :brickTypeId', { brickTypeId: query.brickTypeId });
+
+    // `to_char` keeps the bucketing in Postgres on a `date` column, so no JS
+    // Date is constructed and no timezone can shift a day (the IST trap).
+    const format = { day: 'YYYY-MM-DD', month: 'YYYY-MM', year: 'YYYY' }[query.groupBy];
+    const period = `to_char(e.entry_date, '${format}')`;
+
+    // The batch count is taken from its own builder: adding a GROUP BY below
+    // would otherwise turn the total into one row per group.
+    const totalBatches = await qb.clone().select('COUNT(DISTINCT b.id)', 'n').getRawOne<{ n: string }>();
+
+    const raw = await qb
+      .select(period, 'period')
+      .addSelect('b.site_id', 'siteId')
+      .addSelect('s.name', 'siteName')
+      .addSelect('o.brick_type_id', 'brickTypeId')
+      .addSelect('bt.grade', 'grade')
+      .addSelect('SUM(o.quantity)', 'goodBricks')
+      .addSelect('COUNT(DISTINCT b.id)', 'batchCount')
+      // Grouped and ordered by the expression, not the alias: Postgres resolves
+      // an output name in GROUP BY only in limited positions, and TypeORM's
+      // escaping pushed this one outside them.
+      .groupBy(period)
+      .addGroupBy('b.site_id')
+      .addGroupBy('s.name')
+      .addGroupBy('o.brick_type_id')
+      .addGroupBy('bt.grade')
+      .orderBy(period, 'DESC')
+      .addOrderBy('s.name', 'ASC')
+      .addOrderBy('bt.grade', 'ASC')
+      .getRawMany<{
+        period: string;
+        siteId: string;
+        siteName: string;
+        brickTypeId: string;
+        grade: string;
+        goodBricks: string;
+        batchCount: string;
+      }>();
+
+    const rows: ProductionReportRow[] = raw.map((r) => ({
+      period: r.period,
+      siteId: r.siteId,
+      siteName: r.siteName,
+      brickTypeId: r.brickTypeId,
+      grade: r.grade,
+      goodBricks: new Decimal(r.goodBricks ?? 0).toFixed(3),
+      batchCount: Number(r.batchCount ?? 0),
+    }));
+
+    const goodBricks = rows.reduce((acc, r) => acc.plus(r.goodBricks), new Decimal(0)).toFixed(3);
+    // Distinct across the whole window — summing the per-row counts would
+    // double-count a batch that produced more than one grade.
+    return { rows, totals: { goodBricks, batchCount: Number(totalBatches?.n ?? 0) } };
+  }
 
   async yieldVariance(companyId: string, query: YieldVarianceQueryDto): Promise<YieldVarianceRow[]> {
     const batchFilter = this.batchRepo
@@ -150,9 +286,12 @@ export class ProductionReportsService {
     }
 
     if (query.groupBy === 'chamber') {
+      // Keyed by site too: `chamber` is a free-text label unique only within a
+      // kiln, so two kilns both calling one "Chamber 1" were merged into a
+      // single row and attributed to whichever happened to be seen first.
       return this.aggregate(
         filtered,
-        (row) => row.batch.chamber,
+        (row) => `${row.batch.siteId}|${row.batch.chamber}`,
         (sample) => ({
           siteId: sample.batch.siteId,
           chamber: sample.batch.chamber,
@@ -175,15 +314,23 @@ export class ProductionReportsService {
       : [];
     const sardarName = new Map(sardarRows.map((p) => [p.id, p.name]));
 
+    // Batches with no named Sardar get their own bucket rather than vanishing.
+    // Dropping them silently made the gang view fail to reconcile with the
+    // batch view, and unattributed production is exactly where a loss would
+    // be parked.
+    const UNASSIGNED = '(unassigned)';
     return this.aggregate(
-      filtered.filter((row) => row.making?.sardarPartyId),
-      (row) => row.making!.sardarPartyId!,
-      (sample) => ({
-        siteId: null,
-        chamber: null,
-        sardarPartyId: sample.making!.sardarPartyId!,
-        label: sardarName.get(sample.making!.sardarPartyId!) ?? '(unknown Sardar)',
-      }),
+      filtered,
+      (row) => row.making?.sardarPartyId ?? UNASSIGNED,
+      (sample) => {
+        const id = sample.making?.sardarPartyId ?? null;
+        return {
+          siteId: null,
+          chamber: null,
+          sardarPartyId: id,
+          label: id ? (sardarName.get(id) ?? '(unknown Sardar)') : 'No Sardar recorded',
+        };
+      },
     );
   }
 
@@ -203,11 +350,14 @@ export class ProductionReportsService {
       );
     }
 
+    // The window is on the FIRING date, not the batch date: the coal burns when
+    // the chamber is fired, which can be weeks after the batch was loaded. On
+    // batch_date a batch loaded 28 Sep and fired 3 Oct filed its October coal
+    // under September and vanished from the October report entirely.
     const batchFilter = this.batchRepo
       .createQueryBuilder('b')
       .where('b.company_id = :companyId', { companyId })
-      .andWhere('b.deleted_at IS NULL')
-      .andWhere('b.batch_date BETWEEN :from AND :to', { from: query.from, to: query.to });
+      .andWhere('b.deleted_at IS NULL');
     if (query.siteId) batchFilter.andWhere('b.site_id = :siteId', { siteId: query.siteId });
     const batches = await batchFilter.getMany();
     if (batches.length === 0) return [];
@@ -220,6 +370,7 @@ export class ProductionReportsService {
       .where('e.company_id = :companyId', { companyId })
       .andWhere('e.deleted_at IS NULL')
       .andWhere('e.stage = :stage', { stage: 'firing' })
+      .andWhere('e.entry_date BETWEEN :from AND :to', { from: query.from, to: query.to })
       .andWhere('e.batch_id IN (:...batchIds)', { batchIds })
       .getMany();
     if (firingEntries.length === 0) return [];
@@ -243,10 +394,17 @@ export class ProductionReportsService {
         const firing = firingByBatch.get(batch.id);
         if (!firing) return null;
         const fired = new Decimal(firing.firedBricks ?? 0);
-        const fuel = new Decimal(fuelByEntry.get(firing.id) ?? 0);
-        return { batch, fired, fuel };
+        const booked = fuelByEntry.get(firing.id);
+        return {
+          batch,
+          fired,
+          fuel: new Decimal(booked ?? 0),
+          // Absent is not zero. Kept apart so a missing row cannot pose as frugality.
+          fuelRecorded: booked !== undefined,
+          firedDate: firing.entryDate,
+        };
       })
-      .filter((row): row is { batch: ProductionBatch; fired: Decimal; fuel: Decimal } => row !== null);
+      .filter((row): row is FuelBatchRow => row !== null);
 
     // Site names, for the kiln grouping's label.
     const siteIds = Array.from(new Set(perBatch.map((r) => r.batch.siteId)));
@@ -274,15 +432,15 @@ export class ProductionReportsService {
         }),
       );
     } else {
-      // 'month' — YYYY-MM from batch_date.
+      // 'month' — YYYY-MM of the FIRING date, which is when the fuel was burned.
       rows = this.aggregateFuel(
         perBatch,
-        (r) => r.batch.batchDate.slice(0, 7),
+        (r) => r.firedDate.slice(0, 7),
         (sample) => ({
           siteId: null,
           chamber: null,
-          periodMonth: sample.batch.batchDate.slice(0, 7),
-          label: sample.batch.batchDate.slice(0, 7),
+          periodMonth: sample.firedDate.slice(0, 7),
+          label: sample.firedDate.slice(0, 7),
         }),
       );
     }
@@ -291,8 +449,8 @@ export class ProductionReportsService {
     return rows;
   }
 
-  private fuelRowForBatch(row: { batch: ProductionBatch; fired: Decimal; fuel: Decimal }): FuelVarianceRow {
-    const ratio = row.fired.isZero() ? null : row.fuel.div(row.fired).mul(1000).toFixed(3);
+  private fuelRowForBatch(row: FuelBatchRow): FuelVarianceRow {
+    const measurable = !row.fired.isZero() && row.fuelRecorded;
     return {
       groupId: row.batch.id,
       groupLabel: `${row.batch.chamber} · ${row.batch.batchDate}`,
@@ -301,15 +459,17 @@ export class ProductionReportsService {
       periodMonth: null,
       firedTotal: row.fired.toFixed(3),
       fuelConsumed: row.fuel.toFixed(3),
-      ratio,
+      ratio: measurable ? row.fuel.div(row.fired).mul(1000).toFixed(3) : null,
+      fuelRecorded: row.fuelRecorded,
+      direction: null,
       isOutlier: false,
     };
   }
 
   private aggregateFuel<K extends string>(
-    rows: Array<{ batch: ProductionBatch; fired: Decimal; fuel: Decimal }>,
-    keyOf: (r: { batch: ProductionBatch; fired: Decimal; fuel: Decimal }) => K,
-    labelFrom: (sample: { batch: ProductionBatch; fired: Decimal; fuel: Decimal }) => {
+    rows: FuelBatchRow[],
+    keyOf: (r: FuelBatchRow) => K,
+    labelFrom: (sample: FuelBatchRow) => {
       siteId: string | null;
       chamber: string | null;
       periodMonth: string | null;
@@ -318,22 +478,34 @@ export class ProductionReportsService {
   ): FuelVarianceRow[] {
     const buckets = new Map<
       K,
-      { sample: { batch: ProductionBatch; fired: Decimal; fuel: Decimal }; fired: Decimal; fuel: Decimal }
+      { sample: FuelBatchRow; fired: Decimal; fuel: Decimal; recordedFired: Decimal; anyRecorded: boolean }
     >();
     for (const row of rows) {
       const key = keyOf(row);
       let bucket = buckets.get(key);
       if (!bucket) {
-        bucket = { sample: row, fired: new Decimal(0), fuel: new Decimal(0) };
+        bucket = {
+          sample: row,
+          fired: new Decimal(0),
+          fuel: new Decimal(0),
+          recordedFired: new Decimal(0),
+          anyRecorded: false,
+        };
         buckets.set(key, bucket);
       }
       bucket.fired = bucket.fired.plus(row.fired);
       bucket.fuel = bucket.fuel.plus(row.fuel);
+      if (row.fuelRecorded) {
+        // The ratio divides by the bricks whose fuel we actually know, so a
+        // batch with no coal booked cannot dilute the group's figure.
+        bucket.recordedFired = bucket.recordedFired.plus(row.fired);
+        bucket.anyRecorded = true;
+      }
     }
     const out: FuelVarianceRow[] = [];
     for (const [key, b] of buckets) {
       const label = labelFrom(b.sample);
-      const ratio = b.fired.isZero() ? null : b.fuel.div(b.fired).mul(1000).toFixed(3);
+      const measurable = b.anyRecorded && !b.recordedFired.isZero();
       out.push({
         groupId: String(key),
         groupLabel: label.label,
@@ -342,7 +514,9 @@ export class ProductionReportsService {
         periodMonth: label.periodMonth,
         firedTotal: b.fired.toFixed(3),
         fuelConsumed: b.fuel.toFixed(3),
-        ratio,
+        ratio: measurable ? b.fuel.div(b.recordedFired).mul(1000).toFixed(3) : null,
+        fuelRecorded: b.anyRecorded,
+        direction: null,
         isOutlier: false,
       });
     }
@@ -350,12 +524,27 @@ export class ProductionReportsService {
   }
 
   /** ±15 % from the median ratio. Median not mean, so the outlier can't skew its own threshold. */
+  /**
+   * Flags a group whose fuel-per-1,000 sits more than 15 % from the median.
+   *
+   * Needs at least `MIN_SAMPLE` comparable rows. Two is the broken case: the
+   * "median" of two values is their mean, so both rows sit equidistant from it
+   * and the flag is all-or-nothing — a 20 % gap between two batches passed
+   * silently, while a 36 % gap flagged the **efficient** batch alongside the
+   * wasteful one. Three is the smallest sample where the median lands on an
+   * actual observation, which is what makes the comparison mean something.
+   *
+   * Rows with no fuel booked carry `ratio: null` and are excluded here — they
+   * are a missing data-entry row, not a frugal kiln, and letting them in
+   * re-based the threshold for everyone else.
+   */
   private flagFuelOutliers(rows: FuelVarianceRow[]): void {
+    const MIN_SAMPLE = 3;
     const ratios = rows
       .map((r) => (r.ratio == null ? null : new Decimal(r.ratio)))
       .filter((d): d is Decimal => d !== null)
       .sort((a, b) => a.comparedTo(b));
-    if (ratios.length < 2) return;
+    if (ratios.length < MIN_SAMPLE) return;
 
     const mid = Math.floor(ratios.length / 2);
     const lower = ratios[mid - 1]!;
@@ -368,7 +557,12 @@ export class ProductionReportsService {
       if (row.ratio == null) continue;
       const r = new Decimal(row.ratio);
       const drift = r.minus(median).abs().div(median);
-      if (drift.greaterThan(threshold)) row.isOutlier = true;
+      if (drift.greaterThan(threshold)) {
+        row.isOutlier = true;
+        // Which way it drifts is the actionable part: over-consumption is fuel
+        // going missing, under-consumption usually means coal booked elsewhere.
+        row.direction = r.greaterThan(median) ? 'over' : 'under';
+      }
     }
   }
 
@@ -384,7 +578,8 @@ export class ProductionReportsService {
     const broken = new Decimal(row.sorting?.brokenBricks ?? 0);
     const rejects = new Decimal(row.sorting?.rejectBricks ?? 0);
     const good = row.goodTotal;
-    const unexplained = green.minus(good).minus(broken).minus(rejects);
+    const sorted = row.sorting !== null;
+    const accounted = good.plus(broken).plus(rejects);
     return {
       groupId: row.batch.id,
       groupLabel: `${row.batch.chamber} · ${row.batch.batchDate}`,
@@ -396,7 +591,12 @@ export class ProductionReportsService {
       goodTotal: good.toFixed(3),
       broken: broken.toFixed(3),
       rejects: rejects.toFixed(3),
-      unexplained: unexplained.toFixed(3),
+      unexplained: sorted ? green.minus(accounted).toFixed(3) : null,
+      sortingComplete: sorted,
+      batchCount: 1,
+      pendingSortCount: sorted ? 0 : 1,
+      preFiringLoss: green.minus(fired).toFixed(3),
+      postFiringLoss: sorted ? fired.minus(accounted).toFixed(3) : null,
     };
   }
 
@@ -431,6 +631,8 @@ export class ProductionReportsService {
         good: Decimal;
         broken: Decimal;
         rejects: Decimal;
+        batchCount: number;
+        pendingSortCount: number;
       }
     >();
     for (const row of rows) {
@@ -444,19 +646,32 @@ export class ProductionReportsService {
           good: new Decimal(0),
           broken: new Decimal(0),
           rejects: new Decimal(0),
+          batchCount: 0,
+          pendingSortCount: 0,
         };
         buckets.set(key, bucket);
       }
-      bucket.green = bucket.green.plus(row.making?.greenBricks ?? 0);
-      bucket.fired = bucket.fired.plus(row.firing?.firedBricks ?? 0);
+      const green = new Decimal(row.making?.greenBricks ?? 0);
+      const fired = new Decimal(row.firing?.firedBricks ?? 0);
+      bucket.green = bucket.green.plus(green);
+      bucket.fired = bucket.fired.plus(fired);
       bucket.good = bucket.good.plus(row.goodTotal);
       bucket.broken = bucket.broken.plus(row.sorting?.brokenBricks ?? 0);
       bucket.rejects = bucket.rejects.plus(row.sorting?.rejectBricks ?? 0);
+      bucket.batchCount += 1;
+      // A group's loss is only meaningful once every batch in it has been
+      // sorted, so the count of stragglers is what decides whether to report
+      // a figure at all.
+      if (!row.sorting) bucket.pendingSortCount += 1;
     }
     const out: YieldVarianceRow[] = [];
     for (const [key, b] of buckets) {
       const label = labelFrom(b.sample);
-      const unexplained = b.green.minus(b.good).minus(b.broken).minus(b.rejects);
+      // Every batch in the group must be sorted before a group loss means anything.
+      const complete = b.pendingSortCount === 0;
+      const accounted = b.good.plus(b.broken).plus(b.rejects);
+      const unexplained = complete ? b.green.minus(accounted).toFixed(3) : null;
+      const postFiringLoss = complete ? b.fired.minus(accounted).toFixed(3) : null;
       out.push({
         groupId: String(key),
         groupLabel: label.label,
@@ -468,7 +683,12 @@ export class ProductionReportsService {
         goodTotal: b.good.toFixed(3),
         broken: b.broken.toFixed(3),
         rejects: b.rejects.toFixed(3),
-        unexplained: unexplained.toFixed(3),
+        unexplained,
+        sortingComplete: complete,
+        batchCount: b.batchCount,
+        pendingSortCount: b.pendingSortCount,
+        preFiringLoss: b.green.minus(b.fired).toFixed(3),
+        postFiringLoss,
       });
     }
     return out;

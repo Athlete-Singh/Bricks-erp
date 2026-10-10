@@ -3,7 +3,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, ILike, Repository } from 'typeorm';
 import type { CreatePartyDto, PartyQueryDto, PartyType, UpdatePartyDto } from '@brics/shared';
 import { AuditService } from '../audit/audit.service';
-import { applySince, withTombstone, type WithTombstone } from '../../common/sync/delta-pull';
+import {
+  applySince,
+  deltaMeta,
+  withTombstone,
+  type DeltaPageMeta,
+  type WithTombstone,
+} from '../../common/sync/delta-pull';
 import { LedgerGroup } from '../../accounting/entities/ledger-group.entity';
 import { Ledger } from '../../accounting/entities/ledger.entity';
 import { Party } from './entities/party.entity';
@@ -11,7 +17,7 @@ import { FinancialYear } from '../company/entities/financial-year.entity';
 
 export interface Paginated<T> {
   items: T[];
-  meta: { page: number; limit: number; total: number };
+  meta: DeltaPageMeta;
 }
 
 /**
@@ -192,17 +198,21 @@ export class PartyService {
     if (query.type) {
       qb.andWhere(':type = ANY(p.party_types)', { type: query.type });
     }
-    if (query.isActive !== undefined) {
+    const delta = applySince(qb, 'p', query.since);
+    // `isActive` is a filter for a human browsing the list. On a delta it would
+    // hide the deactivation itself, which is this product's only retirement
+    // signal — there are no DELETE endpoints (ADR-034).
+    if (!delta && query.isActive !== undefined) {
       qb.andWhere('p.is_active = :isActive', { isActive: query.isActive });
     }
 
-    applySince(qb, 'p', query.since);
-
-    const sortField = query.sort?.startsWith('-') ? query.sort.slice(1) : (query.sort ?? 'created_at');
-    const sortDir = query.sort?.startsWith('-') ? 'DESC' : 'ASC';
-    const allowed = ['name', 'created_at', 'updated_at'];
-    const col = allowed.includes(sortField) ? sortField : 'created_at';
-    qb.orderBy(`p.${col}`, sortDir);
+    if (!delta) {
+      const sortField = query.sort?.startsWith('-') ? query.sort.slice(1) : (query.sort ?? 'created_at');
+      const sortDir = query.sort?.startsWith('-') ? 'DESC' : 'ASC';
+      const allowed = ['name', 'created_at', 'updated_at'];
+      const col = allowed.includes(sortField) ? sortField : 'created_at';
+      qb.orderBy(`p.${col}`, sortDir);
+    }
 
     const total = await qb.getCount();
     const rows = await qb
@@ -210,7 +220,10 @@ export class PartyService {
       .take(query.limit)
       .getMany();
 
-    return { items: rows.map(withTombstone), meta: { page: query.page, limit: query.limit, total } };
+    return {
+      items: rows.map(withTombstone),
+      meta: deltaMeta({ page: query.page, limit: query.limit, total }, query.since, rows),
+    };
   }
 
   async findOne(companyId: string, id: string): Promise<Party> {

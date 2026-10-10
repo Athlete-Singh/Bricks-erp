@@ -11,17 +11,17 @@
 
 |              | Total | ✅  | 🟨  | ⚠️  | ⬜  | ⏭️  |
 | ------------ | ----- | --- | --- | --- | --- | --- |
-| CP1 MVP      | 101   | 24  | 10  | 1   | 66  | 0   |
+| CP1 MVP      | 101   | 24  | 11  | 1   | 65  | 0   |
 | CP2 Advanced | 10    | 0   | 0   | 0   | 0   | 10  |
 
 ### Progress per app (CP1)
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 | ----------------------------------- | ---------- | ------- | ---------------- | -------------- | ---------- | -------------- |
-| Backend                             | 97         | 33      | 1                | 0              | 0          | 63             |
+| Backend                             | 97         | 34      | 1                | 0              | 0          | 62             |
 | Web                                 | 94         | 25      | 0                | 0              | 0          | 69             |
 | Mobile                              | 11         | 0       | 0                | 0              | 0          | 11             |
-| Tests                               | 101        | 34      | 0                | 0              | 0          | 67             |
+| Tests                               | 101        | 35      | 0                | 0              | 0          | 66             |
 
 ## Client phases
 
@@ -198,6 +198,7 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 - 🟨 **PRD-03** Stage entries: brick making (green bricks, labour group) → drying → firing (chamber, fuel) → sorting (fired, broken/rejected, good by grade) _(P5)_
 - 🟨 **PRD-04** Fuel/raw material consumption (coal, soil) reduces raw stock _(P5)_
 - 🟨 **PRD-05** Sorted good bricks enter finished stock by grade; wastage recorded _(P5)_
+- 🟨 **PRD-07** Production report: day / month / year by kiln and grade _(P5)_
 - 🟨 **ACC-04** Opening balances for ledgers _(P2)_
 - 🟨 **LEK-01** Brick yield variance: green moulded − (good + broken + rejects) per batch / chamber / Sardar gang, with an "unexplained" column _(P5)_
 - 🟨 **LEK-02** Coal consumption per 1,000 bricks fired, compared batch-to-batch, kiln-to-kiln and month-to-month; outliers flagged _(P5)_
@@ -210,7 +211,6 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 - ⬜ **ADM-08** Company bank accounts (as Bank ledgers) _(P2)_
 - ⬜ **ADM-09** Backups via managed DB (Supabase daily backups) + documented restore procedure _(P13)_
 - ⬜ **PRD-06** Production entry on mobile (offline) _(P5)_
-- ⬜ **PRD-07** Production report: day / month / year by kiln and grade _(P5)_
 - ⬜ **LAB-01** Labour groups under a Sardar; worker master _(P6)_
 - ⬜ **LAB-02** Daily attendance by group/worker (web + mobile offline) _(P6)_
 - ⬜ **LAB-04** Auto wage entries from production and loading counts _(P6)_
@@ -309,7 +309,7 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 | PRD-04 | Fuel/raw material consumption (coal, soil) reduces raw stock                                                                                 | CP1 | P5    | ✅      | ⬜  | —      | ✅    | 🟨     |
 | PRD-05 | Sorted good bricks enter finished stock by grade; wastage recorded                                                                           | CP1 | P5    | ✅      | ⬜  | —      | ✅    | 🟨     |
 | PRD-06 | Production entry on mobile (offline)                                                                                                         | CP1 | P5    | ⬜      | ⬜  | ⬜     | ⬜    | ⬜     |
-| PRD-07 | Production report: day / month / year by kiln and grade                                                                                      | CP1 | P5    | ⬜      | ⬜  | —      | ⬜    | ⬜     |
+| PRD-07 | Production report: day / month / year by kiln and grade                                                                                      | CP1 | P5    | ✅      | ⬜  | —      | ✅    | 🟨     |
 
 ### M04 Labour & Sardar Engine (SOW #4)
 

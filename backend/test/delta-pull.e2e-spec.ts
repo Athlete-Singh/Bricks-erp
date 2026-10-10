@@ -10,6 +10,11 @@ import { WageRate } from '../src/modules/labour/entities/wage-rate.entity';
 import { WageActivity } from '@brics/shared';
 import { seedChartForCompany } from '../src/accounting/chart-of-accounts.seed';
 import { FinancialYear } from '../src/modules/company/entities/financial-year.entity';
+import { User } from '../src/modules/auth/entities/user.entity';
+import { UserSite } from '../src/modules/auth/entities/user-site.entity';
+import { MembershipService } from '../src/modules/auth/membership.service';
+import { CompanyService } from '../src/modules/company/company.service';
+import { DELTA_WATERMARK_LAG_MS } from '../src/common/sync/delta-pull';
 import { createTenantFixture, type TenantFixture } from './helpers/tenant-fixture';
 
 jest.setTimeout(60000);
@@ -24,8 +29,9 @@ jest.setTimeout(60000);
  *   - without `since`, the list behaves exactly as before (no `deleted` key
  *     needed; the mobile only ever reads these as a delta).
  *
- * The window boundary is "strictly after" by design: a mobile sends the
- * `updated_at` of the newest row it already has, and we must not resend it.
+ * The window boundary is inclusive by design (ADR-034): a mobile echoes back
+ * the watermark the server gave it, millisecond stamps tie, and a row resent
+ * once is upserted harmlessly while a row dropped once is gone for good.
  */
 describe('SYN-02 delta pull (e2e)', () => {
   let fx: TenantFixture;
@@ -269,5 +275,228 @@ describe('SYN-02 delta pull (e2e)', () => {
     }).expect(200);
     // Every item this spec created falls inside this window.
     expect((res.body.data as Array<{ id: string }>).length).toBeGreaterThan(0);
+  });
+
+  // ------------------------------------------------------------------
+  // ADR-034 — the watermark, the order, and the filters a delta must ignore
+  // ------------------------------------------------------------------
+
+  describe('the watermark (ADR-034)', () => {
+    it('comes back with every delta and lags the clock', async () => {
+      // Without a server watermark the client has to guess, and every guess
+      // loses rows: `updated_at` is stamped when the UPDATE runs, not when it
+      // commits, so a bare `now()` steps over a row that is still in flight.
+      const res = await authGet('/api/v1/inventory/items', fx.tokenA, {
+        since: pastSinceWindow,
+        limit: '100',
+      }).expect(200);
+      const nextSince = res.body.meta.nextSince as string;
+      expect(typeof nextSince).toBe('string');
+      expect(Date.now() - Date.parse(nextSince)).toBeGreaterThanOrEqual(DELTA_WATERMARK_LAG_MS);
+    });
+
+    it('never walks backwards past the since it was given', async () => {
+      const sinceAt = new Date().toISOString();
+      const res = await authGet('/api/v1/inventory/items', fx.tokenA, { since: sinceAt, limit: '100' }).expect(200);
+      expect(Date.parse(res.body.meta.nextSince as string)).toBeGreaterThanOrEqual(Date.parse(sinceAt));
+    });
+
+    it('is absent when the request is an ordinary list, not a delta', async () => {
+      const res = await authGet('/api/v1/inventory/items', fx.tokenA, { limit: '100' }).expect(200);
+      expect(res.body.meta.nextSince).toBeUndefined();
+    });
+
+    it('the kilns delta carries one too', async () => {
+      const res = await authGet('/api/v1/sites', fx.tokenA, { since: pastSinceWindow }).expect(200);
+      expect(Array.isArray(res.body.data)).toBe(true);
+      expect(typeof res.body.meta.nextSince).toBe('string');
+    });
+
+    it('a round trip through its own watermark loses nothing', async () => {
+      const btRepo = fx.dataSource.getRepository(BrickType);
+      const sinceAt = new Date().toISOString();
+      await sleep(10);
+      const made = await createMaster(btRepo, { companyId: fx.companyA.id, grade: 'Watermark Grade' });
+
+      const first = await authGet('/api/v1/inventory/brick-types', fx.tokenA, {
+        since: sinceAt,
+        limit: '100',
+      }).expect(200);
+      expect((first.body.data as Array<{ id: string }>).some((r) => r.id === made.id)).toBe(true);
+
+      // The device stores the watermark and comes back with it. The row may
+      // arrive twice — a delta is an upsert stream — but it must never be lost.
+      const second = await authGet('/api/v1/inventory/brick-types', fx.tokenA, {
+        since: first.body.meta.nextSince as string,
+        limit: '100',
+      }).expect(200);
+      expect((second.body.data as Array<{ id: string }>).some((r) => r.id === made.id)).toBe(true);
+    });
+  });
+
+  describe('delta ordering', () => {
+    it('orders by the change stamp, so a page boundary cannot hide an older edit', async () => {
+      // The hole this closes: ordered by created_at, page 1 held the freshly
+      // edited row, so its max(updated_at) was the newest stamp in the table —
+      // and every row waiting on page 2 with a smaller stamp was skipped
+      // forever.
+      const btRepo = fx.dataSource.getRepository(BrickType);
+      const sinceAt = new Date().toISOString();
+      await sleep(10);
+
+      const grades: BrickType[] = [];
+      for (const n of [1, 2, 3, 4, 5, 6]) {
+        grades.push(await createMaster(btRepo, { companyId: fx.companyA.id, grade: `Order ${n}` }));
+        await sleep(2);
+      }
+      // The oldest row becomes the newest change — created_at order and
+      // updated_at order now disagree.
+      const first = grades[0]!;
+      await btRepo.save({ ...first, grade: 'Order 1 edited' });
+
+      const seen: string[] = [];
+      const stamps: number[] = [];
+      for (const page of ['1', '2', '3']) {
+        const res = await authGet('/api/v1/inventory/brick-types', fx.tokenA, {
+          since: sinceAt,
+          limit: '2',
+          page,
+        }).expect(200);
+        for (const row of res.body.data as Array<{ id: string; updatedAt: string }>) {
+          seen.push(row.id);
+          stamps.push(Date.parse(row.updatedAt));
+        }
+      }
+
+      expect(new Set(seen).size).toBe(seen.length);
+      for (const g of grades) expect(seen).toContain(g.id);
+      expect([...stamps].sort((a, b) => a - b)).toEqual(stamps);
+      expect(seen[seen.length - 1]).toBe(first.id);
+    });
+  });
+
+  describe('isActive on a delta', () => {
+    // `isActive=false` is this product's only retirement mechanism — there are
+    // no DELETE endpoints — so a delta that honoured the filter would hide the
+    // very event the device has to hear about.
+    it('reports a deactivated item instead of filtering it away', async () => {
+      const unitRepo = fx.dataSource.getRepository(Unit);
+      const itemRepo = fx.dataSource.getRepository(Item);
+      const unit = await createMaster(unitRepo, { companyId: fx.companyA.id, name: 'Retire Unit', abbreviation: 'ru' });
+      const item = await createMaster(itemRepo, {
+        companyId: fx.companyA.id,
+        name: 'Retired Coal',
+        category: 'raw_material',
+        unitId: unit.id,
+        isActive: true,
+      });
+
+      const sinceAt = new Date().toISOString();
+      await sleep(10);
+      await itemRepo.save({ ...item, isActive: false });
+
+      const res = await authGet('/api/v1/inventory/items', fx.tokenA, {
+        since: sinceAt,
+        limit: '100',
+        'filter[isActive]': 'true',
+        isActive: 'true',
+      }).expect(200);
+      const row = (res.body.data as Array<{ id: string; isActive: boolean }>).find((r) => r.id === item.id);
+      expect(row?.isActive).toBe(false);
+    });
+
+    it('reports a deactivated party', async () => {
+      const partyRepo = fx.dataSource.getRepository(Party);
+      const party = await fx.app.get(PartyService).create(fx.companyA.id, '00000000-0000-0000-0000-000000000000', {
+        name: 'Retired Customer',
+        partyTypes: ['customer'],
+        gstin: null,
+        pan: null,
+        stateCode: null,
+        address: null,
+        phone: null,
+        email: null,
+        openingDebit: '0.00',
+        openingCredit: '0.00',
+      });
+
+      const sinceAt = new Date().toISOString();
+      await sleep(10);
+      await partyRepo.update(party.id, { isActive: false });
+
+      const res = await authGet('/api/v1/parties', fx.tokenA, {
+        since: sinceAt,
+        limit: '100',
+        isActive: 'true',
+      }).expect(200);
+      const row = (res.body.data as Array<{ id: string; isActive: boolean }>).find((r) => r.id === party.id);
+      expect(row?.isActive).toBe(false);
+    });
+
+    it('reports a deactivated wage rate', async () => {
+      const wageRepo = fx.dataSource.getRepository(WageRate);
+      const rate = await createMaster(wageRepo, {
+        companyId: fx.companyA.id,
+        activity: WageActivity.UNLOADING,
+        unit: 'per_1000_bricks',
+        rateAmount: '300.00',
+        isActive: true,
+      });
+
+      const sinceAt = new Date().toISOString();
+      await sleep(10);
+      await wageRepo.update(rate.id, { isActive: false });
+
+      const res = await authGet('/api/v1/labour/wage-rates', fx.tokenA, {
+        since: sinceAt,
+        limit: '100',
+        isActive: 'true',
+      }).expect(200);
+      const row = (res.body.data as Array<{ id: string; isActive: boolean }>).find((r) => r.id === rate.id);
+      expect(row?.isActive).toBe(false);
+    });
+
+    it('still honours isActive on an ordinary list', async () => {
+      const wageRepo = fx.dataSource.getRepository(WageRate);
+      const rate = await createMaster(wageRepo, {
+        companyId: fx.companyA.id,
+        activity: WageActivity.DAILY_WAGE,
+        unit: 'per_1000_bricks',
+        rateAmount: '275.00',
+        isActive: false,
+      });
+      const res = await authGet('/api/v1/labour/wage-rates', fx.tokenA, { limit: '100', isActive: 'true' }).expect(200);
+      expect((res.body.data as Array<{ id: string }>).find((r) => r.id === rate.id)).toBeUndefined();
+    });
+  });
+
+  describe('a revoked site grant', () => {
+    it('comes back as a tombstone, not as silence', async () => {
+      // Silence is indistinguishable from "nothing changed", so the device kept
+      // the kiln on screen and kept recording production against it.
+      const company = fx.app.get(CompanyService);
+      const membership = fx.app.get(MembershipService);
+      const userSiteRepo = fx.dataSource.getRepository(UserSite);
+      const siteRepo = fx.dataSource.getRepository(Site);
+      const owner = await fx.dataSource.getRepository(User).findOneByOrFail({ email: 'owner-a@delta.test' });
+
+      const kept = await createMaster(siteRepo, { companyId: fx.companyA.id, name: 'Kept Kiln', code: 'KEPT' });
+      const lost = await createMaster(siteRepo, { companyId: fx.companyA.id, name: 'Lost Kiln', code: 'LOST' });
+      await membership.replaceSiteAccess(owner.id, [kept.id, lost.id]);
+
+      const sinceAt = new Date().toISOString();
+      await sleep(10);
+      await membership.replaceSiteAccess(owner.id, [kept.id]);
+
+      const delta = await company.accessibleSitesSince(fx.companyA.id, owner.id, sinceAt);
+      expect(delta.items.find((s) => s.id === lost.id)?.deleted).toBe(true);
+      expect(delta.items.find((s) => s.id === kept.id)).toBeUndefined();
+
+      // Re-granting revives the same row rather than tripping the unique key.
+      await membership.replaceSiteAccess(owner.id, [kept.id, lost.id]);
+      expect(await membership.siteIdsFor(owner.id)).toEqual(expect.arrayContaining([kept.id, lost.id]));
+
+      await userSiteRepo.delete({ userId: owner.id });
+    });
   });
 });

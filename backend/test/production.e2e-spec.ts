@@ -365,14 +365,73 @@ describe('Production (e2e)', () => {
 
       // The flow above moulded 10,000 green, fired 9,800, and sorted into
       // 7,000 + 2,500 good, 200 broken, 100 rejects → unexplained 200.
-      expect(res.body.data).toHaveLength(1);
-      const row = res.body.data[0];
+      // Found by label, not by position: this used to assert `toHaveLength(1)`
+      // and passed only because it ran before the LEK-02 fixtures seeded more
+      // batches into the same window.
+      const row = (res.body.data as { groupLabel: string }[]).find((r) => r.groupLabel.startsWith('C1 ·')) as Record<
+        string,
+        unknown
+      >;
+      expect(row).toBeDefined();
       expect(row.greenMoulded).toBe('10000.000');
       expect(row.fired).toBe('9800.000');
       expect(row.goodTotal).toBe('9500.000');
       expect(row.broken).toBe('200.000');
       expect(row.rejects).toBe('100.000');
       expect(row.unexplained).toBe('200.000');
+      expect(row.sortingComplete).toBe(true);
+
+      // The two losses the single `unexplained` figure used to conflate:
+      // 10,000 − 9,800 went in the drying shed (normal), and 9,800 − 9,800
+      // came out of the kiln accounted for (no theft signal).
+      expect(row.preFiringLoss).toBe('200.000');
+      expect(row.postFiringLoss).toBe('0.000');
+    });
+
+    it('does not accuse an unsorted batch of losing everything', async () => {
+      // The defect: good/broken/rejects are all zero until sorting happens, so
+      // `green − (0+0+0)` reported every batch still in the kiln as 100 % loss
+      // on the anti-theft screen.
+      const open = await createBatch(fx.tokenA, {
+        siteId: siteA.id,
+        chamber: 'UNSORTED',
+        batchDate: '2026-05-02',
+      }).expect(201);
+      await making(fx.tokenA, open.body.data.id as string, {
+        entryDate: '2026-05-02',
+        greenBricks: '10000',
+      }).expect(201);
+
+      const res = await request(fx.app.getHttpServer())
+        .get('/api/v1/production/yield-variance')
+        .query({ from: '2026-05-01', to: '2026-05-31' })
+        .set('Authorization', `Bearer ${fx.tokenA}`)
+        .expect(200);
+
+      const row = (res.body.data as { groupLabel: string }[]).find((r) =>
+        r.groupLabel.startsWith('UNSORTED ·'),
+      ) as Record<string, unknown>;
+      expect(row.greenMoulded).toBe('10000.000');
+      expect(row.unexplained).toBeNull();
+      expect(row.postFiringLoss).toBeNull();
+      expect(row.sortingComplete).toBe(false);
+      expect(row.pendingSortCount).toBe(1);
+    });
+
+    it('keeps a group incomplete while any of its batches is unsorted', async () => {
+      const res = await request(fx.app.getHttpServer())
+        .get('/api/v1/production/yield-variance')
+        .query({ from: '2026-05-01', to: '2026-05-31', groupBy: 'chamber' })
+        .set('Authorization', `Bearer ${fx.tokenA}`)
+        .expect(200);
+
+      const row = (res.body.data as { chamber: string }[]).find((r) => r.chamber === 'UNSORTED') as Record<
+        string,
+        unknown
+      >;
+      expect(row.sortingComplete).toBe(false);
+      expect(row.unexplained).toBeNull();
+      expect(row.batchCount).toBe(1);
     });
 
     it('groups by Sardar when asked', async () => {
@@ -381,9 +440,38 @@ describe('Production (e2e)', () => {
         .query({ from: '2026-09-01', to: '2026-10-31', groupBy: 'sardar' })
         .set('Authorization', `Bearer ${fx.tokenA}`)
         .expect(200);
-      expect(res.body.data).toHaveLength(1);
-      expect(res.body.data[0].sardarPartyId).toBe(sardarA.id);
-      expect(res.body.data[0].groupLabel).toBe('Ramesh Sardar');
+      const named = (res.body.data as { sardarPartyId: string | null }[]).find(
+        (r) => r.sardarPartyId === sardarA.id,
+      ) as Record<string, unknown>;
+      expect(named).toBeDefined();
+      expect(named.groupLabel).toBe('Ramesh Sardar');
+    });
+
+    it('gives unattributed production its own bucket instead of dropping it', async () => {
+      // Batches moulded without a named Sardar used to vanish from the gang
+      // view, so the gang totals did not reconcile with the batch totals — and
+      // unattributed output is exactly where a loss would be parked.
+      const res = await request(fx.app.getHttpServer())
+        .get('/api/v1/production/yield-variance')
+        .query({ from: '2026-05-01', to: '2026-10-31', groupBy: 'sardar' })
+        .set('Authorization', `Bearer ${fx.tokenA}`)
+        .expect(200);
+
+      const unassigned = (res.body.data as { sardarPartyId: string | null }[]).find(
+        (r) => r.sardarPartyId === null,
+      ) as Record<string, unknown>;
+      expect(unassigned).toBeDefined();
+      expect(unassigned.groupLabel).toBe('No Sardar recorded');
+      expect(Number(unassigned.greenMoulded)).toBeGreaterThan(0);
+    });
+
+    it('refuses to show another company its yield', async () => {
+      const res = await request(fx.app.getHttpServer())
+        .get('/api/v1/production/yield-variance')
+        .query({ from: '2026-05-01', to: '2026-10-31' })
+        .set('Authorization', `Bearer ${fx.tokenB}`)
+        .expect(200);
+      expect(res.body.data).toHaveLength(0);
     });
   });
 
@@ -757,6 +845,232 @@ describe('Production (e2e)', () => {
         batchDate: '2026-09-08',
       }).expect(201);
       expect(a.body.data.id).not.toBe(b.body.data.id);
+    });
+
+    it('refuses a key longer than the column with a 400, not a 500', async () => {
+      // `idempotency_keys.key` is varchar(100). Without the length check the
+      // business write ran first and the insert then failed with 22001, so the
+      // caller got a 500 — and a queued mobile write retries a 500 forever.
+      const res = await postWithKey('/api/v1/production/batches', fx.tokenA, 'k'.repeat(101), {
+        siteId: siteA.id,
+        chamber: 'IDEM-LONG',
+        batchDate: '2026-09-09',
+      }).expect(400);
+      expect(res.body.error.message).toMatch(/Idempotency-Key/);
+
+      // The write must not have happened: a 400 the device gives up on has to
+      // mean nothing was created.
+      const list = await request(fx.app.getHttpServer())
+        .get('/api/v1/production/batches')
+        .query({ limit: 100 })
+        .set('Authorization', `Bearer ${fx.tokenA}`)
+        .expect(200);
+      expect((list.body.data as Array<{ chamber: string }>).some((b) => b.chamber === 'IDEM-LONG')).toBe(false);
+    });
+
+    it('accepts a key of exactly the maximum length', async () => {
+      const res = await postWithKey('/api/v1/production/batches', fx.tokenA, 'k'.repeat(100), {
+        siteId: siteA.id,
+        chamber: 'IDEM-MAX',
+        batchDate: '2026-09-10',
+      }).expect(201);
+      expect(res.body.data.chamber).toBe('IDEM-MAX');
+    });
+
+    it('creates one batch when eight identical requests arrive at once', async () => {
+      // SYN-01's whole correctness argument is the advisory lock in
+      // IdempotencyService. A device coming back on a flaky network resends the
+      // queue, and nothing makes those arrive one at a time. Mirrors the
+      // concurrency test ADR-027 rests on in stock.e2e-spec.
+      const key = '44444444-4444-4444-8444-444444444444';
+      const body = { siteId: siteA.id, chamber: 'IDEM-RACE', batchDate: '2026-09-11' };
+
+      const responses = await Promise.all(
+        Array.from({ length: 8 }, () => postWithKey('/api/v1/production/batches', fx.tokenA, key, body)),
+      );
+
+      expect(responses.map((r) => r.status)).toEqual(Array(8).fill(201));
+      const ids = new Set(responses.map((r) => r.body.data.id as string));
+      expect(ids.size).toBe(1);
+      // Every field, not merely the id: a replay is the stored response. Compared
+      // field by field because jsonb does not keep the key order it was given,
+      // so the replays come back with the same payload in a different order.
+      for (const r of responses) expect(r.body).toEqual(responses[0]!.body);
+
+      const rows = await fx.dataSource.query(
+        `SELECT count(*)::int AS n FROM "production_batches" WHERE "company_id" = $1 AND "chamber" = $2`,
+        [fx.companyA.id, 'IDEM-RACE'],
+      );
+      expect(rows[0].n).toBe(1);
+    });
+  });
+
+  // ------------------------------------------------------------------
+  // Repairs found by the P5.1 audit
+  // ------------------------------------------------------------------
+
+  describe('LEK-02 repairs', () => {
+    it('treats "no coal booked" as unknown, not as zero coal', async () => {
+      // A missing consumption row used to produce ratio "0.000", which is not a
+      // frugal kiln — and it dragged the median down for every other batch.
+      const open = await createBatch(fx.tokenA, {
+        siteId: siteA.id,
+        chamber: 'NOFUEL',
+        batchDate: '2026-06-10',
+      }).expect(201);
+      const id = open.body.data.id as string;
+      await making(fx.tokenA, id, { entryDate: '2026-06-10', greenBricks: '10000' }).expect(201);
+      await firing(fx.tokenA, id, { entryDate: '2026-06-11', firedBricks: '10000' }).expect(201);
+
+      const res = await request(fx.app.getHttpServer())
+        .get('/api/v1/production/fuel-variance')
+        .query({ from: '2026-06-01', to: '2026-06-30', itemId: coal.id })
+        .set('Authorization', `Bearer ${fx.tokenA}`)
+        .expect(200);
+
+      const row = (res.body.data as { groupLabel: string }[]).find((r) =>
+        r.groupLabel.startsWith('NOFUEL ·'),
+      ) as Record<string, unknown>;
+      expect(row.ratio).toBeNull();
+      expect(row.fuelRecorded).toBe(false);
+      expect(row.isOutlier).toBe(false);
+    });
+
+    it('does not flag an outlier from two rows, where the median is just their mean', async () => {
+      // With n=2 both rows are equidistant from the "median", so the flag was
+      // all-or-nothing: either both fire or neither does.
+      const seed = async (chamber: string, date: string, fired: string, coalQty: string) => {
+        const open = await createBatch(fx.tokenA, { siteId: siteA.id, chamber, batchDate: date }).expect(201);
+        const id = open.body.data.id as string;
+        await making(fx.tokenA, id, { entryDate: date, greenBricks: fired }).expect(201);
+        await firing(fx.tokenA, id, {
+          entryDate: date,
+          firedBricks: fired,
+          consumption: [{ itemId: coal.id, warehouseId: rawYardA.id, quantity: coalQty }],
+        }).expect(201);
+      };
+      // 100 vs 140 per 1,000 — a 40 % gap, which the old code flagged on BOTH.
+      await seed('TWO-A', '2026-08-05', '10000', '1000');
+      await seed('TWO-B', '2026-08-06', '10000', '1400');
+
+      const res = await request(fx.app.getHttpServer())
+        .get('/api/v1/production/fuel-variance')
+        .query({ from: '2026-08-01', to: '2026-08-31', itemId: coal.id })
+        .set('Authorization', `Bearer ${fx.tokenA}`)
+        .expect(200);
+
+      expect(res.body.data).toHaveLength(2);
+      expect((res.body.data as { isOutlier: boolean }[]).every((r) => !r.isOutlier)).toBe(true);
+    });
+
+    it('buckets fuel by the month it was burned, not the month the batch was loaded', async () => {
+      // Loaded 28 Jun, fired 3 Jul: the coal belongs to July. On batch_date it
+      // was filed under June and vanished from a July-only window.
+      const open = await createBatch(fx.tokenA, {
+        siteId: siteA.id,
+        chamber: 'SPAN',
+        batchDate: '2026-06-28',
+      }).expect(201);
+      const id = open.body.data.id as string;
+      await making(fx.tokenA, id, { entryDate: '2026-06-28', greenBricks: '10000' }).expect(201);
+      await firing(fx.tokenA, id, {
+        entryDate: '2026-07-03',
+        firedBricks: '10000',
+        consumption: [{ itemId: coal.id, warehouseId: rawYardA.id, quantity: '2000' }],
+      }).expect(201);
+
+      const march = await request(fx.app.getHttpServer())
+        .get('/api/v1/production/fuel-variance')
+        .query({ from: '2026-07-01', to: '2026-07-31', itemId: coal.id, groupBy: 'month' })
+        .set('Authorization', `Bearer ${fx.tokenA}`)
+        .expect(200);
+      expect(march.body.data).toHaveLength(1);
+      expect((march.body.data[0] as { periodMonth: string }).periodMonth).toBe('2026-07');
+      expect((march.body.data[0] as { fuelConsumed: string }).fuelConsumed).toBe('2000.000');
+
+      // June holds another batch legitimately (fired in June, no coal booked),
+      // so the point is narrower: SPAN's 2,000 kg must not be counted there.
+      const june = await request(fx.app.getHttpServer())
+        .get('/api/v1/production/fuel-variance')
+        .query({ from: '2026-06-01', to: '2026-06-30', itemId: coal.id, groupBy: 'month' })
+        .set('Authorization', `Bearer ${fx.tokenA}`)
+        .expect(200);
+      const juneFuel = (june.body.data as { fuelConsumed: string }[]).reduce(
+        (total, r) => total + Number(r.fuelConsumed),
+        0,
+      );
+      expect(juneFuel).toBe(0);
+    });
+  });
+
+  describe('future-dated production', () => {
+    it('refuses a batch dated after today', async () => {
+      const res = await createBatch(fx.tokenA, {
+        siteId: siteA.id,
+        chamber: 'FUTURE',
+        batchDate: '2099-01-01',
+      }).expect(422);
+      expect(res.body.error.code).toBe('PRODUCTION_DATE_IN_FUTURE');
+    });
+
+    it('refuses a stage dated after today, even one that moves no stock', async () => {
+      // Stock already refused future movements (ADR-028), but drying moves
+      // none — so this stage could carry a mistyped year straight into every
+      // report that buckets by date.
+      const open = await createBatch(fx.tokenA, {
+        siteId: siteA.id,
+        chamber: 'FUTURE-STAGE',
+        batchDate: '2026-05-03',
+      }).expect(201);
+      const id = open.body.data.id as string;
+      await making(fx.tokenA, id, { entryDate: '2026-05-03', greenBricks: '1000' }).expect(201);
+
+      const res = await request(fx.app.getHttpServer())
+        .post(`/api/v1/production/batches/${id}/drying`)
+        .set('Authorization', `Bearer ${fx.tokenA}`)
+        .send({ entryDate: '2099-01-01' })
+        .expect(422);
+      expect(res.body.error.code).toBe('PRODUCTION_DATE_IN_FUTURE');
+    });
+  });
+
+  describe('PRD-07 production report', () => {
+    it('reports good bricks by period, kiln and grade', async () => {
+      const res = await request(fx.app.getHttpServer())
+        .get('/api/v1/production/report')
+        .query({ from: '2026-09-01', to: '2026-10-31', groupBy: 'month' })
+        .set('Authorization', `Bearer ${fx.tokenA}`)
+        .expect(200);
+
+      const rows = res.body.data.rows as { grade: string; goodBricks: string; period: string }[];
+      // The first flow sorted 7,000 of one grade and 2,500 of the other.
+      const first = rows.find((r) => r.goodBricks === '7000.000');
+      const second = rows.find((r) => r.goodBricks === '2500.000');
+      expect(first).toBeDefined();
+      expect(second).toBeDefined();
+      expect(first!.period).toMatch(/^\d{4}-\d{2}$/);
+      expect(res.body.data.totals.goodBricks).toBe('9500.000');
+      expect(res.body.data.totals.batchCount).toBe(1);
+    });
+
+    it('narrows to one grade', async () => {
+      const res = await request(fx.app.getHttpServer())
+        .get('/api/v1/production/report')
+        .query({ from: '2026-09-01', to: '2026-10-31', brickTypeId: classOne.id })
+        .set('Authorization', `Bearer ${fx.tokenA}`)
+        .expect(200);
+      const rows = res.body.data.rows as { brickTypeId: string }[];
+      expect(rows.every((r) => r.brickTypeId === classOne.id)).toBe(true);
+    });
+
+    it('shows another company nothing', async () => {
+      const res = await request(fx.app.getHttpServer())
+        .get('/api/v1/production/report')
+        .query({ from: '2026-09-01', to: '2026-10-31' })
+        .set('Authorization', `Bearer ${fx.tokenB}`)
+        .expect(200);
+      expect(res.body.data.rows).toHaveLength(0);
+      expect(res.body.data.totals.goodBricks).toBe('0.000');
     });
   });
 });

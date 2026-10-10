@@ -5,6 +5,7 @@ import type { CreateCompanyDto, CreateFinancialYearDto, CreateSiteDto, UpdateCom
 import { AuditService } from '../audit/audit.service';
 import { ChartOfAccountsService } from '../../accounting/chart-of-accounts.service';
 import { MembershipService } from '../auth/membership.service';
+import { applySince, deltaWatermark } from '../../common/sync/delta-pull';
 import { RolesService } from '../auth/roles.service';
 import { Company } from './entities/company.entity';
 import { FinancialYear } from './entities/financial-year.entity';
@@ -170,26 +171,43 @@ export class CompanyService {
 
   /**
    * SYN-02 delta pull for the mobile kiln list. Returns the accessible kilns
-   * updated or deleted strictly after `since`, each row with a `deleted` flag
-   * so the mobile reconciles its local store.
+   * touched at or after `since`, each row with a `deleted` flag so the mobile
+   * reconciles its local store, plus the watermark it echoes back (ADR-034).
    */
   async accessibleSitesSince(
     companyId: string,
     userId: string,
     since: string,
-  ): Promise<Array<Site & { deleted: boolean }>> {
+  ): Promise<{ items: Array<Site & { deleted: boolean }>; meta: { nextSince: string } }> {
     const grantedIds = await this.membership.siteIdsFor(userId);
-    const qb = this.siteRepo
-      .createQueryBuilder('s')
-      .where('s.company_id = :companyId', { companyId })
-      .withDeleted()
-      .andWhere('(s.updated_at > :since OR s.deleted_at > :since)', { since })
-      .orderBy('s.name', 'ASC');
+    const qb = this.siteRepo.createQueryBuilder('s').where('s.company_id = :companyId', { companyId });
+    applySince(qb, 's', since);
     if (grantedIds.length > 0) {
       qb.andWhere('s.id IN (:...grantedIds)', { grantedIds });
     }
     const rows = await qb.getMany();
-    return rows.map((s) => ({ ...s, deleted: s.deletedAt != null }));
+    const items = rows.map((s) => ({ ...s, deleted: s.deletedAt != null }));
+
+    // Revoking a grant does not touch the kiln row, so the window above cannot
+    // see it — the kiln would simply stop appearing and the device would keep
+    // showing it and keep taking production against a kiln the user may no
+    // longer use. Fetch the revocations separately and report them as what they
+    // are from this device's point of view: the kiln is gone.
+    // Only meaningful while the user still holds some grant, because no grants
+    // at all means "every kiln of the company" (see `accessibleSites`).
+    if (grantedIds.length > 0) {
+      const revokedIds = (await this.membership.siteIdsRevokedSince(userId, since)).filter(
+        (id) => !grantedIds.includes(id),
+      );
+      const alreadySent = new Set(items.map((s) => s.id));
+      const missing = revokedIds.filter((id) => !alreadySent.has(id));
+      if (missing.length > 0) {
+        const revoked = await this.siteRepo.find({ where: { companyId, id: In(missing) }, withDeleted: true });
+        items.push(...revoked.map((s) => ({ ...s, deleted: true })));
+      }
+    }
+
+    return { items, meta: { nextSince: deltaWatermark(since, rows, false) } };
   }
 
   // ── Financial years (ADM-04) ────────────────────────────────────────────────

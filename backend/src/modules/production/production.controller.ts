@@ -18,6 +18,8 @@ import {
   type ProductionMakingDto,
   type ProductionSortingDto,
   type YieldVarianceQueryDto,
+  productionReportQuerySchema,
+  type ProductionReportQueryDto,
 } from '@brics/shared';
 import {
   CurrentCompany,
@@ -148,5 +150,15 @@ export class ProductionController {
     @Query(new ZodValidationPipe(fuelVarianceQuerySchema)) query: FuelVarianceQueryDto,
   ) {
     return this.reports.fuelVariance(companyId, query);
+  }
+
+  @Get('report')
+  @RequirePermissions(PERMISSIONS.PRODUCTION_VIEW)
+  @ApiOperation({ summary: 'PRD-07 — production by day / month / year, per kiln and grade' })
+  async productionReport(
+    @CurrentCompany() companyId: string,
+    @Query(new ZodValidationPipe(productionReportQuerySchema)) query: ProductionReportQueryDto,
+  ) {
+    return this.reports.productionReport(companyId, query);
   }
 }

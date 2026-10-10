@@ -11,7 +11,7 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 101 | 24 | 10 | 1 | 66 | 0 |
+| CP1 MVP | 101 | 24 | 11 | 1 | 65 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 
 **CP1 done: 24 %** (24 of 101 features ✅)
@@ -20,10 +20,10 @@
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
-| Backend | 97 | 33 | 1 | 0 | 0 | 63 |
+| Backend | 97 | 34 | 1 | 0 | 0 | 62 |
 | Web | 94 | 25 | 0 | 0 | 0 | 69 |
 | Mobile | 11 | 0 | 0 | 0 | 0 | 11 |
-| Tests | 101 | 34 | 0 | 0 | 0 | 67 |
+| Tests | 101 | 35 | 0 | 0 | 0 | 66 |
 
 ## Client Phase 1 — MVP
 
@@ -62,7 +62,7 @@
 | PRD-04 | Fuel/raw material consumption (coal, soil) reduces raw stock | CP1 | P5 | ✅ | ⬜ | — | ✅ | 🟨 | P5.1b — BE done; stage-same-tx OUT via StockService; web in P5.2 |
 | PRD-05 | Sorted good bricks enter finished stock by grade; wastage recorded | CP1 | P5 | ✅ | ⬜ | — | ✅ | 🟨 | P5.1a — Sort → stock IN per grade, in the same transaction; broken + rejects are counts only |
 | PRD-06 | Production entry on mobile (offline) | CP1 | P5 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |  |
-| PRD-07 | Production report: day / month / year by kiln and grade | CP1 | P5 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| PRD-07 | Production report: day / month / year by kiln and grade | CP1 | P5 | ✅ | ⬜ | — | ✅ | 🟨 | P5.1 repair — BE report + tests; web in P5.2 |
 
 ### M04 Labour & Sardar Engine (SOW #4)
 

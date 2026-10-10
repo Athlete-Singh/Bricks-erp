@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, In, Repository } from 'typeorm';
+import { EntityManager, In, IsNull, Repository } from 'typeorm';
 import { UserCompany } from './entities/user-company.entity';
 import { UserSite } from './entities/user-site.entity';
 
@@ -59,15 +59,40 @@ export class MembershipService {
 
   /** Site ids the user is explicitly granted; empty means "all sites of the company". */
   async siteIdsFor(userId: string): Promise<string[]> {
-    const rows = await this.userSiteRepo.find({ where: { userId } });
+    const rows = await this.userSiteRepo.find({ where: { userId, revokedAt: IsNull() } });
     return rows.map((r) => r.siteId);
   }
 
+  /** Grants taken away at or after `since` — the kiln delta turns these into tombstones. */
+  async siteIdsRevokedSince(userId: string, since: string): Promise<string[]> {
+    const rows = await this.userSiteRepo
+      .createQueryBuilder('us')
+      .where('us.user_id = :userId', { userId })
+      .andWhere('us.revoked_at >= :since', { since })
+      .getMany();
+    return rows.map((r) => r.siteId);
+  }
+
+  /**
+   * A grant that is dropped is stamped, not deleted: the device only ever learns
+   * a kiln is gone from a tombstone, and a deleted row leaves nothing to build
+   * one from. Re-granting revives the same row, so the `(user, site)` unique
+   * key still holds.
+   */
   async replaceSiteAccess(userId: string, siteIds: string[], manager?: EntityManager): Promise<void> {
     const repo = manager ? manager.getRepository(UserSite) : this.userSiteRepo;
-    await repo.delete({ userId });
-    if (siteIds.length === 0) return;
-    await repo.save(siteIds.map((siteId) => repo.create({ userId, siteId })));
+    const existing = await repo.find({ where: { userId } });
+    const wanted = new Set(siteIds);
+
+    const toRevoke = existing.filter((r) => r.revokedAt === null && !wanted.has(r.siteId)).map((r) => r.id);
+    if (toRevoke.length > 0) await repo.update({ id: In(toRevoke) }, { revokedAt: new Date() });
+
+    const toRestore = existing.filter((r) => r.revokedAt !== null && wanted.has(r.siteId)).map((r) => r.id);
+    if (toRestore.length > 0) await repo.update({ id: In(toRestore) }, { revokedAt: null });
+
+    const known = new Set(existing.map((r) => r.siteId));
+    const toAdd = siteIds.filter((siteId) => !known.has(siteId));
+    if (toAdd.length > 0) await repo.save(toAdd.map((siteId) => repo.create({ userId, siteId })));
   }
 
   async userIdsInCompany(companyId: string): Promise<string[]> {
