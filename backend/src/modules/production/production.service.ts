@@ -5,6 +5,7 @@ import { DataSource, EntityManager, In, Repository } from 'typeorm';
 import type {
   ProductionBatchCreateDto,
   ProductionBatchQueryDto,
+  ProductionConsumptionInputDto,
   ProductionDryingDto,
   ProductionFiringDto,
   ProductionMakingDto,
@@ -17,8 +18,10 @@ import { Site } from '../company/entities/site.entity';
 import { AuditService } from '../audit/audit.service';
 import { Party } from '../parties/entities/party.entity';
 import { BrickType } from '../inventory/entities/brick-type.entity';
+import { Item } from '../inventory/entities/item.entity';
 import { StockService } from '../../stock/stock.service';
 import { ProductionBatch } from './entities/production-batch.entity';
+import { ProductionConsumption } from './entities/production-consumption.entity';
 import { ProductionEntry } from './entities/production-entry.entity';
 import { ProductionSortingOutput } from './entities/production-sorting-output.entity';
 
@@ -129,7 +132,12 @@ export class ProductionService {
   async getBatch(
     companyId: string,
     batchId: string,
-  ): Promise<{ batch: ProductionBatch; entries: ProductionEntry[]; outputs: ProductionSortingOutput[] }> {
+  ): Promise<{
+    batch: ProductionBatch;
+    entries: ProductionEntry[];
+    outputs: ProductionSortingOutput[];
+    consumptions: ProductionConsumption[];
+  }> {
     const batch = await this.batchRepo.findOne({ where: { id: batchId, companyId } });
     if (!batch) throw new NotFoundException('That batch does not exist');
 
@@ -145,7 +153,19 @@ export class ProductionService {
           .find({ where: { entryId: sortingEntry.id, companyId } })
       : [];
 
-    return { batch, entries, outputs };
+    const entryIds = entries.map((e) => e.id);
+    const consumptions =
+      entryIds.length > 0
+        ? await this.dataSource
+            .getRepository(ProductionConsumption)
+            .createQueryBuilder('c')
+            .where('c.company_id = :companyId', { companyId })
+            .andWhere('c.deleted_at IS NULL')
+            .andWhere('c.entry_id IN (:...entryIds)', { entryIds })
+            .getMany()
+        : [];
+
+    return { batch, entries, outputs, consumptions };
   }
 
   // ---- Stage entries --------------------------------------------------------
@@ -166,6 +186,8 @@ export class ProductionService {
         );
       }
     }
+
+    this.assertConsumptionShape(dto.consumption);
 
     return this.dataSource.transaction(async (manager) => {
       const batch = await this.loadBatchForWrite(manager, companyId, batchId);
@@ -189,6 +211,15 @@ export class ProductionService {
         }),
       );
 
+      const consumptions = await this.recordConsumptions(manager, {
+        companyId,
+        userId,
+        batch,
+        entry,
+        inputs: dto.consumption,
+        stageLabel: 'making',
+      });
+
       await this.audit.record(
         {
           companyId,
@@ -196,7 +227,16 @@ export class ProductionService {
           action: 'CREATE',
           entityName: 'production_entries',
           entityId: entry.id,
-          after: { batchId: batch.id, stage: 'making', greenBricks: entry.greenBricks },
+          after: {
+            batchId: batch.id,
+            stage: 'making',
+            greenBricks: entry.greenBricks,
+            consumption: consumptions.map((c) => ({
+              itemId: c.itemId,
+              warehouseId: c.warehouseId,
+              quantity: c.quantity,
+            })),
+          },
         },
         manager,
       );
@@ -255,6 +295,8 @@ export class ProductionService {
     batchId: string,
     dto: ProductionFiringDto,
   ): Promise<ProductionEntry> {
+    this.assertConsumptionShape(dto.consumption);
+
     return this.dataSource.transaction(async (manager) => {
       const batch = await this.loadBatchForWrite(manager, companyId, batchId);
       await this.assertStageOrder(manager, batch.id, 'firing');
@@ -277,6 +319,15 @@ export class ProductionService {
         }),
       );
 
+      const consumptions = await this.recordConsumptions(manager, {
+        companyId,
+        userId,
+        batch,
+        entry,
+        inputs: dto.consumption,
+        stageLabel: 'firing',
+      });
+
       // open → firing. Sorting flips it to 'sorted'.
       if (batch.status === 'open') {
         batch.status = 'firing';
@@ -291,7 +342,16 @@ export class ProductionService {
           action: 'CREATE',
           entityName: 'production_entries',
           entityId: entry.id,
-          after: { batchId: batch.id, stage: 'firing', firedBricks: entry.firedBricks },
+          after: {
+            batchId: batch.id,
+            stage: 'firing',
+            firedBricks: entry.firedBricks,
+            consumption: consumptions.map((c) => ({
+              itemId: c.itemId,
+              warehouseId: c.warehouseId,
+              quantity: c.quantity,
+            })),
+          },
         },
         manager,
       );
@@ -445,6 +505,89 @@ export class ProductionService {
       throw new BusinessRuleException('PRODUCTION_BATCH_CLOSED', 'This batch is closed');
     }
     return batch;
+  }
+
+  /**
+   * PRD-04 — write one stock OUT movement per consumption input (in the
+   * caller's transaction) and a matching `production_consumptions` row linking
+   * the stage entry to it. If any row fails — missing item, wrong tenant,
+   * wrong category, insufficient stock — the whole stage rolls back; a stage
+   * that saved cannot leave the yard pretending nothing moved.
+   */
+  private async recordConsumptions(
+    manager: EntityManager,
+    args: {
+      companyId: string;
+      userId: string;
+      batch: ProductionBatch;
+      entry: ProductionEntry;
+      inputs: ProductionConsumptionInputDto[];
+      stageLabel: string;
+    },
+  ): Promise<ProductionConsumption[]> {
+    const rows: ProductionConsumption[] = [];
+    for (const input of args.inputs) {
+      const item = await manager.findOne(Item, { where: { id: input.itemId, companyId: args.companyId } });
+      if (!item) {
+        throw new BusinessRuleException(
+          'PRODUCTION_CONSUMPTION_ITEM_NOT_FOUND',
+          'That raw material does not exist in this company',
+        );
+      }
+      if (!item.isActive) {
+        throw new BusinessRuleException('PRODUCTION_CONSUMPTION_ITEM_INACTIVE', `${item.name} is no longer in use`);
+      }
+      if (item.category !== 'raw_material') {
+        throw new BusinessRuleException(
+          'PRODUCTION_CONSUMPTION_ITEM_INVALID',
+          `${item.name} is not a raw material — only raw materials are consumed at a stage`,
+        );
+      }
+
+      const movement = await this.stock.record(manager, {
+        companyId: args.companyId,
+        userId: args.userId,
+        warehouseId: input.warehouseId,
+        itemId: input.itemId,
+        movementType: 'production',
+        direction: 'out',
+        quantity: toQuantity(input.quantity),
+        movementDate: args.entry.entryDate,
+        sourceType: 'production_batch',
+        sourceId: args.batch.id,
+        notes: `Consumed at ${args.stageLabel} of ${args.batch.chamber} on ${args.batch.batchDate}`,
+      });
+
+      const row = await manager.save(
+        manager.create(ProductionConsumption, {
+          companyId: args.companyId,
+          createdBy: args.userId,
+          updatedBy: args.userId,
+          entryId: args.entry.id,
+          itemId: input.itemId,
+          warehouseId: input.warehouseId,
+          quantity: toQuantity(input.quantity),
+          stockMovementId: movement.id,
+        }),
+      );
+      rows.push(row);
+    }
+    return rows;
+  }
+
+  /** The partial unique in the DB stops duplicates eventually; this fails loudly first. */
+  private assertConsumptionShape(inputs: ProductionConsumptionInputDto[]): void {
+    const seen = new Set<string>();
+    for (const row of inputs) {
+      const key = `${row.itemId}|${row.warehouseId}`;
+      if (seen.has(key)) {
+        throw new BusinessRuleException(
+          'PRODUCTION_CONSUMPTION_DUPLICATE',
+          'The same item from the same warehouse may appear only once per stage — combine the quantities',
+        );
+      }
+      seen.add(key);
+    }
   }
 
   private async assertStageOrder(manager: EntityManager, batchId: string, stage: ProductionStage): Promise<void> {

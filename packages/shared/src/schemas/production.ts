@@ -56,6 +56,18 @@ export type ProductionBatchQueryDto = z.infer<typeof productionBatchQuerySchema>
 export type ProductionBatchQueryInput = z.input<typeof productionBatchQuerySchema>;
 
 /**
+ * PRD-04 — raw material consumed during a stage. Soil at making, coal at
+ * firing. Each row causes a stock OUT in the same transaction as the stage
+ * entry, so a stage that saved cannot leave stock untouched.
+ */
+export const productionConsumptionInputSchema = z.object({
+  itemId: uuid,
+  warehouseId: uuid,
+  quantity,
+});
+export type ProductionConsumptionInputDto = z.infer<typeof productionConsumptionInputSchema>;
+
+/**
  * PRD-03 making — the Sardar's gang moulds green bricks. Sardar is optional
  * only because the parties catalogue may not have the right one on the day;
  * when LAB-01 lands this becomes a strict FK into labour_groups through its
@@ -65,6 +77,8 @@ export const productionMakingSchema = z.object({
   entryDate: isoDate,
   greenBricks: quantity,
   sardarPartyId: uuid.nullish(),
+  /** PRD-04 — soil (or other raw material) consumed to mould this batch. */
+  consumption: z.array(productionConsumptionInputSchema).default([]),
   notes: z.string().max(500).nullish(),
 });
 export type ProductionMakingDto = z.infer<typeof productionMakingSchema>;
@@ -86,6 +100,8 @@ export type ProductionDryingInput = z.input<typeof productionDryingSchema>;
 export const productionFiringSchema = z.object({
   entryDate: isoDate,
   firedBricks: quantity,
+  /** PRD-04 — coal (or other fuel) consumed to fire this batch. */
+  consumption: z.array(productionConsumptionInputSchema).default([]),
   notes: z.string().max(500).nullish(),
 });
 export type ProductionFiringDto = z.infer<typeof productionFiringSchema>;
@@ -119,6 +135,26 @@ export type ProductionSortingInput = z.input<typeof productionSortingSchema>;
  * the "unexplained" column has a stable meaning: a batch, a chamber across
  * dates, or a Sardar gang's output.
  */
+/**
+ * LEK-02 — coal (or any named fuel item) consumption per 1,000 bricks fired.
+ * The caller names the fuel item explicitly: no `is_fuel` flag on items, so a
+ * kiln using coal today and petcoke tomorrow can run the same report twice.
+ * Grouping chooses the comparison frame — batches, kilns or months — and the
+ * outlier flag is relative to the median within that frame.
+ */
+export const FUEL_VARIANCE_GROUP_BYS = ['batch', 'kiln', 'month'] as const;
+export type FuelVarianceGroupBy = (typeof FUEL_VARIANCE_GROUP_BYS)[number];
+
+export const fuelVarianceQuerySchema = z.object({
+  from: isoDate,
+  to: isoDate,
+  itemId: uuid,
+  siteId: uuid.optional(),
+  groupBy: z.enum(FUEL_VARIANCE_GROUP_BYS).default('batch'),
+});
+export type FuelVarianceQueryDto = z.infer<typeof fuelVarianceQuerySchema>;
+export type FuelVarianceQueryInput = z.input<typeof fuelVarianceQuerySchema>;
+
 export const yieldVarianceQuerySchema = z.object({
   from: isoDate,
   to: isoDate,

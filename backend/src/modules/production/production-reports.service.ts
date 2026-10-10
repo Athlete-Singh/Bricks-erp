@@ -2,11 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import Decimal from 'decimal.js';
 import { Repository } from 'typeorm';
-import type { YieldVarianceQueryDto } from '@brics/shared';
+import type { FuelVarianceQueryDto, YieldVarianceQueryDto } from '@brics/shared';
+import { Item } from '../inventory/entities/item.entity';
 import { Party } from '../parties/entities/party.entity';
+import { Site } from '../company/entities/site.entity';
 import { ProductionBatch } from './entities/production-batch.entity';
+import { ProductionConsumption } from './entities/production-consumption.entity';
 import { ProductionEntry } from './entities/production-entry.entity';
 import { ProductionSortingOutput } from './entities/production-sorting-output.entity';
+import { BusinessRuleException } from '../../common/exceptions/business-rule.exception';
 
 Decimal.set({ precision: 30, rounding: Decimal.ROUND_HALF_UP });
 
@@ -39,6 +43,25 @@ export interface YieldVarianceRow {
  * groupBy=chamber (a chamber's cumulative yield across dates), or
  * groupBy=sardar (a gang's total output, which is the labour-leakage view).
  */
+export interface FuelVarianceRow {
+  /** The grouping key — a batchId, a siteId, or a `YYYY-MM` string. */
+  groupId: string;
+  groupLabel: string;
+  siteId: string | null;
+  chamber: string | null;
+  periodMonth: string | null;
+  firedTotal: string;
+  fuelConsumed: string;
+  /** `fuelConsumed / (firedTotal / 1000)`, or null when no bricks were fired. */
+  ratio: string | null;
+  /**
+   * True when `|ratio − median| / median > 0.15` within the result set — a
+   * batch using 15 % more or less fuel per 1,000 bricks than the median
+   * batch in the window, which is far more than normal day-to-day drift.
+   */
+  isOutlier: boolean;
+}
+
 @Injectable()
 export class ProductionReportsService {
   constructor(
@@ -46,6 +69,10 @@ export class ProductionReportsService {
     @InjectRepository(ProductionEntry) private readonly entryRepo: Repository<ProductionEntry>,
     @InjectRepository(ProductionSortingOutput)
     private readonly outputRepo: Repository<ProductionSortingOutput>,
+    @InjectRepository(ProductionConsumption)
+    private readonly consumptionRepo: Repository<ProductionConsumption>,
+    @InjectRepository(Item) private readonly itemRepo: Repository<Item>,
+    @InjectRepository(Site) private readonly siteRepo: Repository<Site>,
     @InjectRepository(Party) private readonly partyRepo: Repository<Party>,
   ) {}
 
@@ -158,6 +185,191 @@ export class ProductionReportsService {
         label: sardarName.get(sample.making!.sardarPartyId!) ?? '(unknown Sardar)',
       }),
     );
+  }
+
+  /**
+   * LEK-02 — fuel consumed per 1,000 bricks fired, within one date window,
+   * for one explicitly-named fuel item. Grouping chooses the comparison frame:
+   * `batch` compares every batch, `kiln` sums per site, `month` sums per
+   * calendar month. The outlier flag is the median within the frame — a
+   * threshold on the mean would be pulled around by the outlier itself.
+   */
+  async fuelVariance(companyId: string, query: FuelVarianceQueryDto): Promise<FuelVarianceRow[]> {
+    const item = await this.itemRepo.findOne({ where: { id: query.itemId, companyId } });
+    if (!item) {
+      throw new BusinessRuleException(
+        'PRODUCTION_FUEL_ITEM_NOT_FOUND',
+        'That fuel item does not exist in this company',
+      );
+    }
+
+    const batchFilter = this.batchRepo
+      .createQueryBuilder('b')
+      .where('b.company_id = :companyId', { companyId })
+      .andWhere('b.deleted_at IS NULL')
+      .andWhere('b.batch_date BETWEEN :from AND :to', { from: query.from, to: query.to });
+    if (query.siteId) batchFilter.andWhere('b.site_id = :siteId', { siteId: query.siteId });
+    const batches = await batchFilter.getMany();
+    if (batches.length === 0) return [];
+    const batchIds = batches.map((b) => b.id);
+
+    // Firing stage entries carry the fired count. A batch that was opened but
+    // never fired has nothing to show here, so it drops out of the join below.
+    const firingEntries = await this.entryRepo
+      .createQueryBuilder('e')
+      .where('e.company_id = :companyId', { companyId })
+      .andWhere('e.deleted_at IS NULL')
+      .andWhere('e.stage = :stage', { stage: 'firing' })
+      .andWhere('e.batch_id IN (:...batchIds)', { batchIds })
+      .getMany();
+    if (firingEntries.length === 0) return [];
+    const firingEntryIds = firingEntries.map((e) => e.id);
+    const firingByBatch = new Map(firingEntries.map((e) => [e.batchId, e]));
+
+    const consumptionRows = await this.consumptionRepo
+      .createQueryBuilder('c')
+      .where('c.company_id = :companyId', { companyId })
+      .andWhere('c.deleted_at IS NULL')
+      .andWhere('c.item_id = :itemId', { itemId: query.itemId })
+      .andWhere('c.entry_id IN (:...entryIds)', { entryIds: firingEntryIds })
+      .select(['c.entry_id as "entryId"', 'SUM(c.quantity) as "quantity"'])
+      .groupBy('c.entry_id')
+      .getRawMany<{ entryId: string; quantity: string }>();
+    const fuelByEntry = new Map(consumptionRows.map((r) => [r.entryId, r.quantity ?? '0']));
+
+    // One record per batch, built from the firing entry.
+    const perBatch = batches
+      .map((batch) => {
+        const firing = firingByBatch.get(batch.id);
+        if (!firing) return null;
+        const fired = new Decimal(firing.firedBricks ?? 0);
+        const fuel = new Decimal(fuelByEntry.get(firing.id) ?? 0);
+        return { batch, fired, fuel };
+      })
+      .filter((row): row is { batch: ProductionBatch; fired: Decimal; fuel: Decimal } => row !== null);
+
+    // Site names, for the kiln grouping's label.
+    const siteIds = Array.from(new Set(perBatch.map((r) => r.batch.siteId)));
+    const sites = siteIds.length
+      ? await this.siteRepo
+          .createQueryBuilder('s')
+          .where('s.company_id = :companyId', { companyId })
+          .andWhere('s.id IN (:...ids)', { ids: siteIds })
+          .getMany()
+      : [];
+    const siteName = new Map(sites.map((s) => [s.id, s.name]));
+
+    let rows: FuelVarianceRow[];
+    if (query.groupBy === 'batch') {
+      rows = perBatch.map((r) => this.fuelRowForBatch(r));
+    } else if (query.groupBy === 'kiln') {
+      rows = this.aggregateFuel(
+        perBatch,
+        (r) => r.batch.siteId,
+        (sample) => ({
+          siteId: sample.batch.siteId,
+          chamber: null,
+          periodMonth: null,
+          label: siteName.get(sample.batch.siteId) ?? '(unknown kiln)',
+        }),
+      );
+    } else {
+      // 'month' — YYYY-MM from batch_date.
+      rows = this.aggregateFuel(
+        perBatch,
+        (r) => r.batch.batchDate.slice(0, 7),
+        (sample) => ({
+          siteId: null,
+          chamber: null,
+          periodMonth: sample.batch.batchDate.slice(0, 7),
+          label: sample.batch.batchDate.slice(0, 7),
+        }),
+      );
+    }
+
+    this.flagFuelOutliers(rows);
+    return rows;
+  }
+
+  private fuelRowForBatch(row: { batch: ProductionBatch; fired: Decimal; fuel: Decimal }): FuelVarianceRow {
+    const ratio = row.fired.isZero() ? null : row.fuel.div(row.fired).mul(1000).toFixed(3);
+    return {
+      groupId: row.batch.id,
+      groupLabel: `${row.batch.chamber} · ${row.batch.batchDate}`,
+      siteId: row.batch.siteId,
+      chamber: row.batch.chamber,
+      periodMonth: null,
+      firedTotal: row.fired.toFixed(3),
+      fuelConsumed: row.fuel.toFixed(3),
+      ratio,
+      isOutlier: false,
+    };
+  }
+
+  private aggregateFuel<K extends string>(
+    rows: Array<{ batch: ProductionBatch; fired: Decimal; fuel: Decimal }>,
+    keyOf: (r: { batch: ProductionBatch; fired: Decimal; fuel: Decimal }) => K,
+    labelFrom: (sample: { batch: ProductionBatch; fired: Decimal; fuel: Decimal }) => {
+      siteId: string | null;
+      chamber: string | null;
+      periodMonth: string | null;
+      label: string;
+    },
+  ): FuelVarianceRow[] {
+    const buckets = new Map<
+      K,
+      { sample: { batch: ProductionBatch; fired: Decimal; fuel: Decimal }; fired: Decimal; fuel: Decimal }
+    >();
+    for (const row of rows) {
+      const key = keyOf(row);
+      let bucket = buckets.get(key);
+      if (!bucket) {
+        bucket = { sample: row, fired: new Decimal(0), fuel: new Decimal(0) };
+        buckets.set(key, bucket);
+      }
+      bucket.fired = bucket.fired.plus(row.fired);
+      bucket.fuel = bucket.fuel.plus(row.fuel);
+    }
+    const out: FuelVarianceRow[] = [];
+    for (const [key, b] of buckets) {
+      const label = labelFrom(b.sample);
+      const ratio = b.fired.isZero() ? null : b.fuel.div(b.fired).mul(1000).toFixed(3);
+      out.push({
+        groupId: String(key),
+        groupLabel: label.label,
+        siteId: label.siteId,
+        chamber: label.chamber,
+        periodMonth: label.periodMonth,
+        firedTotal: b.fired.toFixed(3),
+        fuelConsumed: b.fuel.toFixed(3),
+        ratio,
+        isOutlier: false,
+      });
+    }
+    return out;
+  }
+
+  /** ±15 % from the median ratio. Median not mean, so the outlier can't skew its own threshold. */
+  private flagFuelOutliers(rows: FuelVarianceRow[]): void {
+    const ratios = rows
+      .map((r) => (r.ratio == null ? null : new Decimal(r.ratio)))
+      .filter((d): d is Decimal => d !== null)
+      .sort((a, b) => a.comparedTo(b));
+    if (ratios.length < 2) return;
+
+    const mid = Math.floor(ratios.length / 2);
+    const lower = ratios[mid - 1]!;
+    const upper = ratios[mid]!;
+    const median = ratios.length % 2 === 0 ? lower.plus(upper).div(2) : upper;
+    if (median.isZero()) return;
+
+    const threshold = new Decimal('0.15');
+    for (const row of rows) {
+      if (row.ratio == null) continue;
+      const r = new Decimal(row.ratio);
+      const drift = r.minus(median).abs().div(median);
+      if (drift.greaterThan(threshold)) row.isOutlier = true;
+    }
   }
 
   private rowForBatch(row: {

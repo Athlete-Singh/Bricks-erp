@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query, UseGuards } f
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   PERMISSIONS,
+  fuelVarianceQuerySchema,
   productionBatchCreateSchema,
   productionBatchQuerySchema,
   productionDryingSchema,
@@ -9,6 +10,7 @@ import {
   productionMakingSchema,
   productionSortingSchema,
   yieldVarianceQuerySchema,
+  type FuelVarianceQueryDto,
   type ProductionBatchCreateDto,
   type ProductionBatchQueryDto,
   type ProductionDryingDto,
@@ -123,5 +125,17 @@ export class ProductionController {
     @Query(new ZodValidationPipe(yieldVarianceQuerySchema)) query: YieldVarianceQueryDto,
   ) {
     return this.reports.yieldVariance(companyId, query);
+  }
+
+  @Get('fuel-variance')
+  @RequirePermissions(PERMISSIONS.PRODUCTION_VIEW)
+  @ApiOperation({
+    summary: 'LEK-02 — fuel per 1,000 bricks fired, grouped by batch / kiln / month, with outliers flagged',
+  })
+  async fuelVariance(
+    @CurrentCompany() companyId: string,
+    @Query(new ZodValidationPipe(fuelVarianceQuerySchema)) query: FuelVarianceQueryDto,
+  ) {
+    return this.reports.fuelVariance(companyId, query);
   }
 }
