@@ -244,7 +244,10 @@ The P track is never blocked by the M track.
 | P5 | P5.2 | Web production entry + the two variance reports | ✅ |
 | P6 | P6.1 | Labour backend + **LEK-03 live advance exposure, with the warning at advance entry** | ✅ |
 | P6 | P6.2 | Web attendance, wages, advances, settlement + exposure screen | ✅ |
-| P7 | P7.1 / P7.2 | Purchases backend / web (PO → GRN → bill → payment) | ⬜ |
+| P7 | P7.1a | **Backend: PO + GRN** → stock IN through `StockService` (PUR-01, PUR-02, INV-05) | ⬜ |
+| P7 | P7.1b | Backend: supplier bill with input GST + payment, bill-wise (PUR-03, PUR-04, GST-03) | ⬜ |
+| P7 | P7.1c | Backend: purchase return / debit note + payables ageing (PUR-05, PUR-06) | ⬜ |
+| P7 | P7.2 | Web: purchases screens — PO, GRN, bills, payments, ageing | ⬜ |
 | P8 | P8.1 / P8.2 | Sales & GST backend (+ invoice PDF) / web | ⬜ |
 | P9 | P9.1 | Dispatch & transport backend + **LEK-04 gate reconciliation** | ⬜ |
 | P9 | P9.2 | Web dispatch, trips, vehicle profitability + gate report | ⬜ |
@@ -296,6 +299,9 @@ A1 banking/accounting adv · A2 adv GST (if approved) · A3 profitability/leakag
 
 ## Splits recorded
 - **P5.1 → P5.1a + P5.1b + P5.1c** (2026-10-09). Batches + stages + sort-to-stock + LEK-01 go first (one session's worth, and the sort-into-stock tx is the one piece worth reviewing alone); P5.1b adds coal/soil consumption + LEK-02; P5.1c adds SYN-01 idempotency + SYN-02 delta pull. **P5.1 is not ✅ until all three ship** — see exit criteria.
+- **P7.1 → P7.1a + P7.1b + P7.1c** (2026-10-12). Seven features and two money paths (stock and ledger) is more than
+  one session. GRN moves quantity only; value enters with the bill — ACCOUNTING_RULES is explicit about that, so the
+  two are separate steps rather than one.
 - **P4.1 → P4.1a + P4.1b** (2026-10-09). The ledger and its reader are each a session, the same way `PostingService`
   (P2.1b) and the books (P2.1c) were split.
 - **P3.1 → P3.1a + P3.1b + P3.1c** (2026-10-09). Nine master tables is three sessions. Parties go first and alone because

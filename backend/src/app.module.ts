@@ -13,6 +13,7 @@ import { AuditModule } from './modules/audit/audit.module';
 import { IdempotencyModule } from './common/idempotency/idempotency.module';
 import { AccountingModule } from './accounting/accounting.module';
 import { StockModule } from './stock/stock.module';
+import { PurchasesModule } from './modules/purchases/purchases.module';
 import { PartyModule } from './modules/parties/party.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { TransportModule } from './modules/transport/transport.module';
@@ -52,6 +53,7 @@ import { ProductionModule } from './modules/production/production.module';
     AuditModule,
     AccountingModule,
     StockModule,
+    PurchasesModule,
     PartyModule,
     InventoryModule,
     TransportModule,

@@ -23,6 +23,8 @@ export const PERMISSIONS = {
   TAXES_MANAGE: 'taxes.manage',
   LABOUR_VIEW: 'labour.view',
   LABOUR_MANAGE: 'labour.manage',
+  PURCHASES_VIEW: 'purchases.view',
+  PURCHASES_MANAGE: 'purchases.manage',
   PRODUCTION_VIEW: 'production.view',
   PRODUCTION_MANAGE: 'production.manage',
 } as const;
@@ -141,6 +143,18 @@ export const PERMISSION_CATALOGUE: readonly PermissionDefinition[] = [
     description: 'Create and edit labour masters',
   },
   {
+    code: PERMISSIONS.PURCHASES_VIEW,
+    name: 'View purchases',
+    module: 'purchases',
+    description: 'Read purchase orders, goods receipts, supplier bills and payables',
+  },
+  {
+    code: PERMISSIONS.PURCHASES_MANAGE,
+    name: 'Manage purchases',
+    module: 'purchases',
+    description: 'Raise purchase orders, receive goods, enter supplier bills and pay them',
+  },
+  {
     code: PERMISSIONS.PRODUCTION_VIEW,
     name: 'View production',
     module: 'production',
@@ -192,6 +206,8 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.LABOUR_MANAGE,
       PERMISSIONS.PRODUCTION_VIEW,
       PERMISSIONS.PRODUCTION_MANAGE,
+      PERMISSIONS.PURCHASES_VIEW,
+      PERMISSIONS.PURCHASES_MANAGE,
     ],
   },
   {
@@ -218,6 +234,8 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.LABOUR_MANAGE,
       PERMISSIONS.PRODUCTION_VIEW,
       PERMISSIONS.PRODUCTION_MANAGE,
+      PERMISSIONS.PURCHASES_VIEW,
+      PERMISSIONS.PURCHASES_MANAGE,
     ],
   },
   {
@@ -239,6 +257,8 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.INVENTORY_VIEW,
       // Production is a cost driver, so the Accountant reads but does not post.
       PERMISSIONS.PRODUCTION_VIEW,
+      PERMISSIONS.PURCHASES_VIEW,
+      PERMISSIONS.PURCHASES_MANAGE,
     ],
   },
   {
@@ -258,6 +278,8 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.LABOUR_VIEW,
       PERMISSIONS.PRODUCTION_VIEW,
       PERMISSIONS.PRODUCTION_MANAGE,
+      PERMISSIONS.PURCHASES_VIEW,
+      PERMISSIONS.PURCHASES_MANAGE,
     ],
   },
   {
@@ -272,6 +294,8 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.LABOUR_VIEW,
       PERMISSIONS.PRODUCTION_VIEW,
       PERMISSIONS.PRODUCTION_MANAGE,
+      PERMISSIONS.PURCHASES_VIEW,
+      PERMISSIONS.PURCHASES_MANAGE,
     ],
   },
   {
@@ -286,6 +310,7 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       // entry is a mobile use-case (PRD-06), so this role posts stages too.
       PERMISSIONS.PRODUCTION_VIEW,
       PERMISSIONS.PRODUCTION_MANAGE,
+      PERMISSIONS.PURCHASES_VIEW,
     ],
   },
   {
@@ -316,6 +341,8 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.TRANSPORT_VIEW,
       // The store keeper sees what sorting is producing so stock lines up.
       PERMISSIONS.PRODUCTION_VIEW,
+      PERMISSIONS.PURCHASES_VIEW,
+      PERMISSIONS.PURCHASES_MANAGE,
     ],
   },
   {

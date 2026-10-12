@@ -15,3 +15,4 @@ export * from './schemas/labour';
 export * from './schemas/stock';
 export * from './schemas/production';
 export * from './format/quantity';
+export * from './schemas/purchases';

@@ -168,6 +168,54 @@ describe('Schema integrity (e2e)', () => {
     });
   });
 
+  describe('the purchases engine (P7)', () => {
+    it.each([
+      ['uq_purchase_orders_company_no', 'an order number cannot repeat'],
+      ['uq_goods_receipts_company_no', 'a receipt number cannot repeat'],
+      ['uq_purchase_bills_supplier_invoice', 'one supplier invoice number is billed once'],
+      ['uq_allocation_payment_bill', 'a payment allocates to a bill once'],
+    ])('enforces %s — %s', (name) => {
+      expect(indexes.has(name)).toBe(true);
+    });
+
+    it.each([
+      ['chk_bills_total_is_sum', 'a bill total really is the sum of its parts'],
+      ['chk_bills_not_overpaid', 'a bill cannot be paid more than it is worth'],
+      ['chk_bill_lines_one_gst_kind', 'a line carries CGST + SGST or IGST, never both'],
+      ['chk_returns_total_is_sum', 'a return total is its taxable plus its tax'],
+      ['chk_supplier_payments_amount_positive', 'a payment moves more than nothing'],
+    ])('enforces %s — %s', async (name) => {
+      const rows = await dataSource.query<{ count: string }[]>(
+        `SELECT count(*) AS count FROM pg_constraint WHERE contype = 'c' AND conname = $1`,
+        [name],
+      );
+      expect(Number(rows[0]?.count)).toBe(1);
+    });
+
+    it.each([
+      ['fk_goods_receipt_lines_stock_movement_id', 'a received line points at the stock it wrote'],
+      ['fk_purchase_return_lines_stock_movement_id', 'a returned line points at the stock it removed'],
+      ['fk_purchase_bills_voucher_id', 'a bill points at the journal it posted'],
+      ['fk_supplier_payments_voucher_id', 'a payment points at the journal it posted'],
+    ])('enforces %s — %s', (name) => {
+      expect(foreignKeys.has(name)).toBe(true);
+    });
+
+    it('refuses a bill whose total does not equal its parts', async () => {
+      // The service computes this, but the rule must not live only in TypeScript.
+      await expect(
+        dataSource.query(
+          `INSERT INTO purchase_bills
+             (company_id, site_id, supplier_party_id, supplier_invoice_no, bill_date,
+              taxable_amount, cgst_amount, sgst_amount, igst_amount, total_amount, voucher_id)
+           VALUES ('00000000-0000-4000-8000-000000000000','00000000-0000-4000-8000-000000000000',
+                   '00000000-0000-4000-8000-000000000000','BAD','2026-09-01',
+                   100, 6, 6, 0, 999, '00000000-0000-4000-8000-000000000000')`,
+        ),
+      ).rejects.toThrow();
+    });
+  });
+
   describe('every tenant table is indexed and keyed on company_id', () => {
     const TENANT_TABLES = [
       'parties',
@@ -186,6 +234,16 @@ describe('Schema integrity (e2e)', () => {
       'labour_deductions',
       'labour_settlements',
       'labour_wage_accruals',
+      'purchase_orders',
+      'purchase_order_lines',
+      'goods_receipts',
+      'goods_receipt_lines',
+      'purchase_bills',
+      'purchase_bill_lines',
+      'supplier_payments',
+      'supplier_payment_allocations',
+      'purchase_returns',
+      'purchase_return_lines',
       'stock_movements',
       'production_batches',
       'production_entries',
