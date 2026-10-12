@@ -1,17 +1,17 @@
 # M09 Dispatch & Delivery
 
 **Purpose:** Dispatch/challan linking invoice, vehicle, driver, grade, loading group; auto stock deduction; delivery acknowledgement.
-**Phase:** P9 · **Status:** 🧩 backend built (P9.1a), web screens pending (P9.2)
+**Phase:** P9 · **Status:** ✅ complete (P9.1a backend, P9.2 web)
 
 ## Features
 | ID | Feature | Phase | Status |
 |---|---|---|---|
-| DSP-01 | Dispatch / delivery challan: customer, invoice or SO, vehicle, driver, brick type/qty, loading group, loading & delivery location, date/time | P9 | 🧩 BE |
-| DSP-02 | Confirm dispatch → finished stock deducted automatically | P9 | 🧩 BE |
-| DSP-03 | Delivery status + acknowledgement (receiver name, time, remarks) | P9 | 🧩 BE |
+| DSP-01 | Dispatch / delivery challan: customer, invoice or SO, vehicle, driver, brick type/qty, loading group, loading & delivery location, date/time | P9 | ✅ |
+| DSP-02 | Confirm dispatch → finished stock deducted automatically | P9 | ✅ |
+| DSP-03 | Delivery status + acknowledgement (receiver name, time, remarks) | P9 | ✅ |
 | DSP-04 | Dispatch challan + delivery update on mobile (offline) | P9 | ⬜ (M5; creates already take `Idempotency-Key`) |
-| DSP-05 | Challan PDF | P9 | 🧩 BE |
-| LEK-04 | Gate reconciliation — dispatched vs invoiced vs stock, unbilled listed | P9 | 🧩 BE |
+| DSP-05 | Challan PDF | P9 | ✅ |
+| LEK-04 | Gate reconciliation — dispatched vs invoiced vs stock, unbilled listed | P9 | ✅ |
 
 ## Tables
 - `dispatches` — challan header. `challan_no` (CHL-00001, per company, advisory-locked), customer, site,

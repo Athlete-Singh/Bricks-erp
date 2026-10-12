@@ -11,17 +11,17 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 101 | 51 | 17 | 1 | 32 | 0 |
+| CP1 MVP | 101 | 62 | 6 | 1 | 32 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 
-**CP1 done: 50 %** (51 of 101 features ✅)
+**CP1 done: 61 %** (62 of 101 features ✅)
 
 ### Per app
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
 | Backend | 97 | 67 | 1 | 0 | 0 | 29 |
-| Web | 94 | 54 | 0 | 0 | 0 | 40 |
+| Web | 94 | 65 | 0 | 0 | 0 | 29 |
 | Mobile | 11 | 0 | 0 | 0 | 0 | 11 |
 | Tests | 101 | 68 | 0 | 0 | 0 | 33 |
 
@@ -94,12 +94,12 @@
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
 | VEH-01 | Vehicles (own/hired; truck/tractor/tipper) and drivers | CP1 | P3 | ✅ | ✅ | — | ✅ | ✅ |  |
-| VEH-02 | Trip log: vehicle, driver, route, linked dispatch, freight income | CP1 | P9 | ✅ | ⬜ | — | ✅ | 🟨 |  |
-| VEH-03 | Diesel entries per vehicle/trip | CP1 | P9 | ✅ | ⬜ | — | ✅ | 🟨 |  |
-| VEH-04 | Maintenance/repair expense per vehicle | CP1 | P9 | ✅ | ⬜ | — | ✅ | 🟨 |  |
-| VEH-05 | Loading/unloading fees per trip (linked to labour wages) | CP1 | P9 | ✅ | ⬜ | — | ✅ | 🟨 |  |
-| VEH-06 | Hired vehicle / transporter charges payable | CP1 | P9 | ✅ | ⬜ | — | ✅ | 🟨 |  |
-| VEH-07 | Vehicle-wise profitability report (income − diesel − maintenance − driver/hire cost) | CP1 | P9 | ✅ | ⬜ | — | ✅ | 🟨 |  |
+| VEH-02 | Trip log: vehicle, driver, route, linked dispatch, freight income | CP1 | P9 | ✅ | ✅ | — | ✅ | ✅ |  |
+| VEH-03 | Diesel entries per vehicle/trip | CP1 | P9 | ✅ | ✅ | — | ✅ | ✅ |  |
+| VEH-04 | Maintenance/repair expense per vehicle | CP1 | P9 | ✅ | ✅ | — | ✅ | ✅ |  |
+| VEH-05 | Loading/unloading fees per trip (linked to labour wages) | CP1 | P9 | ✅ | ✅ | — | ✅ | ✅ |  |
+| VEH-06 | Hired vehicle / transporter charges payable | CP1 | P9 | ✅ | ✅ | — | ✅ | ✅ |  |
+| VEH-07 | Vehicle-wise profitability report (income − diesel − maintenance − driver/hire cost) | CP1 | P9 | ✅ | ✅ | — | ✅ | ✅ |  |
 
 ### M07 Purchases (SOW #7)
 
@@ -128,11 +128,11 @@
 
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| DSP-01 | Dispatch / delivery challan: customer, invoice or SO, vehicle, driver, brick type/qty, loading group, loading & delivery location, date/time | CP1 | P9 | ✅ | ⬜ | — | ✅ | 🟨 |  |
-| DSP-02 | Confirm dispatch → finished stock deducted automatically | CP1 | P9 | ✅ | ⬜ | — | ✅ | 🟨 |  |
-| DSP-03 | Delivery status + acknowledgement (receiver name, time, remarks) | CP1 | P9 | ✅ | ⬜ | — | ✅ | 🟨 |  |
+| DSP-01 | Dispatch / delivery challan: customer, invoice or SO, vehicle, driver, brick type/qty, loading group, loading & delivery location, date/time | CP1 | P9 | ✅ | ✅ | — | ✅ | ✅ |  |
+| DSP-02 | Confirm dispatch → finished stock deducted automatically | CP1 | P9 | ✅ | ✅ | — | ✅ | ✅ |  |
+| DSP-03 | Delivery status + acknowledgement (receiver name, time, remarks) | CP1 | P9 | ✅ | ✅ | — | ✅ | ✅ |  |
 | DSP-04 | Dispatch challan + delivery update on mobile (offline) | CP1 | P9 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | Backend creates accept `Idempotency-Key`; app is M5 |
-| DSP-05 | Challan PDF | CP1 | P9 | ✅ | ⬜ | — | ✅ | 🟨 |  |
+| DSP-05 | Challan PDF | CP1 | P9 | ✅ | ✅ | — | ✅ | ✅ |  |
 
 ### M10 Accounting (SOW #10)
 
@@ -172,7 +172,7 @@
 | LEK-01 | Brick yield variance: green moulded − (good + broken + rejects) per batch / chamber / Sardar gang, with an "unexplained" column | CP1 | P5 | ✅ | ✅ | — | ✅ | ✅ | |
 | LEK-02 | Coal consumption per 1,000 bricks fired, compared batch-to-batch, kiln-to-kiln and month-to-month; outliers flagged | CP1 | P5 | ✅ | ✅ | — | ✅ | ✅ | |
 | LEK-03 | Live Sardar advance exposure: advances drawn − wages earned to date, per Sardar; **warning shown at the moment a new advance is entered** | CP1 | P6 | ✅ | ✅ | — | ✅ | ✅ | Live Sardar advance exposure monitor dashboard & real-time modal warning |
-| LEK-04 | Gate reconciliation: dispatched qty vs invoiced qty vs stock movement, with unmatched dispatches listed | CP1 | P9 | ✅ | ⬜ | — | ✅ | 🟨 | Catches trucks leaving without a bill |
+| LEK-04 | Gate reconciliation: dispatched qty vs invoiced qty vs stock movement, with unmatched dispatches listed | CP1 | P9 | ✅ | ✅ | — | ✅ | ✅ | Catches trucks leaving without a bill |
 
 ### M14 Sync & idempotency (backend only — no Flutter needed)
 

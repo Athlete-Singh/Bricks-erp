@@ -40,7 +40,7 @@ const NAV: NavItem[] = [
   { label: 'Labour', href: '/labour', icon: Users, permissions: [PERMISSIONS.LABOUR_VIEW] },
   { label: 'Purchases', href: '/purchases', icon: ShoppingCart, permissions: [PERMISSIONS.PURCHASES_VIEW] },
   { label: 'Sales', href: '/sales', icon: Receipt, permissions: [PERMISSIONS.SALES_VIEW] },
-  { label: 'Dispatch', href: '/dispatch', icon: Truck, comingIn: 'P9' },
+  { label: 'Dispatch', href: '/dispatch', icon: Truck, permissions: [PERMISSIONS.DISPATCH_VIEW] },
   { label: 'Stock', href: '/stock', icon: Boxes, permissions: [PERMISSIONS.INVENTORY_VIEW] },
   { label: 'Masters', href: '/masters', icon: Library, permissions: [PERMISSIONS.PARTIES_VIEW] },
   { label: 'Accounts', href: '/accounts', icon: BookOpen, permissions: [PERMISSIONS.ACCOUNTS_VIEW] },

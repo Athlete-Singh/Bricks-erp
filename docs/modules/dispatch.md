@@ -1,6 +1,6 @@
 # M09 Dispatch & Delivery
 
-> Status: **Backend built (P9.1a), web screens pending (P9.2)** · Build phase: P9
+> Status: **Built** · Build phase: P9
 > Scope source: `docs/client-requirements/` · Tracker: [13-roadmap-and-status.md](../13-roadmap-and-status.md)
 
 ## Purpose
@@ -11,11 +11,11 @@ Dispatch/challan linking invoice, vehicle, driver, grade, loading group; auto st
 
 | ID     | Feature                                                                                                                                      | Phase | Status |
 | ------ | -------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------ |
-| DSP-01 | Dispatch / delivery challan: customer, invoice or SO, vehicle, driver, brick type/qty, loading group, loading & delivery location, date/time | P9    | 🧩 BE  |
-| DSP-02 | Confirm dispatch → finished stock deducted automatically                                                                                     | P9    | 🧩 BE  |
-| DSP-03 | Delivery status + acknowledgement (receiver name, time, remarks)                                                                             | P9    | 🧩 BE  |
+| DSP-01 | Dispatch / delivery challan: customer, invoice or SO, vehicle, driver, brick type/qty, loading group, loading & delivery location, date/time | P9    | ✅  |
+| DSP-02 | Confirm dispatch → finished stock deducted automatically                                                                                     | P9    | ✅  |
+| DSP-03 | Delivery status + acknowledgement (receiver name, time, remarks)                                                                             | P9    | ✅  |
 | DSP-04 | Dispatch challan + delivery update on mobile (offline)                                                                                       | P9    | ⬜     |
-| DSP-05 | Challan PDF                                                                                                                                  | P9    | 🧩 BE  |
+| DSP-05 | Challan PDF                                                                                                                                  | P9    | ✅  |
 
 ## Data
 

@@ -41,6 +41,7 @@ describe('Dispatch (e2e)', () => {
   /** One row of the LEK-04 report, as the endpoint returns it. */
   interface GateRow {
     challanNo: string;
+    dispatchDate: string;
     invoiceNo: string | null;
     dispatchedQuantity: string;
     invoicedQuantity: string | null;
@@ -645,6 +646,10 @@ describe('Dispatch (e2e)', () => {
       expect(row!.invoiceNo).toBeNull();
       expect(row!.dispatchedQuantity).toBe('1200.000');
       expect(row!.stockMovedBy).toBe('dispatch');
+      // A calendar date, not a timestamp: the pg driver hands back a JS Date
+      // for a `date` column, which serialises as UTC midnight and reads a day
+      // early anywhere east of Greenwich.
+      expect(row!.dispatchDate).toBe('2026-10-01');
       expect(res.body.meta.unbilledCount).toBe(1);
       expect(res.body.meta.unbilledQuantity).toBe('1200.000');
     });

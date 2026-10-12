@@ -1,0 +1,7 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "backend", "runtimeExecutable": "pnpm", "runtimeArgs": ["--filter", "@brics/backend", "dev"], "port": 4000 },
+    { "name": "web", "runtimeExecutable": "pnpm", "runtimeArgs": ["--filter", "@brics/web", "dev"], "port": 3000 }
+  ]
+}

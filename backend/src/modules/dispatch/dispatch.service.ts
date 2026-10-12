@@ -500,7 +500,10 @@ export class DispatchService {
       SELECT
         d."id",
         d."challan_no",
-        d."dispatch_date",
+        -- ::text, not the bare column: the pg driver turns a date column into
+        -- a JS Date, which serialises as UTC midnight and reads a day early in
+        -- IST. The challan register would show every truck leaving a day early.
+        d."dispatch_date"::text AS dispatch_date,
         d."status",
         p."name"  AS customer_name,
         v."registration_no" AS vehicle_no,

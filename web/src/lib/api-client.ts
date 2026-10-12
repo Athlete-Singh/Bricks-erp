@@ -14,10 +14,14 @@ export interface PageMeta {
   total: number;
 }
 
-/** The backend envelope: `{ data }`, or `{ data, meta }` on paginated lists. */
-interface Envelope<T> {
+/**
+ * The backend envelope: `{ data }`, or `{ data, meta }` on lists. `meta` is
+ * `PageMeta` on a paged list and a report's own summary elsewhere — the
+ * interceptor passes whatever the service put there (see response-envelope).
+ */
+interface Envelope<T, M = PageMeta> {
   data: T;
-  meta?: PageMeta;
+  meta?: M;
 }
 
 interface ApiErrorBody {
@@ -99,7 +103,7 @@ async function rawRequest<T>(path: string, options: RequestOptions = {}): Promis
   return envelope.data;
 }
 
-async function requestEnvelope<T>(path: string, options: RequestOptions = {}): Promise<Envelope<T>> {
+async function requestEnvelope<T, M = PageMeta>(path: string, options: RequestOptions = {}): Promise<Envelope<T, M>> {
   const { method = 'GET', body, signal, skipAuthRetry } = options;
 
   const headers: Record<string, string> = {};
@@ -116,14 +120,14 @@ async function requestEnvelope<T>(path: string, options: RequestOptions = {}): P
 
   if (res.status === 401 && !skipAuthRetry) {
     if (await refreshOnce()) {
-      return requestEnvelope<T>(path, { ...options, skipAuthRetry: true });
+      return requestEnvelope<T, M>(path, { ...options, skipAuthRetry: true });
     }
   }
 
   if (!res.ok) throw await toApiError(res);
 
   if (res.status === 204) return { data: undefined as T };
-  return (await res.json()) as Envelope<T>;
+  return (await res.json()) as Envelope<T, M>;
 }
 
 async function toApiError(res: Response): Promise<ApiError> {
@@ -149,6 +153,14 @@ export const apiClient = {
       items: envelope.data,
       meta: envelope.meta ?? { page: 1, limit: envelope.data.length, total: envelope.data.length },
     };
+  },
+  /**
+   * A list endpoint whose `meta` is the report's own summary rather than page
+   * counts — the gate reconciliation and vehicle P&L both return one.
+   */
+  getWithMeta: async <T, M>(path: string, signal?: AbortSignal): Promise<{ items: T[]; meta: M }> => {
+    const envelope = await requestEnvelope<T[], M>(path, { signal });
+    return { items: envelope.data, meta: envelope.meta as M };
   },
   post: <T>(path: string, body?: unknown) => rawRequest<T>(path, { method: 'POST', body }),
   put: <T>(path: string, body?: unknown) => rawRequest<T>(path, { method: 'PUT', body }),

@@ -1,10 +1,10 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** P9.1b ✅ done (transport) → **next: P9.2** (web: dispatch, trips, vehicle P&L, gate report)
+**Client Phase:** CP1 (MVP) · **Current step:** P9.2 ✅ done — **phase P9 complete** → **next: P10** (expenses, cash/bank, P&L/BS, GSTR + GST-07)
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
-- **Last green gate:** P9.1b complete (2026-10-12). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 143 unit + **580 e2e** (19 suites), web 113, shared 76. Schema integrity is now **221** assertions.
+- **Last green gate:** P9 complete (2026-10-12). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 143 unit + **580 e2e** (19 suites), web **120** (21 files), shared 76. Schema integrity **221** assertions. CP1 **62/101 (61 %)**.
 - **What shipped (P8):** sales engine, SAL-01…07.
   - **Backend (P8.1a+b+c in one commit):** 13 new tables, 16 routes under `/sales/*`. Quotations with status machine (draft → sent → accepted/rejected/cancelled/expired). Sales orders (optional convert from quote). **GST tax invoice** that moves stock OUT via `StockService` and posts the journal via `PostingService` in **one transaction** (ADR-038); composite loading/transport/other charges split across three income ledgers (ADR-039). **Invoice PDF** rendered server-side with `pdfmake` (OQ #18), carrying every Rule 46 field including amount-in-words. Bill-wise customer receipts with an advisory lock against concurrent overcollection. Credit note that re-stocks if and only if the line carries a quantity (ADR-040); debit note mirror. Receivables ageing with the usual `asOf` + buckets (0/1-30/31-60/61-90/90+).
   - **Web (P8.2):** six-tab Sales section — quotations, orders, invoices (per-row PDF button that fetches with the in-memory Bearer token and opens via Blob URL), receipts (bill-wise allocation table auto-filtered to open invoices), credit + debit notes on one page, receivables dashboard.
@@ -16,7 +16,9 @@ Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 - **What shipped (P9.1b):** transport — VEH-02…07. `vehicle_trips` and `vehicle_expenses`, 6 routes under `/transport`. A trip optionally charges freight (Dr customer, Cr `FREIGHT_INCOME`); four kinds of charge (diesel, maintenance, loading, hire) each debit their own ledger so the P&L reads them apart, and each is either paid on the spot or owed to a party — never both, never neither. VEH-07 reports freight earned less what the vehicle cost, with cost-per-km and litres-per-100km.
   - **ADR-042 — freight is income once.** P8 bills transport on the invoice as composite supply, crediting the same ledger. A trip against a challan whose invoice already charges transport is refused (`FREIGHT_ALREADY_BILLED`).
   - **ADR-043 — fuel is paid for once.** Diesel from the kiln's own tank issues stock and posts **no** journal (it was expensed on its purchase bill); diesel bought at a pump posts the journal and moves no stock. A CHECK makes the two mutually exclusive, and the issue carries its own `vehicle_fuel` movement kind rather than polluting the adjustment register (ADR-026).
-- **Next step (exact):** **P9.2 — the web screens.** A Dispatch section (challan list + form, confirm and acknowledge actions, challan PDF button like the P8 invoice one, gate reconciliation report) and the transport screens (trip log, vehicle charges, vehicle P&L). Sidebar: drop `comingIn: 'P9'` from Dispatch. Mobile-usable entry per CONVENTIONS (single column, ≥44 px targets, numeric keypads).
+- **What shipped (P9.2):** the Dispatch section — four tabs. Challans (register, raise, confirm out of the gate, record delivery, cancel a draft, per-row challan PDF through the sanctioned `apiClient.getBlob`), the **gate report** (LEK-04 with the unbilled count in the danger colour and a sentence naming the bricks gone), trips & charges (trip log with optional freight, and the four charge kinds with a "how it was settled" selector that offers *from our own fuel store* only for diesel), and vehicle P&L (VEH-07 with cost-per-km, and a standing note that freight billed on an invoice is not counted here). Sidebar Dispatch is live. Driven in a real browser end to end: challan CHL-00001 → confirm → 5,000 out of the yard → the gate report naming it as unbilled. Mobile verified at 375 px, no horizontal overflow.
+  - **A defect the browser caught that the tests did not:** the LEK-04 query selected `dispatch_date` bare, so the pg driver handed back a JS `Date`, which serialises as UTC midnight and rendered **a day early** in IST — every truck would have read as leaving the day before. Fixed with `::text` and an e2e assertion on the calendar date. Worth remembering for any future raw-SQL report that returns a `date` column.
+- **Next step (exact):** **P10 — expenses, cash & bank, P&L / Balance Sheet, GSTR registers + GST-07 reconciliation**, backend then web.
 - **What shipped (P6.2) — kept for context:** Labour & Sardar Web Screens — **LAB-01…08, LEK-03**:
   - Full frontend module under `/labour` with 6 tab views:
     - `/labour/attendance`: Field-friendly muster roll register with status badges, filters, and batch entry dialog (`AttendanceRegisterDialog`) featuring high-contrast $\ge 44\text{px}$ touch buttons (`Present`, `Half Day`, `Absent`) and overtime tracking.
@@ -262,7 +264,7 @@ The P track is never blocked by the M track.
 | P8 | P8.2 | Web: quotations, orders, invoices (+ PDF), receipts, notes, receivables | ✅ |
 | P9 | P9.1a | Backend: dispatch challan, confirm → stock OUT, delivery acknowledgement, challan PDF + **LEK-04 gate reconciliation** | ✅ |
 | P9 | P9.1b | Backend: transport — trip log, diesel, maintenance, loading fees, hired-vehicle charges, vehicle P&L (VEH-02…07) | ✅ |
-| P9 | P9.2 | Web dispatch, trips, vehicle profitability + gate report | ⬜ |
+| P9 | P9.2 | Web dispatch, trips, vehicle profitability + gate report | ✅ |
 | P10 | P10.1 / P10.2 | Expenses, cash/bank, P&L/BS, GSTR registers + **GST-07 reconciliation** — backend / web | ⬜ |
 | P11 | P11.1 | Dashboard aggregates + **CST-01 cost per 1,000 vs the ₹4,100 benchmark** | ⬜ |
 | P11 | P11.2 | Web dashboard, **RPT-02 daily report, RPT-03 sales register, RPT-04 labour registers**, exports | ⬜ |
