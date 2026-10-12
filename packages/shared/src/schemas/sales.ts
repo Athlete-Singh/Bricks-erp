@@ -186,6 +186,12 @@ export const createSalesInvoiceSchema = z
     customerPartyId: uuid,
     siteId: uuid,
     salesOrderId: uuid.nullish(),
+    /**
+     * Challan-first flow: the truck already left and that challan already
+     * deducted the yard, so this invoice must not deduct a second time
+     * (ADR-041). Null is the ordinary invoice-first flow.
+     */
+    dispatchId: uuid.nullish(),
     invoiceDate: isoDate,
     dueDate: isoDate.nullish(),
     /** PO number from the customer, for their records. */

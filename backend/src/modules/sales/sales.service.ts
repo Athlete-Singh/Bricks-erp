@@ -29,6 +29,8 @@ import { Party } from '../parties/entities/party.entity';
 import { Site } from '../company/entities/site.entity';
 import { Item } from '../inventory/entities/item.entity';
 import { StockService } from '../../stock/stock.service';
+import { Dispatch } from '../dispatch/entities/dispatch.entity';
+import { StockMovement } from '../../stock/entities/stock-movement.entity';
 import { Quotation } from './entities/quotation.entity';
 import { QuotationLine } from './entities/quotation-line.entity';
 import { SalesOrder } from './entities/sales-order.entity';
@@ -563,6 +565,63 @@ export class SalesService {
             }
           }
 
+          // Challan-first flow (ADR-041): the truck already left and that
+          // challan already emptied the yard, so this invoice bills what moved
+          // rather than moving it again.
+          let billedDispatch: Dispatch | null = null;
+          if (dto.dispatchId) {
+            billedDispatch = await manager.findOne(Dispatch, { where: { id: dto.dispatchId, companyId } });
+            if (!billedDispatch) {
+              throw new BusinessRuleException('DISPATCH_NOT_FOUND', 'That challan does not exist');
+            }
+            if (billedDispatch.customerPartyId !== dto.customerPartyId) {
+              throw new BusinessRuleException(
+                'DISPATCH_CUSTOMER_MISMATCH',
+                'That challan belongs to a different customer',
+              );
+            }
+            if (billedDispatch.status !== 'confirmed' && billedDispatch.status !== 'delivered') {
+              throw new BusinessRuleException(
+                'DISPATCH_NOT_CONFIRMED',
+                `Challan ${billedDispatch.challanNo} has not left the gate yet`,
+              );
+            }
+            if (billedDispatch.salesInvoiceId) {
+              throw new BusinessRuleException(
+                'DISPATCH_ALREADY_BILLED',
+                `Challan ${billedDispatch.challanNo} was raised against an invoice already`,
+              );
+            }
+            const existing = await manager.findOne(SalesInvoice, {
+              where: { companyId, dispatchId: billedDispatch.id },
+            });
+            if (existing) {
+              throw new BusinessRuleException(
+                'DISPATCH_ALREADY_BILLED',
+                `Challan ${billedDispatch.challanNo} is already billed on invoice ${existing.invoiceNo}`,
+              );
+            }
+          }
+
+          /**
+           * What the challan actually moved, keyed by item + yard. The invoice
+           * line points at that same movement rather than creating a second
+           * one, so `sales_invoice_lines.stock_movement_id` still traces to the
+           * physical event — it was just the challan that wrote it.
+           */
+          const dispatchedMovements = new Map<string, { movementId: string; quantity: Decimal }>();
+          if (billedDispatch) {
+            const moved = await manager.find(StockMovement, {
+              where: { companyId, sourceType: 'dispatch', sourceId: billedDispatch.id },
+            });
+            for (const m of moved) {
+              dispatchedMovements.set(`${m.itemId}:${m.warehouseId}`, {
+                movementId: m.id,
+                quantity: new Decimal(m.quantityOut),
+              });
+            }
+          }
+
           // Compute totals once, from the lines — the invoice total must be the
           // sum of what the lines actually say, including rounding.
           let taxable = new Decimal(0);
@@ -652,6 +711,7 @@ export class SalesService {
               customerPartyId: dto.customerPartyId,
               siteId: dto.siteId,
               salesOrderId: order?.id ?? null,
+              dispatchId: billedDispatch?.id ?? null,
               invoiceDate: dto.invoiceDate,
               dueDate: dto.dueDate ?? null,
               customerPoNo: dto.customerPoNo ?? null,
@@ -668,23 +728,46 @@ export class SalesService {
           );
 
           for (const { line, c } of computedLines) {
-            // Bricks physically leave the yard. StockService refuses to drive
-            // stock below zero (ADR-026) under an advisory lock (ADR-027): if
-            // what we claim to invoice is not in the yard, the whole document
-            // rolls back and no number is burned.
-            const movement = await this.stock.record(manager, {
-              companyId,
-              userId,
-              warehouseId: line.warehouseId,
-              itemId: line.itemId,
-              movementType: 'sale',
-              direction: 'out',
-              quantity: qty(line.quantity),
-              movementDate: dto.invoiceDate,
-              sourceType: 'sales_invoice',
-              sourceId: invoice.id,
-              notes: `Sold to ${customer.name} on invoice ${invoice.invoiceNo}`,
-            });
+            let movementId: string;
+            if (billedDispatch) {
+              // The bricks already left on the challan — bill them, do not move
+              // them again (ADR-041).
+              const already = dispatchedMovements.get(`${line.itemId}:${line.warehouseId}`);
+              if (!already) {
+                throw new BusinessRuleException(
+                  'LINE_NOT_ON_CHALLAN',
+                  `Challan ${billedDispatch.challanNo} did not carry that grade out of that yard`,
+                );
+              }
+              // Billing more than left the gate would sell bricks that never
+              // moved. Billing less is a part-bill, which LEK-04 reports.
+              if (new Decimal(line.quantity).greaterThan(already.quantity)) {
+                throw new BusinessRuleException(
+                  'INVOICE_EXCEEDS_CHALLAN',
+                  `Challan ${billedDispatch.challanNo} carried ${already.quantity.toFixed(0)} of that grade — the invoice bills more`,
+                );
+              }
+              movementId = already.movementId;
+            } else {
+              // Bricks physically leave the yard. StockService refuses to drive
+              // stock below zero (ADR-026) under an advisory lock (ADR-027): if
+              // what we claim to invoice is not in the yard, the whole document
+              // rolls back and no number is burned.
+              const movement = await this.stock.record(manager, {
+                companyId,
+                userId,
+                warehouseId: line.warehouseId,
+                itemId: line.itemId,
+                movementType: 'sale',
+                direction: 'out',
+                quantity: qty(line.quantity),
+                movementDate: dto.invoiceDate,
+                sourceType: 'sales_invoice',
+                sourceId: invoice.id,
+                notes: `Sold to ${customer.name} on invoice ${invoice.invoiceNo}`,
+              });
+              movementId = movement.id;
+            }
 
             await manager.save(
               manager.create(SalesInvoiceLine, {
@@ -705,7 +788,7 @@ export class SalesService {
                 sgstAmount: money(c.sgst),
                 igstAmount: money(c.igst),
                 hsnCode: line.hsnCode ?? null,
-                stockMovementId: movement.id,
+                stockMovementId: movementId,
                 description: line.description ?? null,
               }),
             );

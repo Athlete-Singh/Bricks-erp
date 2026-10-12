@@ -29,6 +29,9 @@ export const PERMISSIONS = {
   PRODUCTION_MANAGE: 'production.manage',
   SALES_VIEW: 'sales.view',
   SALES_MANAGE: 'sales.manage',
+  DISPATCH_VIEW: 'dispatch.view',
+  DISPATCH_MANAGE: 'dispatch.manage',
+  DISPATCH_ACKNOWLEDGE: 'dispatch.acknowledge',
 } as const;
 
 export type PermissionCode = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -180,6 +183,24 @@ export const PERMISSION_CATALOGUE: readonly PermissionDefinition[] = [
     module: 'sales',
     description: 'Raise quotations and sales orders, issue invoices, record receipts and notes',
   },
+  {
+    code: PERMISSIONS.DISPATCH_VIEW,
+    name: 'View dispatch',
+    module: 'dispatch',
+    description: 'Read delivery challans, delivery status and the gate reconciliation report',
+  },
+  {
+    code: PERMISSIONS.DISPATCH_MANAGE,
+    name: 'Manage dispatch',
+    module: 'dispatch',
+    description: 'Raise a challan, confirm the truck out of the gate (which deducts stock) and cancel',
+  },
+  {
+    code: PERMISSIONS.DISPATCH_ACKNOWLEDGE,
+    name: 'Acknowledge delivery',
+    module: 'dispatch',
+    description: 'Record who received the load and when — held by drivers, who may not open the gate',
+  },
 ] as const;
 
 export interface RoleDefinition {
@@ -224,6 +245,9 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.PURCHASES_MANAGE,
       PERMISSIONS.SALES_VIEW,
       PERMISSIONS.SALES_MANAGE,
+      PERMISSIONS.DISPATCH_VIEW,
+      PERMISSIONS.DISPATCH_MANAGE,
+      PERMISSIONS.DISPATCH_ACKNOWLEDGE,
     ],
   },
   {
@@ -254,6 +278,9 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.PURCHASES_MANAGE,
       PERMISSIONS.SALES_VIEW,
       PERMISSIONS.SALES_MANAGE,
+      PERMISSIONS.DISPATCH_VIEW,
+      PERMISSIONS.DISPATCH_MANAGE,
+      PERMISSIONS.DISPATCH_ACKNOWLEDGE,
     ],
   },
   {
@@ -280,6 +307,7 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       // The books person issues invoices and records receipts.
       PERMISSIONS.SALES_VIEW,
       PERMISSIONS.SALES_MANAGE,
+      PERMISSIONS.DISPATCH_VIEW,
     ],
   },
   {
@@ -303,6 +331,9 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.PURCHASES_MANAGE,
       PERMISSIONS.SALES_VIEW,
       PERMISSIONS.SALES_MANAGE,
+      PERMISSIONS.DISPATCH_VIEW,
+      PERMISSIONS.DISPATCH_MANAGE,
+      PERMISSIONS.DISPATCH_ACKNOWLEDGE,
     ],
   },
   {
@@ -334,6 +365,9 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.PRODUCTION_VIEW,
       PERMISSIONS.PRODUCTION_MANAGE,
       PERMISSIONS.PURCHASES_VIEW,
+      PERMISSIONS.DISPATCH_VIEW,
+      PERMISSIONS.DISPATCH_MANAGE,
+      PERMISSIONS.DISPATCH_ACKNOWLEDGE,
     ],
   },
   {
@@ -352,6 +386,8 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       // The role's actual subject — quotes, orders and invoices.
       PERMISSIONS.SALES_VIEW,
       PERMISSIONS.SALES_MANAGE,
+      PERMISSIONS.DISPATCH_VIEW,
+      PERMISSIONS.DISPATCH_MANAGE,
     ],
   },
   {
@@ -369,12 +405,18 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.PRODUCTION_VIEW,
       PERMISSIONS.PURCHASES_VIEW,
       PERMISSIONS.PURCHASES_MANAGE,
+      PERMISSIONS.DISPATCH_VIEW,
+      PERMISSIONS.DISPATCH_MANAGE,
+      PERMISSIONS.DISPATCH_ACKNOWLEDGE,
     ],
   },
   {
     code: 'driver',
     name: 'Driver',
     description: 'Trip and delivery acknowledgement only',
+    // Deliberately empty in CP1: a driver is master data (VEH-01), not a user.
+    // The acknowledgement is recorded by whoever holds `dispatch.acknowledge`
+    // — supervisor, store keeper or manager — not by the driver signing in.
     permissions: [],
   },
 ] as const;

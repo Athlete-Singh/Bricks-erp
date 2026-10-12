@@ -48,6 +48,7 @@ export const STOCK_MOVEMENT_TYPES = [
   'purchase',
   'production',
   'sale',
+  'dispatch',
   'wastage',
   'adjustment',
   'transfer',

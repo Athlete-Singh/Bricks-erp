@@ -17,3 +17,4 @@ export * from './schemas/production';
 export * from './format/quantity';
 export * from './schemas/purchases';
 export * from './schemas/sales';
+export * from './schemas/dispatch';

@@ -216,6 +216,67 @@ describe('Schema integrity (e2e)', () => {
     });
   });
 
+  describe('dispatch and the gate (P9)', () => {
+    it.each([
+      ['uq_dispatches_company_no', 'a challan number cannot repeat'],
+      ['uq_dispatch_lines_item_warehouse', 'one grade leaves one yard once per challan'],
+      ['uq_sales_invoices_dispatch', 'a challan is billed at most once'],
+    ])('enforces %s — %s', (name) => {
+      expect(indexes.has(name)).toBe(true);
+    });
+
+    it.each([
+      ['chk_dispatches_status', 'a challan is in a status the code knows'],
+      ['chk_dispatches_confirmed_has_time', 'a challan that left the gate records when'],
+      ['chk_dispatches_delivered_is_signed', 'a delivered challan names who signed for it'],
+      ['chk_dispatches_cancel_has_reason', 'a cancelled challan says why'],
+      ['chk_dispatches_moved_stock_only_when_out', 'a draft cannot claim it moved stock'],
+      ['chk_dispatches_invoice_linked_never_moves', 'ADR-041 — an invoiced challan never deducts again'],
+      ['chk_dispatch_lines_qty_positive', 'a challan line carries more than nothing'],
+    ])('enforces %s — %s', async (name) => {
+      const rows = await dataSource.query<{ count: string }[]>(
+        `SELECT count(*) AS count FROM pg_constraint WHERE contype = 'c' AND conname = $1`,
+        [name],
+      );
+      expect(Number(rows[0]?.count)).toBe(1);
+    });
+
+    it.each([
+      ['fk_dispatches_customer', 'a challan names a real customer'],
+      ['fk_dispatches_site', 'a challan leaves a real kiln'],
+      ['fk_dispatches_sales_invoice', 'a challan against an invoice names a real one'],
+      ['fk_dispatches_vehicle', 'a challan names a real vehicle'],
+      ['fk_dispatches_driver', 'a challan names a real driver'],
+      ['fk_dispatches_loading_group', 'a challan names a real loading group'],
+      ['fk_dispatch_lines_dispatch', 'a line belongs to a real challan'],
+      ['fk_dispatch_lines_item', 'a line names a real grade'],
+      ['fk_dispatch_lines_warehouse', 'a line leaves a real yard'],
+      ['fk_sales_invoices_dispatch', 'an invoice raised on a challan names a real one'],
+    ])('enforces %s — %s', (name) => {
+      expect(foreignKeys.has(name)).toBe(true);
+    });
+
+    it("accepts 'dispatch' as a stock movement kind", async () => {
+      const rows = await dataSource.query<{ def: string }[]>(
+        `SELECT pg_get_constraintdef(oid) AS def FROM pg_constraint WHERE conname = 'chk_stock_movements_type'`,
+      );
+      expect(rows[0]?.def).toContain("'dispatch'");
+    });
+
+    it('refuses a draft challan that claims it moved stock', async () => {
+      // The service never writes this pair; the database must refuse it anyway.
+      await expect(
+        dataSource.query(
+          `INSERT INTO dispatches
+             (company_id, challan_no, site_id, customer_party_id, dispatch_date, status, moved_stock)
+           VALUES ('00000000-0000-4000-8000-000000000000','BAD-1',
+                   '00000000-0000-4000-8000-000000000000','00000000-0000-4000-8000-000000000000',
+                   '2026-09-01','draft', true)`,
+        ),
+      ).rejects.toThrow();
+    });
+  });
+
   describe('every tenant table is indexed and keyed on company_id', () => {
     const TENANT_TABLES = [
       'parties',
@@ -263,6 +324,9 @@ describe('Schema integrity (e2e)', () => {
       'credit_note_lines',
       'debit_notes',
       'debit_note_lines',
+      // Dispatch (P9)
+      'dispatches',
+      'dispatch_lines',
     ];
 
     it.each(TENANT_TABLES)('%s has an index on company_id', async (table) => {

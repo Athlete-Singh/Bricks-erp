@@ -11,7 +11,7 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 101 | 51 | 6 | 1 | 43 | 0 |
+| CP1 MVP | 101 | 51 | 11 | 1 | 38 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 
 **CP1 done: 50 %** (51 of 101 features ✅)
@@ -20,10 +20,10 @@
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
-| Backend | 97 | 56 | 1 | 0 | 0 | 40 |
+| Backend | 97 | 61 | 1 | 0 | 0 | 35 |
 | Web | 94 | 54 | 0 | 0 | 0 | 40 |
 | Mobile | 11 | 0 | 0 | 0 | 0 | 11 |
-| Tests | 101 | 57 | 0 | 0 | 0 | 44 |
+| Tests | 101 | 62 | 0 | 0 | 0 | 39 |
 
 ## Client Phase 1 — MVP
 
@@ -128,11 +128,11 @@
 
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| DSP-01 | Dispatch / delivery challan: customer, invoice or SO, vehicle, driver, brick type/qty, loading group, loading & delivery location, date/time | CP1 | P9 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| DSP-02 | Confirm dispatch → finished stock deducted automatically | CP1 | P9 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| DSP-03 | Delivery status + acknowledgement (receiver name, time, remarks) | CP1 | P9 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| DSP-04 | Dispatch challan + delivery update on mobile (offline) | CP1 | P9 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |  |
-| DSP-05 | Challan PDF | CP1 | P9 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| DSP-01 | Dispatch / delivery challan: customer, invoice or SO, vehicle, driver, brick type/qty, loading group, loading & delivery location, date/time | CP1 | P9 | ✅ | ⬜ | — | ✅ | 🟨 |  |
+| DSP-02 | Confirm dispatch → finished stock deducted automatically | CP1 | P9 | ✅ | ⬜ | — | ✅ | 🟨 |  |
+| DSP-03 | Delivery status + acknowledgement (receiver name, time, remarks) | CP1 | P9 | ✅ | ⬜ | — | ✅ | 🟨 |  |
+| DSP-04 | Dispatch challan + delivery update on mobile (offline) | CP1 | P9 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | Backend creates accept `Idempotency-Key`; app is M5 |
+| DSP-05 | Challan PDF | CP1 | P9 | ✅ | ⬜ | — | ✅ | 🟨 |  |
 
 ### M10 Accounting (SOW #10)
 
@@ -172,7 +172,7 @@
 | LEK-01 | Brick yield variance: green moulded − (good + broken + rejects) per batch / chamber / Sardar gang, with an "unexplained" column | CP1 | P5 | ✅ | ✅ | — | ✅ | ✅ | |
 | LEK-02 | Coal consumption per 1,000 bricks fired, compared batch-to-batch, kiln-to-kiln and month-to-month; outliers flagged | CP1 | P5 | ✅ | ✅ | — | ✅ | ✅ | |
 | LEK-03 | Live Sardar advance exposure: advances drawn − wages earned to date, per Sardar; **warning shown at the moment a new advance is entered** | CP1 | P6 | ✅ | ✅ | — | ✅ | ✅ | Live Sardar advance exposure monitor dashboard & real-time modal warning |
-| LEK-04 | Gate reconciliation: dispatched qty vs invoiced qty vs stock movement, with unmatched dispatches listed | CP1 | P9 | ⬜ | ⬜ | — | ⬜ | ⬜ | Catches trucks leaving without a bill |
+| LEK-04 | Gate reconciliation: dispatched qty vs invoiced qty vs stock movement, with unmatched dispatches listed | CP1 | P9 | ✅ | ⬜ | — | ✅ | 🟨 | Catches trucks leaving without a bill |
 
 ### M14 Sync & idempotency (backend only — no Flutter needed)
 

@@ -25,6 +25,10 @@ export class SalesInvoice extends TenantBaseEntity {
   @Column({ name: 'sales_order_id', type: 'uuid', nullable: true })
   salesOrderId: string | null;
 
+  /** Set when this invoice bills a challan that already moved the stock (ADR-041). */
+  @Column({ name: 'dispatch_id', type: 'uuid', nullable: true })
+  dispatchId: string | null;
+
   @Column({ name: 'invoice_date', type: 'date' })
   invoiceDate: string;
 
