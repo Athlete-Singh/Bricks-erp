@@ -1,10 +1,10 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** P9.2 ✅ done — **phase P9 complete** → **next: P10** (expenses, cash/bank, P&L/BS, GSTR + GST-07)
+**Client Phase:** CP1 (MVP) · **Current step:** P10.1a ✅ done (expenses + cash/bank) → **next: P10.1b** (P&L, Balance Sheet, receivables/payables summary, FY lock & carry-forward)
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
-- **Last green gate:** P9 complete (2026-10-12). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 143 unit + **580 e2e** (19 suites), web **120** (21 files), shared 76. Schema integrity **221** assertions. CP1 **62/101 (61 %)**.
+- **Last green gate:** P10.1a complete (2026-10-12). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 143 unit + **612 e2e** (20 suites), web 120, shared **81**. CP1 **62/101 (61 %)**.
 - **What shipped (P8):** sales engine, SAL-01…07.
   - **Backend (P8.1a+b+c in one commit):** 13 new tables, 16 routes under `/sales/*`. Quotations with status machine (draft → sent → accepted/rejected/cancelled/expired). Sales orders (optional convert from quote). **GST tax invoice** that moves stock OUT via `StockService` and posts the journal via `PostingService` in **one transaction** (ADR-038); composite loading/transport/other charges split across three income ledgers (ADR-039). **Invoice PDF** rendered server-side with `pdfmake` (OQ #18), carrying every Rule 46 field including amount-in-words. Bill-wise customer receipts with an advisory lock against concurrent overcollection. Credit note that re-stocks if and only if the line carries a quantity (ADR-040); debit note mirror. Receivables ageing with the usual `asOf` + buckets (0/1-30/31-60/61-90/90+).
   - **Web (P8.2):** six-tab Sales section — quotations, orders, invoices (per-row PDF button that fetches with the in-memory Bearer token and opens via Blob URL), receipts (bill-wise allocation table auto-filtered to open invoices), credit + debit notes on one page, receivables dashboard.
@@ -18,7 +18,8 @@ Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
   - **ADR-043 — fuel is paid for once.** Diesel from the kiln's own tank issues stock and posts **no** journal (it was expensed on its purchase bill); diesel bought at a pump posts the journal and moves no stock. A CHECK makes the two mutually exclusive, and the issue carries its own `vehicle_fuel` movement kind rather than polluting the adjustment register (ADR-026).
 - **What shipped (P9.2):** the Dispatch section — four tabs. Challans (register, raise, confirm out of the gate, record delivery, cancel a draft, per-row challan PDF through the sanctioned `apiClient.getBlob`), the **gate report** (LEK-04 with the unbilled count in the danger colour and a sentence naming the bricks gone), trips & charges (trip log with optional freight, and the four charge kinds with a "how it was settled" selector that offers *from our own fuel store* only for diesel), and vehicle P&L (VEH-07 with cost-per-km, and a standing note that freight billed on an invoice is not counted here). Sidebar Dispatch is live. Driven in a real browser end to end: challan CHL-00001 → confirm → 5,000 out of the yard → the gate report naming it as unbilled. Mobile verified at 375 px, no horizontal overflow.
   - **A defect the browser caught that the tests did not:** the LEK-04 query selected `dispatch_date` bare, so the pg driver handed back a JS `Date`, which serialises as UTC midnight and rendered **a day early** in IST — every truck would have read as leaving the day before. Fixed with `::text` and an e2e assertion on the calendar date. Worth remembering for any future raw-SQL report that returns a `date` column.
-- **Next step (exact):** **P10 — expenses, cash & bank, P&L / Balance Sheet, GSTR registers + GST-07 reconciliation**, backend then web.
+- **What shipped (P10.1a):** expenses and the cash book — EXP-01, EXP-02, CSH-01, ACC-07. One table, 5 routes. An expense is paid from a named cash/bank account or left owed to a party; paid posts a `payment` voucher, owed posts a `journal` (**ADR-045**), so the cash book never shows money that did not move. The categories are the expense ledgers themselves (**ADR-044**) — no second list to drift — and the two EXP-01 names the P2 chart lacked, machinery and food, are seeded and backfilled onto existing companies. `vouchers` now carries `instrument_type` and `instrument_ref` with a partial index, so a cheque number or UTR is filterable rather than buried in a narration (CSH-01). The cash and bank books give opening, every movement with its counterparty spelled out, and closing — for one account or all of them.
+- **Next step (exact):** **P10.1b — ACC-08 Profit & Loss and Balance Sheet, ACC-09 receivables/payables summary, ACC-10 financial-year lock and carry-forward.** All reads over `voucher_lines` plus the ledger-group nature, except ACC-10 which writes the carry-forward. **Closing stock valuation is OQ #4 and still unanswered** — the Balance Sheet needs a number for it; pick a default (cost of the last purchase, or exclude it and say so on the face of the statement) and log the choice.
 - **What shipped (P6.2) — kept for context:** Labour & Sardar Web Screens — **LAB-01…08, LEK-03**:
   - Full frontend module under `/labour` with 6 tab views:
     - `/labour/attendance`: Field-friendly muster roll register with status badges, filters, and batch entry dialog (`AttendanceRegisterDialog`) featuring high-contrast $\ge 44\text{px}$ touch buttons (`Present`, `Half Day`, `Absent`) and overtime tracking.
@@ -265,7 +266,10 @@ The P track is never blocked by the M track.
 | P9 | P9.1a | Backend: dispatch challan, confirm → stock OUT, delivery acknowledgement, challan PDF + **LEK-04 gate reconciliation** | ✅ |
 | P9 | P9.1b | Backend: transport — trip log, diesel, maintenance, loading fees, hired-vehicle charges, vehicle P&L (VEH-02…07) | ✅ |
 | P9 | P9.2 | Web dispatch, trips, vehicle profitability + gate report | ✅ |
-| P10 | P10.1 / P10.2 | Expenses, cash/bank, P&L/BS, GSTR registers + **GST-07 reconciliation** — backend / web | ⬜ |
+| P10 | P10.1a | Backend: expense categories + entry, cash & bank books, cheque/UPI reference (EXP-01, EXP-02, CSH-01, ACC-07) | ✅ |
+| P10 | P10.1b | Backend: P&L, Balance Sheet, receivables/payables summary, FY lock + carry-forward (ACC-08, ACC-09, ACC-10) | ⬜ |
+| P10 | P10.1c | Backend: GSTR-1 / GSTR-3B registers, GST sales & purchase reports, **GST-07 reconciliation** (GST-04…07) | ⬜ |
+| P10 | P10.2 | Web: expenses, cash & bank books, P&L / Balance Sheet, GST registers + reconciliation | ⬜ |
 | P11 | P11.1 | Dashboard aggregates + **CST-01 cost per 1,000 vs the ₹4,100 benchmark** | ⬜ |
 | P11 | P11.2 | Web dashboard, **RPT-02 daily report, RPT-03 sales register, RPT-04 labour registers**, exports | ⬜ |
 | P13 | P13.1 / P13.2 / P13.3 | e2e + security / deploy + backups / onboarding + guide + UAT → **CP1 sign-off** | ⬜ |
@@ -312,6 +316,10 @@ Exit criteria per phase: see BRICS_MASTER_PROMPT.md §12.
 A1 banking/accounting adv · A2 adv GST (if approved) · A3 profitability/leakage · A4 admin extras · A5 AI anomaly · A6 IoT · A7 approved extras — all ⏭️
 
 ## Splits recorded
+- **P10.1 → P10.1a + P10.1b + P10.1c** (2026-10-12). Eleven features across three unrelated subjects: money
+  leaving the kiln (expenses, cash, bank), the statements that summarise a year (P&L, Balance Sheet, FY
+  lock), and the GST registers with their reconciliation. Each is a session, and only the first writes
+  anything — P10.1b and P10.1c are pure reads over what is already posted.
 - **P9.1 → P9.1a + P9.1b** (2026-10-12). Eleven features across two different kinds of money path is more than
   one session. P9.1a is the goods path (challan, stock OUT, acknowledgement, PDF, LEK-04) and carries the one
   decision the module rests on — who deducts the yard when an invoice and a challan both exist (ADR-041).

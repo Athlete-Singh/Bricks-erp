@@ -1,5 +1,6 @@
 import { Column, Entity } from 'typeorm';
 import { TenantBaseEntity } from '../../common/entities/base.entity';
+import type { InstrumentType } from '@brics/shared';
 
 /** A posted voucher is never edited — correction is a reversal (ACC-02). */
 export type VoucherStatus = 'posted' | 'reversed';
@@ -38,6 +39,13 @@ export class Voucher extends TenantBaseEntity {
   sourceId: string | null;
 
   /** Set on the reversing voucher, pointing at the one it cancels. */
+  /** CSH-01 — how the money moved, for reconciling a bank statement. */
+  @Column({ name: 'instrument_type', type: 'varchar', length: 10, nullable: true })
+  instrumentType: InstrumentType | null;
+
+  @Column({ name: 'instrument_ref', type: 'varchar', length: 80, nullable: true })
+  instrumentRef: string | null;
+
   @Column({ name: 'reversal_of_id', type: 'uuid', nullable: true })
   reversalOfId: string | null;
 }

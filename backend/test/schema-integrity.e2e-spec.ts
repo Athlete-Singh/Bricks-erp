@@ -350,6 +350,51 @@ describe('Schema integrity (e2e)', () => {
     });
   });
 
+  describe('expenses and the cash book (P10.1a)', () => {
+    it.each([['uq_expenses_company_no', 'an expense number cannot repeat']])('enforces %s — %s', (name) => {
+      expect(indexes.has(name)).toBe(true);
+    });
+
+    it.each([
+      ['chk_expenses_mode', 'a payment mode the code knows'],
+      ['chk_expenses_amount_positive', 'an expense is more than nothing'],
+      ['chk_expenses_paid_or_owed', 'paid names the account; on credit names who is owed'],
+      ['chk_expenses_instrument_type', 'an instrument type the code knows'],
+      ['chk_vouchers_instrument_type', 'the same, on the voucher that moved the money'],
+    ])('enforces %s — %s', async (name) => {
+      const rows = await dataSource.query<{ count: string }[]>(
+        `SELECT count(*) AS count FROM pg_constraint WHERE contype = 'c' AND conname = $1`,
+        [name],
+      );
+      expect(Number(rows[0]?.count)).toBe(1);
+    });
+
+    it.each([
+      ['fk_expenses_site_id', 'an expense belongs to a real kiln'],
+      ['fk_expenses_category_ledger_id', 'an expense lands on a real category'],
+      ['fk_expenses_paid_from_ledger_id', 'a paid expense names a real account'],
+      ['fk_expenses_party_id', 'a credit expense names a real party'],
+      ['fk_expenses_voucher_id', 'an expense points at the journal it posted'],
+    ])('enforces %s — %s', (name) => {
+      expect(foreignKeys.has(name)).toBe(true);
+    });
+
+    it('refuses an expense that is both paid and owed', async () => {
+      await expect(
+        dataSource.query(
+          `INSERT INTO expenses
+             (company_id, expense_no, site_id, category_ledger_id, expense_date, amount, mode,
+              paid_from_ledger_id, party_id, voucher_id)
+           VALUES ('00000000-0000-4000-8000-000000000000','BAD-1','00000000-0000-4000-8000-000000000000',
+                   '00000000-0000-4000-8000-000000000000','2026-09-01', 100, 'cash',
+                   '00000000-0000-4000-8000-000000000000','00000000-0000-4000-8000-000000000000',
+                   '00000000-0000-4000-8000-000000000000')`,
+        ),
+      ).rejects.toThrow();
+    });
+
+  });
+
   describe('every tenant table is indexed and keyed on company_id', () => {
     const TENANT_TABLES = [
       'parties',
@@ -403,6 +448,8 @@ describe('Schema integrity (e2e)', () => {
       // Transport operations (P9.1b)
       'vehicle_trips',
       'vehicle_expenses',
+      // Expenses (P10.1a)
+      'expenses',
     ];
 
     it.each(TENANT_TABLES)('%s has an index on company_id', async (table) => {

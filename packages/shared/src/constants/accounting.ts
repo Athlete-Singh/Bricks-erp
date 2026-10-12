@@ -119,6 +119,10 @@ export const LEDGER_SEED: readonly LedgerSeed[] = [
   { code: 'BANK_CHARGES', name: 'Bank Charges', group: 'INDIRECT_EXPENSES' },
   { code: 'GOVERNMENT_CHARGES', name: 'Government Charges', group: 'INDIRECT_EXPENSES' },
   { code: 'MISC_EXPENSES', name: 'Miscellaneous Expenses', group: 'INDIRECT_EXPENSES' },
+  // EXP-01 names machinery and food as their own categories; neither had a
+  // ledger before P10, so an expense entry had nowhere honest to land.
+  { code: 'MACHINERY_REPAIRS', name: 'Machinery & Equipment', group: 'INDIRECT_EXPENSES' },
+  { code: 'FOOD_EXPENSES', name: 'Food & Khurak', group: 'INDIRECT_EXPENSES' },
 
   { code: 'CLOSING_STOCK', name: 'Closing Stock', group: 'STOCK_IN_HAND' },
 

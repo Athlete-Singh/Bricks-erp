@@ -35,6 +35,9 @@ export interface PostingInput {
   /** What produced this journal, e.g. `sales_invoice` + the invoice id. */
   sourceType?: string | null;
   sourceId?: string | null;
+  /** CSH-01 — the cheque number, UPI reference or UTR that moved the money. */
+  instrumentType?: string | null;
+  instrumentRef?: string | null;
 }
 
 export interface PostedVoucher {
@@ -73,6 +76,8 @@ export class PostingService {
         siteId: input.siteId ?? null,
         sourceType: input.sourceType ?? null,
         sourceId: input.sourceId ?? null,
+        instrumentType: (input.instrumentType ?? null) as Voucher['instrumentType'],
+        instrumentRef: input.instrumentRef ?? null,
         createdBy: input.userId,
         updatedBy: input.userId,
       }),
