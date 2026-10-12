@@ -12,10 +12,10 @@
 | ACC-04 | Opening balances for ledgers | P2 | ⬜ |
 | ACC-05 | Day Book, Ledger, Trial Balance | P2 | ⬜ |
 | ACC-06 | Sales & purchase vouchers auto-posted from documents; debit/credit notes | P7/P8 | ⬜ |
-| ACC-07 | Cash Book, Bank Book | P10 | ⬜ |
-| ACC-08 | Profit & Loss, Balance Sheet (closing stock valuation method: see open questions) | P10 | ⬜ |
-| ACC-09 | Receivables & payables summary reports | P10 | ⬜ |
-| ACC-10 | Financial year lock and year-end carry-forward of balances | P10 | ⬜ |
+| ACC-07 | Cash Book, Bank Book | P10 | ✅ |
+| ACC-08 | Profit & Loss, Balance Sheet (closing stock valuation method: see open questions) | P10 | ✅ |
+| ACC-09 | Receivables & payables summary reports | P10 | ✅ |
+| ACC-10 | Financial year lock and year-end carry-forward of balances | P10 | ✅ |
 
 ## Tables (planned)
 ledger_groups, ledgers, voucher_types, vouchers, voucher_lines

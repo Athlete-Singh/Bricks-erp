@@ -11,17 +11,17 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 101 | 62 | 17 | 1 | 21 | 0 |
+| CP1 MVP | 101 | 73 | 6 | 1 | 21 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 
-**CP1 done: 61 %** (62 of 101 features ✅)
+**CP1 done: 72 %** (73 of 101 features ✅)
 
 ### Per app
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
 | Backend | 97 | 78 | 1 | 0 | 0 | 18 |
-| Web | 94 | 65 | 0 | 0 | 0 | 29 |
+| Web | 94 | 76 | 0 | 0 | 0 | 18 |
 | Mobile | 11 | 0 | 0 | 0 | 0 | 11 |
 | Tests | 101 | 79 | 0 | 0 | 0 | 22 |
 
@@ -144,10 +144,10 @@
 | ACC-04 | Opening balances for ledgers | CP1 | P2 | 🧩 | ⬜ | — | ✅ | 🟨 | Opening Dr/Cr per ledger, transactional. Deliberately accepts an unbalanced set and reports the difference — real opening figures rarely tie first time |
 | ACC-05 | Day Book, Ledger, Trial Balance | CP1 | P2 | ✅ | ✅ | — | ✅ | ✅ | Day Book, Ledger statement with running balance, Trial Balance with Σ Dr = Σ Cr and the difference surfaced |
 | ACC-06 | Sales & purchase vouchers auto-posted from documents; debit/credit notes | CP1 | P7/P8 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| ACC-07 | Cash Book, Bank Book | CP1 | P10 | ✅ | ⬜ | — | ✅ | 🟨 |  |
-| ACC-08 | Profit & Loss, Balance Sheet (closing stock valuation method: see open questions) | CP1 | P10 | ✅ | ⬜ | — | ✅ | 🟨 |  |
-| ACC-09 | Receivables & payables summary reports | CP1 | P10 | ✅ | ⬜ | — | ✅ | 🟨 |  |
-| ACC-10 | Financial year lock and year-end carry-forward of balances | CP1 | P10 | ✅ | ⬜ | — | ✅ | 🟨 |  |
+| ACC-07 | Cash Book, Bank Book | CP1 | P10 | ✅ | ✅ | — | ✅ | ✅ |  |
+| ACC-08 | Profit & Loss, Balance Sheet (closing stock valuation method: see open questions) | CP1 | P10 | ✅ | ✅ | — | ✅ | ✅ |  |
+| ACC-09 | Receivables & payables summary reports | CP1 | P10 | ✅ | ✅ | — | ✅ | ✅ |  |
+| ACC-10 | Financial year lock and year-end carry-forward of balances | CP1 | P10 | ✅ | ✅ | — | ✅ | ✅ |  |
 
 ### M11 GST Engine (SOW #11)
 
@@ -156,10 +156,10 @@
 | GST-01 | HSN/SAC master + GST rate config (configurable; clay building bricks usually HSN 6904, confirm with the client's CA) | CP1 | P3 | ✅ | ✅ | — | ✅ | ✅ |  |
 | GST-02 | CGST+SGST vs IGST by place of supply | CP1 | P8 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | GST-03 | GST input on purchases | CP1 | P7 | ✅ | ✅ | — | ✅ | ✅ |  |
-| GST-04 | GSTR-1 register (B2B, B2C, HSN summary) with Excel export | CP1 | P10 | ✅ | ⬜ | — | ✅ | 🟨 |  |
-| GST-05 | GSTR-3B summary register | CP1 | P10 | ✅ | ⬜ | — | ✅ | 🟨 |  |
-| GST-06 | GST sales and purchase reports | CP1 | P10 | ✅ | ⬜ | — | ✅ | 🟨 |  |
-| GST-07 | GST reconciliation: books vs what was filed — GSTR-1 register against the sales register, GSTR-3B against the books, with the differences listed | CP1 | P10 | ✅ | ⬜ | — | ✅ | 🟨 | Proposal §1 names "delayed GST reconciliation" as a problem BRICS solves. GST-04/05 produce registers; nothing reconciles them |
+| GST-04 | GSTR-1 register (B2B, B2C, HSN summary) with Excel export | CP1 | P10 | ✅ | ✅ | — | ✅ | ✅ |  |
+| GST-05 | GSTR-3B summary register | CP1 | P10 | ✅ | ✅ | — | ✅ | ✅ |  |
+| GST-06 | GST sales and purchase reports | CP1 | P10 | ✅ | ✅ | — | ✅ | ✅ |  |
+| GST-07 | GST reconciliation: books vs what was filed — GSTR-1 register against the sales register, GSTR-3B against the books, with the differences listed | CP1 | P10 | ✅ | ✅ | — | ✅ | ✅ | Proposal §1 names "delayed GST reconciliation" as a problem BRICS solves. GST-04/05 produce registers; nothing reconciles them |
 
 ### M13 Leakage Control — the ROI module (Proposal §1 + §4, Functional Spec §21)
 
@@ -199,9 +199,9 @@
 
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| EXP-01 | Expense categories (labour, coal, diesel, electricity, vehicle, machinery, repairs, salary, food, rent, office, govt charges, bank charges, misc) | CP1 | P10 | ✅ | ⬜ | — | ✅ | 🟨 |  |
-| EXP-02 | Expense entry by kiln with payment mode Cash / Bank / UPI / Credit | CP1 | P10 | ✅ | ⬜ | — | ✅ | 🟨 |  |
-| CSH-01 | Opening/closing cash; cash receipts/payments; bank deposit, withdrawal and transfer (contra); bank charges; cheque no. / UPI ref on vouchers | CP1 | P10 | ✅ | ⬜ | — | ✅ | 🟨 |  |
+| EXP-01 | Expense categories (labour, coal, diesel, electricity, vehicle, machinery, repairs, salary, food, rent, office, govt charges, bank charges, misc) | CP1 | P10 | ✅ | ✅ | — | ✅ | ✅ |  |
+| EXP-02 | Expense entry by kiln with payment mode Cash / Bank / UPI / Credit | CP1 | P10 | ✅ | ✅ | — | ✅ | ✅ |  |
+| CSH-01 | Opening/closing cash; cash receipts/payments; bank deposit, withdrawal and transfer (contra); bank charges; cheque no. / UPI ref on vouchers | CP1 | P10 | ✅ | ✅ | — | ✅ | ✅ |  |
 | DSH-01 | Owner dashboard answering the "Key Management Questions": production today/month/year, stock, sold/dispatched, receivables, payables, labour payable, coal/diesel used, **expenses, estimated profit**, cost per 1,000, gross margin | CP1 | P11 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | DSH-02 | Monthly charts: production, sales, collection, expenses, fuel | CP1 | P11 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | CST-01 | Cost per 1,000 bricks by kiln, month **and brick type** (labour, coal, soil, electricity, loading, repairs, other) vs selling price → gross margin. Shown against the ₹4,100 benchmark from the Proposal §4 / Spec §22 | CP1 | P11 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |

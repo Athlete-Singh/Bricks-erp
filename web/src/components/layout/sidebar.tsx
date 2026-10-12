@@ -44,7 +44,7 @@ const NAV: NavItem[] = [
   { label: 'Stock', href: '/stock', icon: Boxes, permissions: [PERMISSIONS.INVENTORY_VIEW] },
   { label: 'Masters', href: '/masters', icon: Library, permissions: [PERMISSIONS.PARTIES_VIEW] },
   { label: 'Accounts', href: '/accounts', icon: BookOpen, permissions: [PERMISSIONS.ACCOUNTS_VIEW] },
-  { label: 'Reports', href: '/reports', icon: BarChart2, comingIn: 'P11' },
+  { label: 'Reports', href: '/reports', icon: BarChart2, permissions: [PERMISSIONS.ACCOUNTS_VIEW] },
   { label: 'Audit log', href: '/audit-logs', icon: ScrollText, permissions: [PERMISSIONS.AUDIT_VIEW] },
   { label: 'Settings', href: '/settings', icon: Settings, permissions: [PERMISSIONS.COMPANY_VIEW] },
 ];

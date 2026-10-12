@@ -60,15 +60,23 @@ describe('Sidebar', () => {
     expect(screen.getByRole('link', { name: /settings/i })).toBeInTheDocument();
   });
 
-  it('renders unbuilt modules as disabled labels, not dead links', () => {
+  it('never renders a dead link', () => {
+    // Production, Purchases, Sales, Dispatch and Reports each held the
+    // "coming soon" slot and each has now shipped, so there is no unbuilt
+    // module left to grey out. What still matters is the invariant: every item
+    // in the sidebar either links somewhere real or is marked disabled.
     useAuthStore.getState().setSession(sessionWith(['company.view']));
-    render(<Sidebar />);
+    const { container } = render(<Sidebar />);
 
-    // Dispatch has no route yet; linking to it would 404. Production and then
-    // Purchases each held this slot and each shipped, so this names the
-    // furthest-out module rather than whichever is next.
-    expect(screen.queryByRole('link', { name: /dispatch/i })).not.toBeInTheDocument();
-    expect(screen.getByTitle('Available in P11')).toHaveAttribute('aria-disabled');
+    const links = Array.from(container.querySelectorAll('a'));
+    expect(links.length).toBeGreaterThan(0);
+    for (const link of links) {
+      expect(link.getAttribute('href')).toMatch(/^\/[a-z-]/);
+    }
+    // Anything not a link must say why it is not clickable.
+    for (const disabled of Array.from(container.querySelectorAll('[aria-disabled]'))) {
+      expect(disabled.getAttribute('title')).toMatch(/^Available in /);
+    }
   });
 
   it('hides a built module from someone without its permission', () => {
