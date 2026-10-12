@@ -28,5 +28,9 @@ Status: ⬜ planned · ✅ migrated. Update when migrations land.
 | `1700000400000-Parties` | `parties` (party_types, gstin, pan, state_code, address, phone, email, opening_debit/credit, ledger_id) · `companies.gst_scheme`. CHECKs: opening on one side only, non-negative. Unique: ledger_id, name per company among live rows |
 | `1791900000000-ProductionConsumptions` | `production_consumptions` (entry_id, item_id, warehouse_id, quantity, stock_movement_id). CHECK quantity > 0. Partial unique on (entry_id, item_id, warehouse_id). FKs to production_entries CASCADE, items/warehouses/stock_movements RESTRICT. |
 | `1792000000000-IdempotencyKeys` | `idempotency_keys` (company_id, user_id, key, endpoint, request_hash sha-256, response_status, response_body jsonb). Unique on (company_id, endpoint, key). FK company_id → companies CASCADE. CHECK status in [100,599]. |
+| `1792100000000-LabourEngine` | `labour_groups` · `workers` · `labour_attendance` · `labour_advances` · `labour_deductions` · `labour_settlements`. FKs with CASCADE/RESTRICT, amount/status CHECKs, company_id indexes and partial unique business keys. |
+- `labour_wage_accruals` — one row per wage-accrual run: `site_id`, `sardar_party_id`, `period_from`,
+  `period_to`, `gross_wages`, `voucher_id`. Exists so the same work cannot be paid for twice — an accrual
+  whose period overlaps an existing one for that Sardar is refused (ADR-035).
 
 Seed: `pnpm seed` fills `roles`, `permissions`, `role_permissions` (9 roles, idempotent).

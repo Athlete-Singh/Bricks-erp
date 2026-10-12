@@ -1,15 +1,21 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** P5.2 ✅ done — **phase P5 complete** → **next: P6.1** (labour: attendance + wages)
+**Client Phase:** CP1 (MVP) · **Current step:** P6.2 ✅ done — **next: P7.1** (purchases engine backend: PO, GRN, bill, payment)
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
-- **Last green commit:** `5e1ecee` P5.2 web production screens (2026-10-10). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 136 unit + 327 e2e, web **96**, shared 76.
-- **What shipped (P5.1c):** backend mobile-sync contract — **SYN-01**: new `idempotency_keys` table (unique on `(company_id, endpoint, key)`), `IdempotencyService.runOnce(manager, …)` wraps the business work in the same transaction, with a per-key advisory lock to serialise two concurrent retries. Wired on all 5 production POSTs. Repeat with the same key + same body returns the stored response (same id) and inserts nothing; same key + different body → `422 IDEMPOTENCY_KEY_REUSED`. Missing header is unchanged behaviour. Same key across two companies does not collide. **SYN-02**: `?since=<ISO>` on `GET /sites`, `GET /parties`, `GET /inventory/items`, `GET /inventory/brick-types`, `GET /inventory/warehouses`, `GET /labour/wage-rates` — returns rows whose `updated_at` or `deleted_at` is strictly after `since`, each carrying `deleted: true|false` so the mobile reconciles tombstones. 12 new e2e: 4 SYN-01 (replay / mismatch / no-header / cross-tenant) + 8 SYN-02 (per-master create/update/delete + strict-after + bad-since + no-since baseline).
-- **P5.1 is ✅ complete**: P5.1a (batches, stages, sorting → stock, LEK-01) + P5.1b (consumption, LEK-02) + P5.1c (SYN-01, SYN-02).
-- **P5.2 shipped:** Production section — batch list, batch detail with the four-stage workflow (a recorded stage is read-only, since correction is reversal), and the two leakage reports. The variance screen is where P5.1's repairs became visible: an unsorted batch reads "Not known yet", and drying loss sits in its own column so the theft number is not buried under ordinary breakage. Verified in a browser: full batch through all four stages, stock in and out, PRD-07 totals correct.
-- **M-track is unblocked** — the sync contract (SYN-01/02) is built, so the Flutter app may begin on a machine with the SDK, in parallel with web work.
-- **Next step (exact):** **P6.1 — labour**: attendance per gang per day (LAB-01), piece-rate and daily-wage payout from the wage rates already in masters (LAB-02/03), and advances against a Sardar (LAB-04). Payouts post through `PostingService` to Labour Payables, the same way sorting posts through `StockService` — one service, the caller's transaction.
+- **Last green gate:** P6 complete, then audited and repaired (2026-10-12). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 143 unit + **371 e2e** (345 → 371 from the audit), web 106 unit, shared 76. Schema integrity 110.
+- **What shipped (P6.2):** Labour & Sardar Web Screens — **LAB-01…08, LEK-03**:
+  - Full frontend module under `/labour` with 6 tab views:
+    - `/labour/attendance`: Field-friendly muster roll register with status badges, filters, and batch entry dialog (`AttendanceRegisterDialog`) featuring high-contrast $\ge 44\text{px}$ touch buttons (`Present`, `Half Day`, `Absent`) and overtime tracking.
+    - `/labour/advances`: Advances register with period summary card and `AdvanceDialog` featuring real-time **LEK-03** exposure detection card and server warning banner.
+    - `/labour/groups`: Dual-section management for Labour Gangs (with Sardar and activity linking) and Worker Master roster.
+    - `/labour/deductions`: Register for Khurak (rations), loan instalments, advance recoveries, and fines with `DeductionDialog`.
+    - `/labour/settlements`: Seasonal settlement statements with gross wages, advances recovered, deductions, and net payable. `AccrueWagesDialog` (LAB-04 journal posting) and `SettlementDialog` (LAB-07 settlement with immediate cash/bank payout option). `SettlementDetailDialog` statement modal.
+    - `/labour/exposure`: Dedicated LEK-03 Live Sardar Advance Exposure Monitor dashboard ranking Sardars by net exposure risk, filterable by kiln and unsecured-only toggle.
+  - Active Labour navigation in sidebar (`PERMISSIONS.LABOUR_VIEW`), removing `comingIn: 'P6'`.
+  - Comprehensive unit test suite in `web/src/features/labour/__tests__/labour.test.tsx` verifying dashboard, tables, badges, and LEK-03 warnings.
+- **Next step (exact):** **P7.1 — purchases engine backend**: PO, GRN (INV-05 stock IN), purchase bill (balanced journal Dr Raw Materials / Cr Vendor), payment voucher, and coal purchase tracking.
 
 - **INV-05 is being wired across P5/P7/P9** — P5.1a added sorting IN (first instance), P5.1b adds the firing/making OUT, P7 will add GRN IN, P9 will add dispatch OUT.
 - **Still open:** opening balance posting — a party's Dr/Cr is stored on the party and its ledger, but no opening journal is written, so the Trial Balance shows it as a difference. Deferred to a dedicated import flow.
@@ -101,6 +107,23 @@ Neither would have failed a unit test, and both were only visible by driving the
 - **`Dialog` used a hardcoded `id="dialog-title"`** for `aria-labelledby`. Any screen with two dialogs — most of them;
   the inventory masters page has four — announced the wrong title to a screen reader. Now `useId()` per instance, and
   `aria-describedby` wired up while there.
+
+### What the P6.1 audit found (2026-10-12)
+Audited before closing P6, as P3.1, P4.1 and P5.1 were. The engine was well built — 17 endpoints, LEK-03 exposure
+live, payouts through `PostingService`, future-date guards already applied, 18 e2e green. Three defects behind that,
+two of them money:
+- **The same work could be paid for twice.** Accrual read a date range and credited the Sardar, but recorded nothing
+  about the range it had paid. A second call, or any overlapping range, posted the whole amount again. Proved live:
+  the first accrual posted ₹500 and the second was refused only after the fix (ADR-035).
+- **A worker could be marked present twice on one day** and be paid twice for it — no guard in code or schema
+  (ADR-036).
+- **A missing wage rate fell back to an invented ₹650 per 1,000** (ADR-037). The existing accrual test passed only
+  because of that fallback.
+- Structural: five of the six new tables had **no foreign key to `companies`**, two had no `company_id` index, and
+  none of the labour tables were in `schema-integrity.e2e-spec.ts` — the P3 failure mode, where a constraint nothing
+  asserts can be dropped silently.
+**Lesson:** an idempotency key is not a duplicate guard. It makes a *retry* safe; it says nothing about a second
+genuine request for the same work. Anything that computes money from a date range needs to record the range.
 
 ### What the P5.1 audit found (2026-10-10)
 Audited before building the screens, as P3.1 and P4.1 were. The structure was sound — idempotency correct under
@@ -219,8 +242,8 @@ The P track is never blocked by the M track.
 | P5 | P5.1b | Backend: **PRD-04** coal + soil consumption from stock + **LEK-02 coal per 1,000** | ✅ |
 | P5 | P5.1c | Backend: **SYN-01** `Idempotency-Key` + **SYN-02** `?since=` delta pull — gates mobile M2 | ✅ |
 | P5 | P5.2 | Web production entry + the two variance reports | ✅ |
-| P6 | P6.1 | Labour backend + **LEK-03 live advance exposure, with the warning at advance entry** | ⬜ |
-| P6 | P6.2 | Web attendance, wages, advances, settlement + exposure screen | ⬜ |
+| P6 | P6.1 | Labour backend + **LEK-03 live advance exposure, with the warning at advance entry** | ✅ |
+| P6 | P6.2 | Web attendance, wages, advances, settlement + exposure screen | ✅ |
 | P7 | P7.1 / P7.2 | Purchases backend / web (PO → GRN → bill → payment) | ⬜ |
 | P8 | P8.1 / P8.2 | Sales & GST backend (+ invoice PDF) / web | ⬜ |
 | P9 | P9.1 | Dispatch & transport backend + **LEK-04 gate reconciliation** | ⬜ |

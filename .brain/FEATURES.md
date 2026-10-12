@@ -11,19 +11,19 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 101 | 31 | 4 | 1 | 65 | 0 |
+| CP1 MVP | 101 | 38 | 5 | 1 | 57 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 
-**CP1 done: 31 %** (31 of 101 features ✅)
+**CP1 done: 38 %** (38 of 101 features ✅)
 
 ### Per app
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
-| Backend | 97 | 34 | 1 | 0 | 0 | 62 |
-| Web | 94 | 32 | 0 | 0 | 0 | 62 |
+| Backend | 97 | 42 | 1 | 0 | 0 | 54 |
+| Web | 94 | 40 | 0 | 0 | 0 | 54 |
 | Mobile | 11 | 0 | 0 | 0 | 0 | 11 |
-| Tests | 101 | 35 | 0 | 0 | 0 | 66 |
+| Tests | 101 | 43 | 0 | 0 | 0 | 58 |
 
 ## Client Phase 1 — MVP
 
@@ -68,14 +68,14 @@
 
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| LAB-01 | Labour groups under a Sardar; worker master | CP1 | P6 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| LAB-02 | Daily attendance by group/worker (web + mobile offline) | CP1 | P6 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |  |
+| LAB-01 | Labour groups under a Sardar; worker master | CP1 | P6 | ✅ | ✅ | — | ✅ | ✅ | Labour groups & worker roster with group/activity/site assignment |
+| LAB-02 | Daily attendance by group/worker (web + mobile offline) | CP1 | P6 | ✅ | ✅ | ⬜ | ✅ | 🟨 | Web muster roll register + mobile pending M3 |
 | LAB-03 | Wage-rate config: piece rate per 1,000 bricks by activity (making, loading, unloading) and daily wage | CP1 | P6 | ✅ | ✅ | — | ✅ | ✅ |  |
-| LAB-04 | Auto wage entries from production and loading counts | CP1 | P6 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| LAB-05 | Cash advances and loans to Sardar/workers (cash/bank/UPI) | CP1 | P6 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| LAB-06 | Deductions: advance recovery, loan instalment, **food/ration (khurak), fines and penalties** | CP1 | P6 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| LAB-07 | Wage payment and seasonal settlement statement (earned − advances − deductions = payable) | CP1 | P6 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| LAB-08 | Labour ledger and outstanding per Sardar/worker | CP1 | P6 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| LAB-04 | Auto wage entries from production and loading counts | CP1 | P6 | ✅ | ✅ | — | ✅ | ✅ | Accrue wages modal + auto wage entry from production |
+| LAB-05 | Cash advances and loans to Sardar/workers (cash/bank/UPI) | CP1 | P6 | ✅ | ✅ | — | ✅ | ✅ | Advances register with live LEK-03 exposure check & payment voucher posting |
+| LAB-06 | Deductions: advance recovery, loan instalment, **food/ration (khurak), fines and penalties** | CP1 | P6 | ✅ | ✅ | — | ✅ | ✅ | Deductions register & dialog for khurak, loans, recoveries, fines |
+| LAB-07 | Wage payment and seasonal settlement statement (earned − advances − deductions = payable) | CP1 | P6 | ✅ | ✅ | — | ✅ | ✅ | Seasonal settlements register & calculation dialog with optional payment voucher |
+| LAB-08 | Labour ledger and outstanding per Sardar/worker | CP1 | P6 | ✅ | ✅ | — | ✅ | ✅ | Party ledger statements cover Sardar accounts |
 
 ### M05 Inventory (SOW #5)
 
@@ -171,7 +171,7 @@
 |---|---|---|---|---|---|---|---|---|---|
 | LEK-01 | Brick yield variance: green moulded − (good + broken + rejects) per batch / chamber / Sardar gang, with an "unexplained" column | CP1 | P5 | ✅ | ✅ | — | ✅ | ✅ | |
 | LEK-02 | Coal consumption per 1,000 bricks fired, compared batch-to-batch, kiln-to-kiln and month-to-month; outliers flagged | CP1 | P5 | ✅ | ✅ | — | ✅ | ✅ | |
-| LEK-03 | Live Sardar advance exposure: advances drawn − wages earned to date, per Sardar; **warning shown at the moment a new advance is entered** | CP1 | P6 | ⬜ | ⬜ | — | ⬜ | ⬜ | Highest value / lowest effort. Season-end settlement is too late to act |
+| LEK-03 | Live Sardar advance exposure: advances drawn − wages earned to date, per Sardar; **warning shown at the moment a new advance is entered** | CP1 | P6 | ✅ | ✅ | — | ✅ | ✅ | Live Sardar advance exposure monitor dashboard & real-time modal warning |
 | LEK-04 | Gate reconciliation: dispatched qty vs invoiced qty vs stock movement, with unmatched dispatches listed | CP1 | P9 | ⬜ | ⬜ | — | ⬜ | ⬜ | Catches trucks leaving without a bill |
 
 ### M14 Sync & idempotency (backend only — no Flutter needed)

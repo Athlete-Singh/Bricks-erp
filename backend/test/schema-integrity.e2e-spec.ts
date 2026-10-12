@@ -137,6 +137,37 @@ describe('Schema integrity (e2e)', () => {
     });
   });
 
+  describe('the labour engine (P6)', () => {
+    it.each([
+      ['uq_labour_groups_company_name', 'no two gangs of a company share a name'],
+      ['uq_labour_attendance_worker_day', 'a worker is marked once per day, so wages are paid once'],
+      ['uq_labour_attendance_group_day', 'a gang is marked once per day'],
+    ])('enforces %s — %s', (name) => {
+      expect(indexes.has(name)).toBe(true);
+    });
+
+    it.each([
+      ['chk_wage_accruals_period', 'an accrual period cannot end before it starts'],
+      ['chk_wage_accruals_gross_positive', 'an accrual is for more than nothing'],
+      ['chk_advance_amount_positive', 'an advance is for more than nothing'],
+      ['chk_deduction_amount_positive', 'a deduction is for more than nothing'],
+    ])('enforces %s — %s', async (name) => {
+      const rows = await dataSource.query<{ count: string }[]>(
+        `SELECT count(*) AS count FROM pg_constraint WHERE contype = 'c' AND conname = $1`,
+        [name],
+      );
+      expect(Number(rows[0]?.count)).toBe(1);
+    });
+
+    it.each([
+      ['fk_wage_accruals_voucher_id', 'an accrual points at the journal it posted'],
+      ['fk_labour_groups_sardar', 'a gang belongs to a real Sardar'],
+      ['fk_attendance_group', 'attendance belongs to a real gang'],
+    ])('enforces %s — %s', (name) => {
+      expect(foreignKeys.has(name)).toBe(true);
+    });
+  });
+
   describe('every tenant table is indexed and keyed on company_id', () => {
     const TENANT_TABLES = [
       'parties',
@@ -148,6 +179,13 @@ describe('Schema integrity (e2e)', () => {
       'transport_vehicles',
       'tax_hsn_rates',
       'labour_wage_rates',
+      'labour_groups',
+      'workers',
+      'labour_attendance',
+      'labour_advances',
+      'labour_deductions',
+      'labour_settlements',
+      'labour_wage_accruals',
       'stock_movements',
       'production_batches',
       'production_entries',

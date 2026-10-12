@@ -85,6 +85,12 @@ describe('Sidebar', () => {
     expect(screen.getByRole('link', { name: /production/i })).toHaveAttribute('href', '/production');
   });
 
+  it('shows Labour to someone who may view it', () => {
+    useAuthStore.getState().setSession(sessionWith(['company.view', 'labour.view']));
+    render(<Sidebar />);
+    expect(screen.getByRole('link', { name: /labour/i })).toHaveAttribute('href', '/labour');
+  });
+
   it('closes the mobile drawer when a link is followed', () => {
     useAuthStore.getState().setSession(sessionWith(['company.view']));
     useUiStore.setState({ mobileNavOpen: true });
