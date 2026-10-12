@@ -5,13 +5,13 @@
 
 ## Where we are
 
-**Client Phase:** CP1 (MVP) · **Current step:** P6.2 ✅ done — **next: P7.1** (purchases engine backend: PO, GRN, bill, payment)
+**Client Phase:** CP1 (MVP) · **Current step:** P7.2 ✅ done — **phase P7 complete** → **next: P8** (sales & dispatch)
 
-**Client Phase 1 (MVP) progress: 38 %** (38 of 101 features done)
+**Client Phase 1 (MVP) progress: 44 %** (44 of 101 features done)
 
 |              | Total | ✅  | 🟨  | ⚠️  | ⬜  | ⏭️  |
 | ------------ | ----- | --- | --- | --- | --- | --- |
-| CP1 MVP      | 101   | 38  | 12  | 1   | 50  | 0   |
+| CP1 MVP      | 101   | 44  | 6   | 1   | 50  | 0   |
 | CP2 Advanced | 10    | 0   | 0   | 0   | 0   | 10  |
 
 ### Progress per app (CP1)
@@ -19,7 +19,7 @@
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 | ----------------------------------- | ---------- | ------- | ---------------- | -------------- | ---------- | -------------- |
 | Backend                             | 97         | 49      | 1                | 0              | 0          | 47             |
-| Web                                 | 94         | 40      | 0                | 0              | 0          | 54             |
+| Web                                 | 94         | 47      | 0                | 0              | 0          | 47             |
 | Mobile                              | 11         | 0       | 0                | 0              | 0          | 11             |
 | Tests                               | 101        | 50      | 0                | 0              | 0          | 51             |
 
@@ -231,11 +231,17 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 - ✅ **INV-06** Manual stock adjustment with reason (restricted role) _(P4)_
 - ✅ **INV-07** Stock reports: current stock by kiln/grade/item, movement register, Opening + Production + Purchase − Sales − Wastage = Closing _(P4)_
 - ✅ **VEH-01** Vehicles (own/hired; truck/tractor/tipper) and drivers _(P3)_
+- ✅ **PUR-01** Purchase order _(P7)_
+- ✅ **PUR-03** Supplier bill / purchase voucher with GST input (CGST/SGST/IGST), linked to GRN _(P7)_
+- ✅ **PUR-04** Supplier payment (cash/bank/UPI) with bill-wise settlement _(P7)_
+- ✅ **PUR-05** Purchase return / debit note _(P7)_
+- ✅ **PUR-06** Payables outstanding with ageing _(P7)_
 - ✅ **ACC-01** Chart of accounts + ledger groups (seeded Indian default, editable) _(P2)_
 - ✅ **ACC-02** Posting engine: balanced, atomic, immutable, reversal _(P2)_
 - ✅ **ACC-03** Manual vouchers: receipt, payment, contra, journal _(P2)_
 - ✅ **ACC-05** Day Book, Ledger, Trial Balance _(P2)_
 - ✅ **GST-01** HSN/SAC master + GST rate config (configurable; clay building bricks usually HSN 6904, confirm with the client's CA) _(P3)_
+- ✅ **GST-03** GST input on purchases _(P7)_
 - ✅ **LEK-01** Brick yield variance: green moulded − (good + broken + rejects) per batch / chamber / Sardar gang, with an "unexplained" column _(P5)_
 - ✅ **LEK-02** Coal consumption per 1,000 bricks fired, compared batch-to-batch, kiln-to-kiln and month-to-month; outliers flagged _(P5)_
 - ✅ **LEK-03** Live Sardar advance exposure: advances drawn − wages earned to date, per Sardar; **warning shown at the moment a new advance is entered** _(P6)_
@@ -244,14 +250,8 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 
 - 🟨 **ADM-05** Users: login (email or mobile + password), JWT access/refresh, logout, change password _(P1)_
 - 🟨 **LAB-02** Daily attendance by group/worker (web + mobile offline) _(P6)_
-- 🟨 **PUR-01** Purchase order _(P7)_
 - 🟨 **PUR-02** GRN (goods receipt) on web + mobile offline → stock in _(P7)_
-- 🟨 **PUR-03** Supplier bill / purchase voucher with GST input (CGST/SGST/IGST), linked to GRN _(P7)_
-- 🟨 **PUR-04** Supplier payment (cash/bank/UPI) with bill-wise settlement _(P7)_
-- 🟨 **PUR-05** Purchase return / debit note _(P7)_
-- 🟨 **PUR-06** Payables outstanding with ageing _(P7)_
 - 🟨 **ACC-04** Opening balances for ledgers _(P2)_
-- 🟨 **GST-03** GST input on purchases _(P7)_
 - 🟨 **SYN-01** `Idempotency-Key` header on every mobile-facing create endpoint + `idempotency_keys` table; a repeat with the same key returns the original result instead of creating a duplicate _(P5)_
 - 🟨 **SYN-02** Delta pull endpoints (`?since=`) for the masters the app caches: kilns, parties, items, brick types, wage rates _(P5)_
 - ⚠️ **NTF-01** SMS/WhatsApp alerts (dispatch sent, payment received, advance limit crossed) via MSG91/Twilio _(P13)_
@@ -387,12 +387,12 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 
 | ID     | Feature                                                                         | CP  | Phase | Backend | Web | Mobile | Tests | Status |
 | ------ | ------------------------------------------------------------------------------- | --- | ----- | ------- | --- | ------ | ----- | ------ |
-| PUR-01 | Purchase order                                                                  | CP1 | P7    | ✅      | ⬜  | —      | ✅    | 🟨     |
-| PUR-02 | GRN (goods receipt) on web + mobile offline → stock in                          | CP1 | P7    | ✅      | ⬜  | ⬜     | ✅    | 🟨     |
-| PUR-03 | Supplier bill / purchase voucher with GST input (CGST/SGST/IGST), linked to GRN | CP1 | P7    | ✅      | ⬜  | —      | ✅    | 🟨     |
-| PUR-04 | Supplier payment (cash/bank/UPI) with bill-wise settlement                      | CP1 | P7    | ✅      | ⬜  | —      | ✅    | 🟨     |
-| PUR-05 | Purchase return / debit note                                                    | CP1 | P7    | ✅      | ⬜  | —      | ✅    | 🟨     |
-| PUR-06 | Payables outstanding with ageing                                                | CP1 | P7    | ✅      | ⬜  | —      | ✅    | 🟨     |
+| PUR-01 | Purchase order                                                                  | CP1 | P7    | ✅      | ✅  | —      | ✅    | ✅     |
+| PUR-02 | GRN (goods receipt) on web + mobile offline → stock in                          | CP1 | P7    | ✅      | ✅  | ⬜     | ✅    | 🟨     |
+| PUR-03 | Supplier bill / purchase voucher with GST input (CGST/SGST/IGST), linked to GRN | CP1 | P7    | ✅      | ✅  | —      | ✅    | ✅     |
+| PUR-04 | Supplier payment (cash/bank/UPI) with bill-wise settlement                      | CP1 | P7    | ✅      | ✅  | —      | ✅    | ✅     |
+| PUR-05 | Purchase return / debit note                                                    | CP1 | P7    | ✅      | ✅  | —      | ✅    | ✅     |
+| PUR-06 | Payables outstanding with ageing                                                | CP1 | P7    | ✅      | ✅  | —      | ✅    | ✅     |
 
 ### M08 Sales & Invoicing (SOW #8)
 
@@ -437,7 +437,7 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------ | --- | ----- | ------- | --- | ------ | ----- | ------ |
 | GST-01 | HSN/SAC master + GST rate config (configurable; clay building bricks usually HSN 6904, confirm with the client's CA)                             | CP1 | P3    | ✅      | ✅  | —      | ✅    | ✅     |
 | GST-02 | CGST+SGST vs IGST by place of supply                                                                                                             | CP1 | P8    | ⬜      | ⬜  | —      | ⬜    | ⬜     |
-| GST-03 | GST input on purchases                                                                                                                           | CP1 | P7    | ✅      | ⬜  | —      | ✅    | 🟨     |
+| GST-03 | GST input on purchases                                                                                                                           | CP1 | P7    | ✅      | ✅  | —      | ✅    | ✅     |
 | GST-04 | GSTR-1 register (B2B, B2C, HSN summary) with Excel export                                                                                        | CP1 | P10   | ⬜      | ⬜  | —      | ⬜    | ⬜     |
 | GST-05 | GSTR-3B summary register                                                                                                                         | CP1 | P10   | ⬜      | ⬜  | —      | ⬜    | ⬜     |
 | GST-06 | GST sales and purchase reports                                                                                                                   | CP1 | P10   | ⬜      | ⬜  | —      | ⬜    | ⬜     |

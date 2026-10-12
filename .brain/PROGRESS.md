@@ -1,10 +1,10 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** P6.2 ✅ done — **next: P7.1** (purchases engine backend: PO, GRN, bill, payment)
+**Client Phase:** CP1 (MVP) · **Current step:** P7.2 ✅ done — **phase P7 complete** → **next: P8** (sales & dispatch)
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
-- **Last green gate:** P6 complete, then audited and repaired (2026-10-12). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 143 unit + **371 e2e** (345 → 371 from the audit), web 106 unit, shared 76. Schema integrity 110.
+- **Last green gate:** P7 complete (2026-10-12). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 143 unit + **426 e2e**, web, shared 76. Schema integrity 144.
 - **What shipped (P6.2):** Labour & Sardar Web Screens — **LAB-01…08, LEK-03**:
   - Full frontend module under `/labour` with 6 tab views:
     - `/labour/attendance`: Field-friendly muster roll register with status badges, filters, and batch entry dialog (`AttendanceRegisterDialog`) featuring high-contrast $\ge 44\text{px}$ touch buttons (`Present`, `Half Day`, `Absent`) and overtime tracking.
@@ -15,7 +15,7 @@ Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
     - `/labour/exposure`: Dedicated LEK-03 Live Sardar Advance Exposure Monitor dashboard ranking Sardars by net exposure risk, filterable by kiln and unsecured-only toggle.
   - Active Labour navigation in sidebar (`PERMISSIONS.LABOUR_VIEW`), removing `comingIn: 'P6'`.
   - Comprehensive unit test suite in `web/src/features/labour/__tests__/labour.test.tsx` verifying dashboard, tables, badges, and LEK-03 warnings.
-- **Next step (exact):** **P7.1 — purchases engine backend**: PO, GRN (INV-05 stock IN), purchase bill (balanced journal Dr Raw Materials / Cr Vendor), payment voucher, and coal purchase tracking.
+- **Next step (exact):** **P8 — sales & dispatch**: quotation → order → dispatch (stock OUT) → tax invoice with output GST → receipt, and receivables ageing. The same two-path shape as P7, mirrored: dispatch moves quantity through `StockService`, the invoice brings value through `PostingService`.
 
 - **INV-05 is being wired across P5/P7/P9** — P5.1a added sorting IN (first instance), P5.1b adds the firing/making OUT, P7 will add GRN IN, P9 will add dispatch OUT.
 - **Still open:** opening balance posting — a party's Dr/Cr is stored on the party and its ledger, but no opening journal is written, so the Trial Balance shows it as a difference. Deferred to a dedicated import flow.
@@ -244,10 +244,10 @@ The P track is never blocked by the M track.
 | P5 | P5.2 | Web production entry + the two variance reports | ✅ |
 | P6 | P6.1 | Labour backend + **LEK-03 live advance exposure, with the warning at advance entry** | ✅ |
 | P6 | P6.2 | Web attendance, wages, advances, settlement + exposure screen | ✅ |
-| P7 | P7.1a | **Backend: PO + GRN** → stock IN through `StockService` (PUR-01, PUR-02, INV-05) | ⬜ |
-| P7 | P7.1b | Backend: supplier bill with input GST + payment, bill-wise (PUR-03, PUR-04, GST-03) | ⬜ |
-| P7 | P7.1c | Backend: purchase return / debit note + payables ageing (PUR-05, PUR-06) | ⬜ |
-| P7 | P7.2 | Web: purchases screens — PO, GRN, bills, payments, ageing | ⬜ |
+| P7 | P7.1a | **Backend: PO + GRN** → stock IN through `StockService` (PUR-01, PUR-02, INV-05) | ✅ |
+| P7 | P7.1b | Backend: supplier bill with input GST + payment, bill-wise (PUR-03, PUR-04, GST-03) | ✅ |
+| P7 | P7.1c | Backend: purchase return / debit note + payables ageing (PUR-05, PUR-06) | ✅ |
+| P7 | P7.2 | Web: purchases screens — PO, GRN, bills, payments, ageing | ✅ |
 | P8 | P8.1 / P8.2 | Sales & GST backend (+ invoice PDF) / web | ⬜ |
 | P9 | P9.1 | Dispatch & transport backend + **LEK-04 gate reconciliation** | ⬜ |
 | P9 | P9.2 | Web dispatch, trips, vehicle profitability + gate report | ⬜ |

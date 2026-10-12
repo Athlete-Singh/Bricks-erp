@@ -37,7 +37,7 @@ const NAV: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Production', href: '/production', icon: Flame, permissions: [PERMISSIONS.PRODUCTION_VIEW] },
   { label: 'Labour', href: '/labour', icon: Users, permissions: [PERMISSIONS.LABOUR_VIEW] },
-  { label: 'Purchases', href: '/purchases', icon: ShoppingCart, comingIn: 'P7' },
+  { label: 'Purchases', href: '/purchases', icon: ShoppingCart, permissions: [PERMISSIONS.PURCHASES_VIEW] },
   { label: 'Dispatch', href: '/dispatch', icon: Truck, comingIn: 'P9' },
   { label: 'Stock', href: '/stock', icon: Boxes, permissions: [PERMISSIONS.INVENTORY_VIEW] },
   { label: 'Masters', href: '/masters', icon: Library, permissions: [PERMISSIONS.PARTIES_VIEW] },

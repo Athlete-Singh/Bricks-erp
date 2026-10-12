@@ -11,17 +11,17 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 101 | 38 | 12 | 1 | 50 | 0 |
+| CP1 MVP | 101 | 44 | 6 | 1 | 50 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 
-**CP1 done: 38 %** (38 of 101 features ✅)
+**CP1 done: 44 %** (44 of 101 features ✅)
 
 ### Per app
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
 | Backend | 97 | 49 | 1 | 0 | 0 | 47 |
-| Web | 94 | 40 | 0 | 0 | 0 | 54 |
+| Web | 94 | 47 | 0 | 0 | 0 | 47 |
 | Mobile | 11 | 0 | 0 | 0 | 0 | 11 |
 | Tests | 101 | 50 | 0 | 0 | 0 | 51 |
 
@@ -105,12 +105,12 @@
 
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| PUR-01 | Purchase order | CP1 | P7 | ✅ | ⬜ | — | ✅ | 🟨 |  |
-| PUR-02 | GRN (goods receipt) on web + mobile offline → stock in | CP1 | P7 | ✅ | ⬜ | ⬜ | ✅ | 🟨 |  |
-| PUR-03 | Supplier bill / purchase voucher with GST input (CGST/SGST/IGST), linked to GRN | CP1 | P7 | ✅ | ⬜ | — | ✅ | 🟨 |  |
-| PUR-04 | Supplier payment (cash/bank/UPI) with bill-wise settlement | CP1 | P7 | ✅ | ⬜ | — | ✅ | 🟨 |  |
-| PUR-05 | Purchase return / debit note | CP1 | P7 | ✅ | ⬜ | — | ✅ | 🟨 |  |
-| PUR-06 | Payables outstanding with ageing | CP1 | P7 | ✅ | ⬜ | — | ✅ | 🟨 |  |
+| PUR-01 | Purchase order | CP1 | P7 | ✅ | ✅ | — | ✅ | ✅ |  |
+| PUR-02 | GRN (goods receipt) on web + mobile offline → stock in | CP1 | P7 | ✅ | ✅ | ⬜ | ✅ | 🟨 |  |
+| PUR-03 | Supplier bill / purchase voucher with GST input (CGST/SGST/IGST), linked to GRN | CP1 | P7 | ✅ | ✅ | — | ✅ | ✅ |  |
+| PUR-04 | Supplier payment (cash/bank/UPI) with bill-wise settlement | CP1 | P7 | ✅ | ✅ | — | ✅ | ✅ |  |
+| PUR-05 | Purchase return / debit note | CP1 | P7 | ✅ | ✅ | — | ✅ | ✅ |  |
+| PUR-06 | Payables outstanding with ageing | CP1 | P7 | ✅ | ✅ | — | ✅ | ✅ |  |
 
 ### M08 Sales & Invoicing (SOW #8)
 
@@ -155,7 +155,7 @@
 |---|---|---|---|---|---|---|---|---|---|
 | GST-01 | HSN/SAC master + GST rate config (configurable; clay building bricks usually HSN 6904, confirm with the client's CA) | CP1 | P3 | ✅ | ✅ | — | ✅ | ✅ |  |
 | GST-02 | CGST+SGST vs IGST by place of supply | CP1 | P8 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| GST-03 | GST input on purchases | CP1 | P7 | ✅ | ⬜ | — | ✅ | 🟨 |  |
+| GST-03 | GST input on purchases | CP1 | P7 | ✅ | ✅ | — | ✅ | ✅ |  |
 | GST-04 | GSTR-1 register (B2B, B2C, HSN summary) with Excel export | CP1 | P10 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | GST-05 | GSTR-3B summary register | CP1 | P10 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | GST-06 | GST sales and purchase reports | CP1 | P10 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |

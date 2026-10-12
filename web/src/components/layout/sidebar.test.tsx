@@ -64,11 +64,11 @@ describe('Sidebar', () => {
     useAuthStore.getState().setSession(sessionWith(['company.view']));
     render(<Sidebar />);
 
-    // Purchases has no route yet; linking to it would 404. (Production used to
-    // be the example here and now ships, which is why this names a phase that
-    // is still ahead rather than asserting on whichever module is next.)
-    expect(screen.queryByRole('link', { name: /purchases/i })).not.toBeInTheDocument();
-    expect(screen.getByTitle('Available in P7')).toHaveAttribute('aria-disabled');
+    // Dispatch has no route yet; linking to it would 404. Production and then
+    // Purchases each held this slot and each shipped, so this names the
+    // furthest-out module rather than whichever is next.
+    expect(screen.queryByRole('link', { name: /dispatch/i })).not.toBeInTheDocument();
+    expect(screen.getByTitle('Available in P11')).toHaveAttribute('aria-disabled');
   });
 
   it('hides a built module from someone without its permission', () => {
@@ -77,6 +77,13 @@ describe('Sidebar', () => {
     useAuthStore.getState().setSession(sessionWith(['company.view']));
     render(<Sidebar />);
     expect(screen.queryByRole('link', { name: /production/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /purchases/i })).not.toBeInTheDocument();
+  });
+
+  it('shows Purchases to someone who may view it', () => {
+    useAuthStore.getState().setSession(sessionWith(['company.view', 'purchases.view']));
+    render(<Sidebar />);
+    expect(screen.getByRole('link', { name: /purchases/i })).toHaveAttribute('href', '/purchases');
   });
 
   it('shows Production to someone who may view it', () => {
