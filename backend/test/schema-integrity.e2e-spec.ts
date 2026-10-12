@@ -248,6 +248,21 @@ describe('Schema integrity (e2e)', () => {
       'production_batches',
       'production_entries',
       'production_sorting_outputs',
+      // Sales (P8) — same rule the P3 audit extracted: a constraint nothing
+      // asserts can be dropped silently (see the Resume here comments).
+      'quotations',
+      'quotation_lines',
+      'sales_orders',
+      'sales_order_lines',
+      'sales_invoices',
+      'sales_invoice_lines',
+      'sales_charges',
+      'customer_receipts',
+      'customer_receipt_allocations',
+      'credit_notes',
+      'credit_note_lines',
+      'debit_notes',
+      'debit_note_lines',
     ];
 
     it.each(TENANT_TABLES)('%s has an index on company_id', async (table) => {

@@ -27,6 +27,8 @@ export const PERMISSIONS = {
   PURCHASES_MANAGE: 'purchases.manage',
   PRODUCTION_VIEW: 'production.view',
   PRODUCTION_MANAGE: 'production.manage',
+  SALES_VIEW: 'sales.view',
+  SALES_MANAGE: 'sales.manage',
 } as const;
 
 export type PermissionCode = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -166,6 +168,18 @@ export const PERMISSION_CATALOGUE: readonly PermissionDefinition[] = [
     module: 'production',
     description: 'Create production batches and record stage entries (making, drying, firing, sorting)',
   },
+  {
+    code: PERMISSIONS.SALES_VIEW,
+    name: 'View sales',
+    module: 'sales',
+    description: 'Read quotations, sales orders, invoices, receipts and receivables',
+  },
+  {
+    code: PERMISSIONS.SALES_MANAGE,
+    name: 'Manage sales',
+    module: 'sales',
+    description: 'Raise quotations and sales orders, issue invoices, record receipts and notes',
+  },
 ] as const;
 
 export interface RoleDefinition {
@@ -208,6 +222,8 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.PRODUCTION_MANAGE,
       PERMISSIONS.PURCHASES_VIEW,
       PERMISSIONS.PURCHASES_MANAGE,
+      PERMISSIONS.SALES_VIEW,
+      PERMISSIONS.SALES_MANAGE,
     ],
   },
   {
@@ -236,6 +252,8 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.PRODUCTION_MANAGE,
       PERMISSIONS.PURCHASES_VIEW,
       PERMISSIONS.PURCHASES_MANAGE,
+      PERMISSIONS.SALES_VIEW,
+      PERMISSIONS.SALES_MANAGE,
     ],
   },
   {
@@ -259,6 +277,9 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.PRODUCTION_VIEW,
       PERMISSIONS.PURCHASES_VIEW,
       PERMISSIONS.PURCHASES_MANAGE,
+      // The books person issues invoices and records receipts.
+      PERMISSIONS.SALES_VIEW,
+      PERMISSIONS.SALES_MANAGE,
     ],
   },
   {
@@ -280,6 +301,8 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.PRODUCTION_MANAGE,
       PERMISSIONS.PURCHASES_VIEW,
       PERMISSIONS.PURCHASES_MANAGE,
+      PERMISSIONS.SALES_VIEW,
+      PERMISSIONS.SALES_MANAGE,
     ],
   },
   {
@@ -326,6 +349,9 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
       PERMISSIONS.TAXES_VIEW,
       // Sorted stock is what the sales team quotes against.
       PERMISSIONS.PRODUCTION_VIEW,
+      // The role's actual subject — quotes, orders and invoices.
+      PERMISSIONS.SALES_VIEW,
+      PERMISSIONS.SALES_MANAGE,
     ],
   },
   {

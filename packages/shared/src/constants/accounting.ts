@@ -94,6 +94,10 @@ export const LEDGER_SEED: readonly LedgerSeed[] = [
   { code: 'SALES_BRICKS', name: 'Sales — Bricks', group: 'SALES_ACCOUNTS' },
   { code: 'SALES_RETURNS', name: 'Sales Returns', group: 'SALES_ACCOUNTS' },
   { code: 'FREIGHT_INCOME', name: 'Freight Income', group: 'DIRECT_INCOME' },
+  // Billed on sales invoices alongside bricks (OQ #17). Separate ledgers so the
+  // P&L shows loading and other charge income on their own lines.
+  { code: 'LOADING_INCOME', name: 'Loading Income', group: 'DIRECT_INCOME' },
+  { code: 'OTHER_SALES_INCOME', name: 'Other Sales Income', group: 'DIRECT_INCOME' },
 
   { code: 'PURCHASES_RAW_MATERIAL', name: 'Purchases — Raw Material', group: 'PURCHASE_ACCOUNTS' },
 

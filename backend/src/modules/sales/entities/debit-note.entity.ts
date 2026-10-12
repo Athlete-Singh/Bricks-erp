@@ -1,0 +1,36 @@
+import { Column, Entity } from 'typeorm';
+import { TenantBaseEntity } from '../../../common/entities/base.entity';
+
+/** SAL-06 — debits the customer for an underbilling. Dr Customer, Cr Sales + Output GST. */
+@Entity('debit_notes')
+export class DebitNote extends TenantBaseEntity {
+  @Column({ name: 'note_no', type: 'varchar', length: 30 })
+  noteNo: string;
+
+  @Column({ name: 'customer_party_id', type: 'uuid' })
+  customerPartyId: string;
+
+  @Column({ name: 'site_id', type: 'uuid' })
+  siteId: string;
+
+  @Column({ name: 'invoice_id', type: 'uuid', nullable: true })
+  invoiceId: string | null;
+
+  @Column({ name: 'note_date', type: 'date' })
+  noteDate: string;
+
+  @Column({ type: 'text' })
+  reason: string;
+
+  @Column({ name: 'taxable_amount', type: 'numeric', precision: 18, scale: 2 })
+  taxableAmount: string;
+
+  @Column({ name: 'tax_amount', type: 'numeric', precision: 18, scale: 2, default: 0 })
+  taxAmount: string;
+
+  @Column({ name: 'total_amount', type: 'numeric', precision: 18, scale: 2 })
+  totalAmount: string;
+
+  @Column({ name: 'voucher_id', type: 'uuid' })
+  voucherId: string;
+}

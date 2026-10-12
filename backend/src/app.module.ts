@@ -20,6 +20,7 @@ import { TransportModule } from './modules/transport/transport.module';
 import { TaxesModule } from './modules/taxes/taxes.module';
 import { LabourModule } from './modules/labour/labour.module';
 import { ProductionModule } from './modules/production/production.module';
+import { SalesModule } from './modules/sales/sales.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -60,6 +61,7 @@ import { ProductionModule } from './modules/production/production.module';
     TaxesModule,
     LabourModule,
     ProductionModule,
+    SalesModule,
   ],
 })
 export class AppModule {}
