@@ -35,9 +35,10 @@ Receipt (RCT) · Payment (PMT) · Contra (CNT) · Journal (JNL) · Sales (SAL) �
 | Supplier bill (P7) | Purchases / Stock / Expense + Input CGST/SGST/IGST | Supplier |
 | Supplier payment (P7) | Supplier | Cash / Bank |
 | Purchase return / debit note (P7) | Supplier | Purchases + Input GST |
-| GST sales invoice (P8) | Customer | Sales – Bricks + Output CGST/SGST/IGST (+ Freight/Loading income if billed) |
-| Customer receipt (P8) | Cash / Bank | Customer |
-| Credit note (P8) | Sales Returns + Output GST | Customer |
+| GST sales invoice (P8) | Customer | Sales – Bricks + Output CGST/SGST/IGST (+ Loading Income / Freight Income / Other Sales Income, split by charge kind — ADR-039) |
+| Customer receipt (P8) | Cash / Bank | Customer (advisory lock stops concurrent overcollection) |
+| Credit note (P8) | Sales Returns + Output CGST/SGST or IGST | Customer; stock IN via StockService in-tx if any line has qty > 0 (ADR-040) |
+| Debit note (P8) | Customer | Sales – Bricks + Output CGST/SGST or IGST |
 | Wage accrual from production/loading (P6) | Labour Wages expense | Sardar / Worker (Labour payable) |
 | Advance to Sardar/worker (P6) | Labour Advances (asset) | Cash / Bank |
 | Advance recovery at settlement (P6) | Sardar payable | Labour Advances |

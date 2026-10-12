@@ -1,11 +1,16 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** P7.2 ✅ done — **phase P7 complete** → **next: P8** (sales & dispatch)
+**Client Phase:** CP1 (MVP) · **Current step:** P8.2 ✅ done — **phase P8 complete** → **next: P9** (dispatch & transport + LEK-04)
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
-- **Last green gate:** P7 complete (2026-10-12). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 143 unit + **426 e2e**, web, shared 76. Schema integrity 144.
-- **What shipped (P6.2):** Labour & Sardar Web Screens — **LAB-01…08, LEK-03**:
+- **Last green gate:** P8 complete (2026-10-12). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 143 unit + **476 e2e** (+50 for sales), web 113, shared 76. Schema integrity now covers 157 tenant tables.
+- **What shipped (P8):** sales engine, SAL-01…07.
+  - **Backend (P8.1a+b+c in one commit):** 13 new tables, 16 routes under `/sales/*`. Quotations with status machine (draft → sent → accepted/rejected/cancelled/expired). Sales orders (optional convert from quote). **GST tax invoice** that moves stock OUT via `StockService` and posts the journal via `PostingService` in **one transaction** (ADR-038); composite loading/transport/other charges split across three income ledgers (ADR-039). **Invoice PDF** rendered server-side with `pdfmake` (OQ #18), carrying every Rule 46 field including amount-in-words. Bill-wise customer receipts with an advisory lock against concurrent overcollection. Credit note that re-stocks if and only if the line carries a quantity (ADR-040); debit note mirror. Receivables ageing with the usual `asOf` + buckets (0/1-30/31-60/61-90/90+).
+  - **Web (P8.2):** six-tab Sales section — quotations, orders, invoices (per-row PDF button that fetches with the in-memory Bearer token and opens via Blob URL), receipts (bill-wise allocation table auto-filtered to open invoices), credit + debit notes on one page, receivables dashboard.
+  - **Shared:** `SALES_VIEW` + `SALES_MANAGE` added to the catalogue; Owner/Super Admin/Accountant/Manager/Sales Executive widened. `LOADING_INCOME` and `OTHER_SALES_INCOME` added to the chart of accounts, with a backfill in the migration so pre-P8 companies pick them up.
+- **Next step (exact):** **P9 — dispatch & transport**: dispatch/challan linking an invoice, vehicle, driver, grade and loading group (DSP-01); confirm → finished stock deducted automatically (DSP-02 — though note that P8 already deducts stock at invoice issue, so P9 will revisit whether the dispatch acts on the invoice line or writes an additional movement, with a dedicated ADR); delivery acknowledgement (DSP-03); challan PDF (DSP-05); + **LEK-04 gate reconciliation**. M-track: SYN-01 already covers the mobile DSP flow in M5.
+- **What shipped (P6.2) — kept for context:** Labour & Sardar Web Screens — **LAB-01…08, LEK-03**:
   - Full frontend module under `/labour` with 6 tab views:
     - `/labour/attendance`: Field-friendly muster roll register with status badges, filters, and batch entry dialog (`AttendanceRegisterDialog`) featuring high-contrast $\ge 44\text{px}$ touch buttons (`Present`, `Half Day`, `Absent`) and overtime tracking.
     - `/labour/advances`: Advances register with period summary card and `AdvanceDialog` featuring real-time **LEK-03** exposure detection card and server warning banner.
@@ -15,9 +20,7 @@ Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
     - `/labour/exposure`: Dedicated LEK-03 Live Sardar Advance Exposure Monitor dashboard ranking Sardars by net exposure risk, filterable by kiln and unsecured-only toggle.
   - Active Labour navigation in sidebar (`PERMISSIONS.LABOUR_VIEW`), removing `comingIn: 'P6'`.
   - Comprehensive unit test suite in `web/src/features/labour/__tests__/labour.test.tsx` verifying dashboard, tables, badges, and LEK-03 warnings.
-- **Next step (exact):** **P8 — sales & dispatch**: quotation → order → dispatch (stock OUT) → tax invoice with output GST → receipt, and receivables ageing. The same two-path shape as P7, mirrored: dispatch moves quantity through `StockService`, the invoice brings value through `PostingService`.
-
-- **INV-05 is being wired across P5/P7/P9** — P5.1a added sorting IN (first instance), P5.1b adds the firing/making OUT, P7 will add GRN IN, P9 will add dispatch OUT.
+- **INV-05 is being wired across P5/P7/P8/P9** — P5.1a added sorting IN (first instance), P5.1b added the firing/making OUT, P7 added GRN IN and purchase-return OUT, P8 added sales-invoice OUT and credit-note IN; P9 adds dispatch OUT (TBD whether as a second movement or a reclassification of the invoice-time OUT).
 - **Still open:** opening balance posting — a party's Dr/Cr is stored on the party and its ledger, but no opening journal is written, so the Trial Balance shows it as a difference. Deferred to a dedicated import flow.
 - **Still open: production stage reversal.** A posted stage entry is immutable (correct) but there is **no reversal endpoint or UI** to correct one — a sorting entry has already written stock IN per grade, and firing/making have written consumption OUT, so an undo must reverse those movements too. The duplicate-stage error now says to use a stock adjustment instead; a proper reversal (like `POST /vouchers/:id/reverse`) is a dedicated step for after P6/P7, once dispatch and purchases have had the same pattern repeated enough times to justify a shared `ReversalService`.
 
@@ -248,7 +251,8 @@ The P track is never blocked by the M track.
 | P7 | P7.1b | Backend: supplier bill with input GST + payment, bill-wise (PUR-03, PUR-04, GST-03) | ✅ |
 | P7 | P7.1c | Backend: purchase return / debit note + payables ageing (PUR-05, PUR-06) | ✅ |
 | P7 | P7.2 | Web: purchases screens — PO, GRN, bills, payments, ageing | ✅ |
-| P8 | P8.1 / P8.2 | Sales & GST backend (+ invoice PDF) / web | ⬜ |
+| P8 | P8.1 | Backend: quotation, SO, GST invoice + stock OUT, PDF, receipt bill-wise, credit/debit notes, receivables ageing | ✅ |
+| P8 | P8.2 | Web: quotations, orders, invoices (+ PDF), receipts, notes, receivables | ✅ |
 | P9 | P9.1 | Dispatch & transport backend + **LEK-04 gate reconciliation** | ⬜ |
 | P9 | P9.2 | Web dispatch, trips, vehicle profitability + gate report | ⬜ |
 | P10 | P10.1 / P10.2 | Expenses, cash/bank, P&L/BS, GSTR registers + **GST-07 reconciliation** — backend / web | ⬜ |

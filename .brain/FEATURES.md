@@ -11,19 +11,19 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 101 | 44 | 6 | 1 | 50 | 0 |
+| CP1 MVP | 101 | 51 | 6 | 1 | 43 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 
-**CP1 done: 44 %** (44 of 101 features ✅)
+**CP1 done: 50 %** (51 of 101 features ✅)
 
 ### Per app
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
-| Backend | 97 | 49 | 1 | 0 | 0 | 47 |
-| Web | 94 | 47 | 0 | 0 | 0 | 47 |
+| Backend | 97 | 56 | 1 | 0 | 0 | 40 |
+| Web | 94 | 54 | 0 | 0 | 0 | 40 |
 | Mobile | 11 | 0 | 0 | 0 | 0 | 11 |
-| Tests | 101 | 50 | 0 | 0 | 0 | 51 |
+| Tests | 101 | 57 | 0 | 0 | 0 | 44 |
 
 ## Client Phase 1 — MVP
 
@@ -116,13 +116,13 @@
 
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| SAL-01 | Quotation | CP1 | P8 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| SAL-02 | Sales order | CP1 | P8 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| SAL-03 | GST tax invoice: brick type, qty, rate per 1,000, discount, loading & transport charges, HSN, GST | CP1 | P8 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| SAL-04 | Invoice PDF (A4, GST-compliant format) | CP1 | P8 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| SAL-05 | Customer receipt with bill-wise allocation | CP1 | P8 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| SAL-06 | Credit / debit notes | CP1 | P8 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| SAL-07 | Receivables outstanding with ageing; customer ledger | CP1 | P8 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| SAL-01 | Quotation | CP1 | P8 | ✅ | ✅ | — | ✅ | ✅ | status machine, GST per line |
+| SAL-02 | Sales order | CP1 | P8 | ✅ | ✅ | — | ✅ | ✅ | optional convert-from-quote |
+| SAL-03 | GST tax invoice: brick type, qty, rate per 1,000, discount, loading & transport charges, HSN, GST | CP1 | P8 | ✅ | ✅ | — | ✅ | ✅ | stock OUT + journal in one tx (ADR-038); composite charges (OQ #17) |
+| SAL-04 | Invoice PDF (A4, GST-compliant format) | CP1 | P8 | ✅ | ✅ | — | ✅ | ✅ | pdfmake (OQ #18); Rule 46 fields incl. amount in words |
+| SAL-05 | Customer receipt with bill-wise allocation | CP1 | P8 | ✅ | ✅ | — | ✅ | ✅ | advisory-lock protects against concurrent overcollection |
+| SAL-06 | Credit / debit notes | CP1 | P8 | ✅ | ✅ | — | ✅ | ✅ | data-driven re-stock (OQ #19); GST split mirrored on reversal |
+| SAL-07 | Receivables outstanding with ageing; customer ledger | CP1 | P8 | ✅ | ✅ | — | ✅ | ✅ | buckets 0/1-30/31-60/61-90/90+; `asOf` honours past dates |
 
 ### M09 Dispatch & Delivery (SOW #9)
 
