@@ -11,9 +11,31 @@ coverage/
 .env
 .env.*
 !.env.example
+# Private keys and certificates — never belong in a repo, even by accident.
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa*
+*.crt
+# Service-account and cloud credential files
+**/credentials.json
+**/service-account*.json
+.aws/
+.gcloud/
+# local databases and dumps — a dump carries real data, not just schema
+*.sqlite
+*.sqlite3
+*.db
+*.sql.gz
+*.dump
 # logs / OS / editors
 *.log
 .DS_Store
+Thumbs.db
+desktop.ini
 .idea/
 .vscode/*
 !.vscode/extensions.json
