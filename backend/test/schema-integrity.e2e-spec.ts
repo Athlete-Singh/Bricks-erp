@@ -395,6 +395,42 @@ describe('Schema integrity (e2e)', () => {
 
   });
 
+  describe('financial statements (P10.1b)', () => {
+    it.each([['uq_closing_stock_rates_item_date', 'one rate per grade per valuation date']])(
+      'enforces %s — %s',
+      (name) => {
+        expect(indexes.has(name)).toBe(true);
+      },
+    );
+
+    it.each([
+      ['chk_closing_stock_rates_rate_positive', 'a closing rate is more than nothing'],
+      ['chk_financial_years_closed_is_locked', 'ACC-10 — a closed year is locked by definition'],
+    ])('enforces %s — %s', async (name) => {
+      const rows = await dataSource.query<{ count: string }[]>(
+        `SELECT count(*) AS count FROM pg_constraint WHERE contype = 'c' AND conname = $1`,
+        [name],
+      );
+      expect(Number(rows[0]?.count)).toBe(1);
+    });
+
+    it.each([
+      ['fk_closing_stock_rates_item_id', 'a rate prices a real grade'],
+      ['fk_closing_stock_rates_company_id', 'a rate belongs to a real company'],
+    ])('enforces %s — %s', (name) => {
+      expect(foreignKeys.has(name)).toBe(true);
+    });
+
+    it('refuses a closed financial year that is not locked', async () => {
+      await expect(
+        dataSource.query(
+          `INSERT INTO financial_years (company_id, name, start_date, end_date, is_active, is_locked, closed_at)
+           VALUES ('00000000-0000-4000-8000-000000000000','BAD','2025-04-01','2026-03-31', false, false, now())`,
+        ),
+      ).rejects.toThrow();
+    });
+  });
+
   describe('every tenant table is indexed and keyed on company_id', () => {
     const TENANT_TABLES = [
       'parties',
@@ -450,6 +486,8 @@ describe('Schema integrity (e2e)', () => {
       'vehicle_expenses',
       // Expenses (P10.1a)
       'expenses',
+      // Financial statements (P10.1b)
+      'closing_stock_rates',
     ];
 
     it.each(TENANT_TABLES)('%s has an index on company_id', async (table) => {

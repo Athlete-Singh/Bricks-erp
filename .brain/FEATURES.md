@@ -11,7 +11,7 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 101 | 62 | 10 | 1 | 28 | 0 |
+| CP1 MVP | 101 | 62 | 13 | 1 | 25 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 
 **CP1 done: 61 %** (62 of 101 features ✅)
@@ -20,10 +20,10 @@
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
-| Backend | 97 | 71 | 1 | 0 | 0 | 25 |
+| Backend | 97 | 74 | 1 | 0 | 0 | 22 |
 | Web | 94 | 65 | 0 | 0 | 0 | 29 |
 | Mobile | 11 | 0 | 0 | 0 | 0 | 11 |
-| Tests | 101 | 72 | 0 | 0 | 0 | 29 |
+| Tests | 101 | 75 | 0 | 0 | 0 | 26 |
 
 ## Client Phase 1 — MVP
 
@@ -145,9 +145,9 @@
 | ACC-05 | Day Book, Ledger, Trial Balance | CP1 | P2 | ✅ | ✅ | — | ✅ | ✅ | Day Book, Ledger statement with running balance, Trial Balance with Σ Dr = Σ Cr and the difference surfaced |
 | ACC-06 | Sales & purchase vouchers auto-posted from documents; debit/credit notes | CP1 | P7/P8 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | ACC-07 | Cash Book, Bank Book | CP1 | P10 | ✅ | ⬜ | — | ✅ | 🟨 |  |
-| ACC-08 | Profit & Loss, Balance Sheet (closing stock valuation method: see open questions) | CP1 | P10 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| ACC-09 | Receivables & payables summary reports | CP1 | P10 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| ACC-10 | Financial year lock and year-end carry-forward of balances | CP1 | P10 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| ACC-08 | Profit & Loss, Balance Sheet (closing stock valuation method: see open questions) | CP1 | P10 | ✅ | ⬜ | — | ✅ | 🟨 |  |
+| ACC-09 | Receivables & payables summary reports | CP1 | P10 | ✅ | ⬜ | — | ✅ | 🟨 |  |
+| ACC-10 | Financial year lock and year-end carry-forward of balances | CP1 | P10 | ✅ | ⬜ | — | ✅ | 🟨 |  |
 
 ### M11 GST Engine (SOW #11)
 

@@ -5,7 +5,7 @@ Format: `#N — question — default we use until answered — needed by phase �
 1. Confirm CP1/CP2 split (ADV-01…07 are in the Functional Spec but not the SOW MVP rows) — default: as in FEATURES.md — P1 — open
 2. GST for bricks: HSN (usually 6904) and rate (12% with ITC vs 6% special scheme without ITC); rates for coal, sand, spares (diesel is outside GST) — default: seed configurable rows, owner edits — P3 — open
 3. Default chart of accounts: Tally-style groups (ACCOUNTING_RULES.md) OK? — default: yes — P2 — open
-4. Closing stock valuation for P&L/BS: weighted average cost, or standard rate per 1,000 entered at period end? — default: standard rate per grade entered at period end — P10 — open
+4. Closing stock valuation for P&L/BS: weighted average cost, or standard rate per 1,000 entered at period end? — **default implemented in P10.1b**: standard rate per grade entered at period end, stored per valuation date; quantity always read from the stock ledger so the two cannot disagree. Stock with no rate is reported as *unvalued*, never as zero (ADR-046). Still open for the client to confirm before CP1 sign-off — P10 — open
 5. One business with many companies, or SaaS for many clients? (billing out of CP1 either way) — default: multi-company schema, no billing — P1 — open
 6. Supervisor app language: English only in CP1, or Hindi too? — default: English, l10n-ready — P12 — open
 7. Brick grades actually used and their names — default: Class 1, Class 2, Class 3, Broken (editable) — P3 — open
