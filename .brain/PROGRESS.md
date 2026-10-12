@@ -237,7 +237,7 @@ The P track is never blocked by the M track.
 | P3 | P3.1a | **Backend: parties + auto ledger** (PTY-01…03) and the company GST scheme | ✅ |
 | P3 | P3.1b | Backend: units, items, brick types, warehouses (INV-01, INV-02, PRD-01) | ✅ |
 | P3 | P3.1c | Backend: vehicles, drivers, HSN + GST rates, wage rates (VEH-01, GST-01, LAB-03) | ✅ |
-| P3 | P3.2 | Web master screens + party ledger | ⬜ |
+| P3 | P3.2 | Web master screens + party ledger | ✅ |
 | P4 | P4.1a | **Backend `StockService`**, the stock ledger, opening stock and adjustments (INV-03, INV-04, INV-06) | ✅ |
 | P4 | P4.1b | Backend stock reports: current stock and the movement register (INV-07) | ✅ |
 | P4 | P4.2 | Web stock screens + reports | ✅ |
