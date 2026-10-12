@@ -101,13 +101,14 @@ describe('Sales screens (P8.2)', () => {
 
     renderPage(<InvoicesPage />);
 
-    // Wait for the list to render, then confirm each row's PDF button carries
-    // an aria-label naming its invoice — a screen reader needs that to say
-    // which document the control opens.
-    await screen.findAllByText(/SAL\/2026-27\/000001/);
-    const buttons = screen.getAllByRole('button');
-    expect(buttons.some((b) => b.getAttribute('aria-label') === 'Open PDF for SAL/2026-27/000001')).toBe(true);
-    expect(buttons.some((b) => b.getAttribute('aria-label') === 'Open PDF for SAL/2026-27/000002')).toBe(true);
+    // DataTable mounts a desktop table AND a mobile card list at the same time
+    // and hides one with CSS, so every row's button appears twice in the
+    // accessible tree. `getAllByRole + .length > 0` is the project convention
+    // for anything inside a row (see purchases.test.tsx) — this exercises the
+    // accessible-name path a screen reader actually walks.
+    await screen.findAllByText('SAL/2026-27/000001');
+    expect(screen.getAllByRole('button', { name: /Open PDF for SAL\/2026-27\/000001/ }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('button', { name: /Open PDF for SAL\/2026-27\/000002/ }).length).toBeGreaterThan(0);
   });
 
   it('hides invoice creation from someone who may only read sales', async () => {

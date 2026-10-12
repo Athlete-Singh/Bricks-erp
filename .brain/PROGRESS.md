@@ -4,7 +4,7 @@
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
-- **Last green gate:** P10 complete (2026-10-12). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 143 unit + **652 e2e** (22 suites), web **127** (22 files), shared 81.
+- **Last green gate:** P10 complete + sales test gap closed (2026-10-12). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 143 unit + **652 e2e** (22 suites), web **134** (23 files, +7 for the P8.2 sales screens the earlier session had left untested), shared 81.
 - **What shipped (P8):** sales engine, SAL-01…07.
   - **Backend (P8.1a+b+c in one commit):** 13 new tables, 16 routes under `/sales/*`. Quotations with status machine (draft → sent → accepted/rejected/cancelled/expired). Sales orders (optional convert from quote). **GST tax invoice** that moves stock OUT via `StockService` and posts the journal via `PostingService` in **one transaction** (ADR-038); composite loading/transport/other charges split across three income ledgers (ADR-039). **Invoice PDF** rendered server-side with `pdfmake` (OQ #18), carrying every Rule 46 field including amount-in-words. Bill-wise customer receipts with an advisory lock against concurrent overcollection. Credit note that re-stocks if and only if the line carries a quantity (ADR-040); debit note mirror. Receivables ageing with the usual `asOf` + buckets (0/1-30/31-60/61-90/90+).
   - **Web (P8.2):** six-tab Sales section — quotations, orders, invoices (per-row PDF button that fetches with the in-memory Bearer token and opens via Blob URL), receipts (bill-wise allocation table auto-filtered to open invoices), credit + debit notes on one page, receivables dashboard.
