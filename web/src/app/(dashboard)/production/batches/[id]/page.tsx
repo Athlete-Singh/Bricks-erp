@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, Check } from 'lucide-react';
+import { ArrowLeft, Check, Minus } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { formatDate, formatQuantity, isZeroQuantity, PERMISSIONS } from '@brics/shared';
@@ -100,6 +100,19 @@ function RecordedStage({ entry, detail }: { entry: ProductionEntry; detail: Batc
   );
 }
 
+/** A stage the user chose to skip (drying only, in CP1). Not editable — the backend refuses to insert a stage out of order once a later stage lands. */
+function SkippedStage({ title }: { title: string }) {
+  return (
+    <section className="rounded-lg border border-dashed border-border bg-surface-muted/40 p-4">
+      <h3 className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+        <Minus className="h-4 w-4" aria-hidden />
+        {title}
+        <span className="text-xs font-normal">· skipped</span>
+      </h3>
+    </section>
+  );
+}
+
 export default function BatchDetailPage() {
   const params = useParams<{ id: string }>();
   const { can, sites } = useSession();
@@ -140,6 +153,11 @@ export default function BatchDetailPage() {
 
         {drying ? (
           <RecordedStage entry={drying} detail={data} />
+        ) : making && firing ? (
+          // Drying is optional — a batch may go making → firing with no drying
+          // record. Show a muted placeholder so the stage is not silently
+          // absent from the batch timeline.
+          <SkippedStage title="2 · Drying" />
         ) : (
           making && !firing && canManage && <DryingForm batchId={data.batch.id} />
         )}

@@ -74,6 +74,9 @@ export class IdempotencyService {
         endpoint: args.endpoint,
         key: args.key,
         requestHash: hash,
+        // Every wired endpoint is a POST create, so the replay carries the
+        // same 201 Nest returns naturally for the fresh insert. Revisit if a
+        // non-POST ever opts in to idempotency.
         responseStatus: 201,
         // JSONB stores plain values; TypeORM / class instances serialise fine via JSON.
         responseBody: JSON.parse(JSON.stringify(result)) as unknown,

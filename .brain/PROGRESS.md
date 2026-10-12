@@ -13,6 +13,7 @@ Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 - **INV-05 is being wired across P5/P7/P9** — P5.1a added sorting IN (first instance), P5.1b adds the firing/making OUT, P7 will add GRN IN, P9 will add dispatch OUT.
 - **Still open:** opening balance posting — a party's Dr/Cr is stored on the party and its ledger, but no opening journal is written, so the Trial Balance shows it as a difference. Deferred to a dedicated import flow.
+- **Still open: production stage reversal.** A posted stage entry is immutable (correct) but there is **no reversal endpoint or UI** to correct one — a sorting entry has already written stock IN per grade, and firing/making have written consumption OUT, so an undo must reverse those movements too. The duplicate-stage error now says to use a stock adjustment instead; a proper reversal (like `POST /vouchers/:id/reverse`) is a dedicated step for after P6/P7, once dispatch and purchases have had the same pattern repeated enough times to justify a shared `ReversalService`.
 
 ### First run on a fresh database
 `pnpm db:up` → `pnpm --filter @brics/backend migration:run` → set `SEED_OWNER_MOBILE` + `SEED_OWNER_PASSWORD` in `backend/.env` → `pnpm seed`.

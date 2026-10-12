@@ -701,7 +701,7 @@ export class ProductionService {
     if (stages.has(stage)) {
       throw new BusinessRuleException(
         'PRODUCTION_STAGE_DUPLICATE',
-        `This batch already has a ${stage} entry — reverse the existing one instead`,
+        `This batch already has a ${stage} entry — correct it with a stock adjustment (stage reversal is not available in CP1)`,
       );
     }
 
