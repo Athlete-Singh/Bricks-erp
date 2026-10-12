@@ -33,6 +33,7 @@
 3. **Green gate before finishing:** lint, typecheck, test, build. Never end red. Revert or disable unfinished parts instead.
    **Per track:** the **P track** (backend + web) runs the JS gate only. Flutter is **not installed** in the current environment, so never run or expect `flutter analyze` / `flutter test`, and never report `mobile/` as red or blocked. The **M track** runs on whatever machine has the Flutter SDK and additionally runs `dart run build_runner build -d && flutter analyze && flutter test`. Tracks are listed in `.brain/PROGRESS.md`.
 4. **Checkpoint commits** after every green slice (Conventional Commits). Never commit secrets/.env.
+   **No AI attribution in commits.** Never add a `Co-Authored-By: Claude …` trailer, a "Generated with Claude Code" line, or a 🤖 marker — not in commit messages, not in PR titles or descriptions. The repo owner is the sole author. This applies to every agent and every sub-agent.
 5. Pinned tooling, committed lockfiles, non-interactive CLI flags.
 6. Dev servers only in the background; stop them when done.
 7. Migrations append-only; never `synchronize: true`.

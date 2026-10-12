@@ -3,6 +3,7 @@
 ## General
 - English identifiers. Files small, single responsibility. No dead / commented-out code. No `any` without a `// reason:` comment.
 - Commits: Conventional Commits `type(scope): subject` (feat, fix, refactor, test, docs, chore, ci). Scope = module (`sales`, `brain`, `mobile`).
+- Commit messages carry **no AI attribution**: no `Co-Authored-By: Claude …` trailer, no "Generated with Claude Code" line, no 🤖 — in commits or PR descriptions. Same for sub-agents.
 - Branches: `main` (always green) · `feat/<step>-<short>` · `fix/<short>`.
 - Every session: one step, green gate, checkpoint commits, update brain (see AGENTS.md).
 - CP1: build only the FEATURES.md depth. Extras → FEATURES "CP2 candidates".
