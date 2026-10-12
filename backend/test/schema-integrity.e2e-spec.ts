@@ -277,6 +277,79 @@ describe('Schema integrity (e2e)', () => {
     });
   });
 
+  describe('transport operations (P9.1b)', () => {
+    it.each([['uq_vehicle_trips_company_no', 'a trip number cannot repeat']])('enforces %s — %s', (name) => {
+      expect(indexes.has(name)).toBe(true);
+    });
+
+    it.each([
+      ['chk_trips_freight_is_charged_to_someone', 'freight is charged to somebody, with a journal, or not at all'],
+      ['chk_trips_distance_positive', 'a distance is more than nothing'],
+      ['chk_vehicle_expenses_kind', 'a charge is a kind the code knows'],
+      ['chk_vehicle_expenses_amount_positive', 'a charge moves more than nothing'],
+      ['chk_vehicle_expenses_paid_or_owed', 'a charge is paid now or owed — never both, never neither'],
+      ['chk_vehicle_expenses_stock_xor_voucher', 'ADR-043 — fuel from the tank has stock and no journal'],
+    ])('enforces %s — %s', async (name) => {
+      const rows = await dataSource.query<{ count: string }[]>(
+        `SELECT count(*) AS count FROM pg_constraint WHERE contype = 'c' AND conname = $1`,
+        [name],
+      );
+      expect(Number(rows[0]?.count)).toBe(1);
+    });
+
+    it.each([
+      ['fk_vehicle_trips_vehicle_id', 'a trip names a real vehicle'],
+      ['fk_vehicle_trips_driver_id', 'a trip names a real driver'],
+      ['fk_vehicle_trips_dispatch_id', 'a trip names a real challan'],
+      ['fk_vehicle_trips_freight_party_id', 'freight is charged to a real party'],
+      ['fk_vehicle_trips_voucher_id', 'a charged trip points at the journal it posted'],
+      ['fk_vehicle_expenses_vehicle_id', 'a charge names a real vehicle'],
+      ['fk_vehicle_expenses_trip_id', 'a charge against a trip names a real one'],
+      ['fk_vehicle_expenses_paid_from_ledger_id', 'a paid charge names a real ledger'],
+      ['fk_vehicle_expenses_party_id', 'an owed charge names a real party'],
+      ['fk_vehicle_expenses_stock_movement_id', 'fuel from the tank points at the stock it took'],
+      ['fk_vehicle_expenses_voucher_id', 'a charge points at the journal it posted'],
+    ])('enforces %s — %s', (name) => {
+      expect(foreignKeys.has(name)).toBe(true);
+    });
+
+    it("accepts 'vehicle_fuel' as a stock movement kind", async () => {
+      const rows = await dataSource.query<{ def: string }[]>(
+        `SELECT pg_get_constraintdef(oid) AS def FROM pg_constraint WHERE conname = 'chk_stock_movements_type'`,
+      );
+      expect(rows[0]?.def).toContain("'vehicle_fuel'");
+    });
+
+    it('refuses a charge that is both paid and owed', async () => {
+      // The schema refuses it too; the database must not depend on that.
+      await expect(
+        dataSource.query(
+          `INSERT INTO vehicle_expenses
+             (company_id, vehicle_id, site_id, kind, expense_date, amount,
+              paid_from_ledger_id, party_id, voucher_id)
+           VALUES ('00000000-0000-4000-8000-000000000000','00000000-0000-4000-8000-000000000000',
+                   '00000000-0000-4000-8000-000000000000','diesel','2026-09-01', 100,
+                   '00000000-0000-4000-8000-000000000000','00000000-0000-4000-8000-000000000000',
+                   '00000000-0000-4000-8000-000000000000')`,
+        ),
+      ).rejects.toThrow();
+    });
+
+    it('refuses fuel from the tank that also carries a journal', async () => {
+      await expect(
+        dataSource.query(
+          `INSERT INTO vehicle_expenses
+             (company_id, vehicle_id, site_id, kind, expense_date, amount, quantity,
+              item_id, warehouse_id, stock_movement_id, voucher_id)
+           VALUES ('00000000-0000-4000-8000-000000000000','00000000-0000-4000-8000-000000000000',
+                   '00000000-0000-4000-8000-000000000000','diesel','2026-09-01', 100, 10,
+                   '00000000-0000-4000-8000-000000000000','00000000-0000-4000-8000-000000000000',
+                   '00000000-0000-4000-8000-000000000000','00000000-0000-4000-8000-000000000000')`,
+        ),
+      ).rejects.toThrow();
+    });
+  });
+
   describe('every tenant table is indexed and keyed on company_id', () => {
     const TENANT_TABLES = [
       'parties',
@@ -327,6 +400,9 @@ describe('Schema integrity (e2e)', () => {
       // Dispatch (P9)
       'dispatches',
       'dispatch_lines',
+      // Transport operations (P9.1b)
+      'vehicle_trips',
+      'vehicle_expenses',
     ];
 
     it.each(TENANT_TABLES)('%s has an index on company_id', async (table) => {

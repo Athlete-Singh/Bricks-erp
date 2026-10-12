@@ -49,6 +49,7 @@ export const STOCK_MOVEMENT_TYPES = [
   'production',
   'sale',
   'dispatch',
+  'vehicle_fuel',
   'wastage',
   'adjustment',
   'transfer',

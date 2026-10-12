@@ -11,7 +11,7 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 101 | 51 | 11 | 1 | 38 | 0 |
+| CP1 MVP | 101 | 51 | 17 | 1 | 32 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 
 **CP1 done: 50 %** (51 of 101 features ✅)
@@ -20,10 +20,10 @@
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
-| Backend | 97 | 61 | 1 | 0 | 0 | 35 |
+| Backend | 97 | 67 | 1 | 0 | 0 | 29 |
 | Web | 94 | 54 | 0 | 0 | 0 | 40 |
 | Mobile | 11 | 0 | 0 | 0 | 0 | 11 |
-| Tests | 101 | 62 | 0 | 0 | 0 | 39 |
+| Tests | 101 | 68 | 0 | 0 | 0 | 33 |
 
 ## Client Phase 1 — MVP
 
@@ -94,12 +94,12 @@
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
 | VEH-01 | Vehicles (own/hired; truck/tractor/tipper) and drivers | CP1 | P3 | ✅ | ✅ | — | ✅ | ✅ |  |
-| VEH-02 | Trip log: vehicle, driver, route, linked dispatch, freight income | CP1 | P9 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| VEH-03 | Diesel entries per vehicle/trip | CP1 | P9 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| VEH-04 | Maintenance/repair expense per vehicle | CP1 | P9 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| VEH-05 | Loading/unloading fees per trip (linked to labour wages) | CP1 | P9 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| VEH-06 | Hired vehicle / transporter charges payable | CP1 | P9 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| VEH-07 | Vehicle-wise profitability report (income − diesel − maintenance − driver/hire cost) | CP1 | P9 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| VEH-02 | Trip log: vehicle, driver, route, linked dispatch, freight income | CP1 | P9 | ✅ | ⬜ | — | ✅ | 🟨 |  |
+| VEH-03 | Diesel entries per vehicle/trip | CP1 | P9 | ✅ | ⬜ | — | ✅ | 🟨 |  |
+| VEH-04 | Maintenance/repair expense per vehicle | CP1 | P9 | ✅ | ⬜ | — | ✅ | 🟨 |  |
+| VEH-05 | Loading/unloading fees per trip (linked to labour wages) | CP1 | P9 | ✅ | ⬜ | — | ✅ | 🟨 |  |
+| VEH-06 | Hired vehicle / transporter charges payable | CP1 | P9 | ✅ | ⬜ | — | ✅ | 🟨 |  |
+| VEH-07 | Vehicle-wise profitability report (income − diesel − maintenance − driver/hire cost) | CP1 | P9 | ✅ | ⬜ | — | ✅ | 🟨 |  |
 
 ### M07 Purchases (SOW #7)
 
