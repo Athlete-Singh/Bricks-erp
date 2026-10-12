@@ -11,7 +11,7 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 101 | 62 | 13 | 1 | 25 | 0 |
+| CP1 MVP | 101 | 62 | 17 | 1 | 21 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 
 **CP1 done: 61 %** (62 of 101 features ✅)
@@ -20,10 +20,10 @@
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
-| Backend | 97 | 74 | 1 | 0 | 0 | 22 |
+| Backend | 97 | 78 | 1 | 0 | 0 | 18 |
 | Web | 94 | 65 | 0 | 0 | 0 | 29 |
 | Mobile | 11 | 0 | 0 | 0 | 0 | 11 |
-| Tests | 101 | 75 | 0 | 0 | 0 | 26 |
+| Tests | 101 | 79 | 0 | 0 | 0 | 22 |
 
 ## Client Phase 1 — MVP
 
@@ -156,10 +156,10 @@
 | GST-01 | HSN/SAC master + GST rate config (configurable; clay building bricks usually HSN 6904, confirm with the client's CA) | CP1 | P3 | ✅ | ✅ | — | ✅ | ✅ |  |
 | GST-02 | CGST+SGST vs IGST by place of supply | CP1 | P8 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | GST-03 | GST input on purchases | CP1 | P7 | ✅ | ✅ | — | ✅ | ✅ |  |
-| GST-04 | GSTR-1 register (B2B, B2C, HSN summary) with Excel export | CP1 | P10 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| GST-05 | GSTR-3B summary register | CP1 | P10 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| GST-06 | GST sales and purchase reports | CP1 | P10 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| GST-07 | GST reconciliation: books vs what was filed — GSTR-1 register against the sales register, GSTR-3B against the books, with the differences listed | CP1 | P10 | ⬜ | ⬜ | — | ⬜ | ⬜ | Proposal §1 names "delayed GST reconciliation" as a problem BRICS solves. GST-04/05 produce registers; nothing reconciles them |
+| GST-04 | GSTR-1 register (B2B, B2C, HSN summary) with Excel export | CP1 | P10 | ✅ | ⬜ | — | ✅ | 🟨 |  |
+| GST-05 | GSTR-3B summary register | CP1 | P10 | ✅ | ⬜ | — | ✅ | 🟨 |  |
+| GST-06 | GST sales and purchase reports | CP1 | P10 | ✅ | ⬜ | — | ✅ | 🟨 |  |
+| GST-07 | GST reconciliation: books vs what was filed — GSTR-1 register against the sales register, GSTR-3B against the books, with the differences listed | CP1 | P10 | ✅ | ⬜ | — | ✅ | 🟨 | Proposal §1 names "delayed GST reconciliation" as a problem BRICS solves. GST-04/05 produce registers; nothing reconciles them |
 
 ### M13 Leakage Control — the ROI module (Proposal §1 + §4, Functional Spec §21)
 

@@ -24,6 +24,7 @@ import { SalesModule } from './modules/sales/sales.module';
 import { DispatchModule } from './modules/dispatch/dispatch.module';
 import { ExpensesModule } from './modules/expenses/expenses.module';
 import { FinancialsModule } from './modules/financials/financials.module';
+import { GstModule } from './modules/gst/gst.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -68,6 +69,7 @@ import { FinancialsModule } from './modules/financials/financials.module';
     DispatchModule,
     ExpensesModule,
     FinancialsModule,
+    GstModule,
   ],
 })
 export class AppModule {}
