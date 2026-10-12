@@ -154,4 +154,13 @@ export const apiClient = {
   put: <T>(path: string, body?: unknown) => rawRequest<T>(path, { method: 'PUT', body }),
   patch: <T>(path: string, body?: unknown) => rawRequest<T>(path, { method: 'PATCH', body }),
   delete: <T>(path: string) => rawRequest<T>(path, { method: 'DELETE' }),
+  /** For non-JSON responses (PDF, Excel, CSV). Honours the auth token the same way. */
+  async getBlob(path: string): Promise<Blob> {
+    const token = getAccessToken();
+    const res = await fetch(`${API_BASE}${path}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    if (!res.ok) throw await toApiError(res);
+    return res.blob();
+  },
 };

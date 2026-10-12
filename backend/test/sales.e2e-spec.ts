@@ -380,7 +380,8 @@ describe('Sales (e2e)', () => {
         .expect(200);
       expect(res.header['content-type']).toContain('application/pdf');
       // A real PDF starts with the magic bytes %PDF.
-      expect(res.body.subarray(0, 4).toString()).toBe('%PDF');
+      const body = res.body as Buffer;
+      expect(body.subarray(0, 4).toString()).toBe('%PDF');
     });
   });
 

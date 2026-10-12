@@ -19,10 +19,8 @@ function loadRobotoFonts(): TFontDictionary {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const vfsModule = require('pdfmake/build/vfs_fonts') as VfsFlat & VfsWrapped;
   const vfs: VfsFlat =
-    vfsModule.pdfMake?.vfs ??
-    vfsModule.default?.pdfMake?.vfs ??
-    // 0.2.x — the module itself is the map.
-    (typeof vfsModule === 'object' ? (vfsModule as VfsFlat) : ({} as VfsFlat));
+    // 0.2.x — the module itself is the flat map; older releases wrapped it.
+    vfsModule.pdfMake?.vfs ?? vfsModule.default?.pdfMake?.vfs ?? vfsModule;
   const getFont = (name: string): Buffer => {
     const b64 = vfs[name];
     if (!b64) throw new Error(`pdfmake vfs is missing font ${name}`);
