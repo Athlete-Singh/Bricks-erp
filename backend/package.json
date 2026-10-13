@@ -1,6 +1,9 @@
 {
   "name": "@brics/backend",
   "version": "0.0.0",
+  "engines": {
+    "node": ">=22.12"
+  },
   "private": true,
   "description": "BRICS REST API (NestJS)",
   "scripts": {

@@ -6,6 +6,11 @@
  * metadata, and NestJS and TypeORM are built entirely out of decorators. The
  * build command runs `nest build` (tsc) first, which does emit it, and this
  * file only hands the request over.
+ *
+ * Node 22.12 or newer is required: @nestjs/jwt v12 is ESM-only, and `require()`
+ * of an ESM package is what Node allows from 22.12 on. On an older runtime
+ * every request dies with ERR_REQUIRE_ESM before the app is even built, which
+ * is why `engines.node` and the function runtime both say so.
  */
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- CommonJS entry for the platform
 module.exports = require('../dist/serverless').default;
