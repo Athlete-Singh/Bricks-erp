@@ -1,10 +1,13 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from 'nestjs-pino';
 import { resolve } from 'node:path';
 import { type Env, validateEnv } from './config/env';
 import { buildTypeOrmOptions } from './config/typeorm.config';
+import { AppThrottlerGuard } from './common/guards/app-throttler.guard';
 import { HealthModule } from './modules/health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CompanyModule } from './modules/company/company.module';
@@ -46,6 +49,19 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
         },
       }),
     }),
+    /**
+     * A ceiling on how fast anyone can hit the API (P13.1). The tight limit
+     * that matters is on `/auth/login` — see `@Throttle` there — but a global
+     * default means a new endpoint is covered the day it is written rather
+     * than the day someone remembers.
+     *
+     * `AppThrottlerGuard` turns the whole thing off under `test` — see there
+     * for why.
+     */
+    ThrottlerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: () => ({ throttlers: [{ name: 'default', ttl: 60_000, limit: 300 }] }),
+    }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService<Env, true>) =>
@@ -73,5 +89,6 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     GstModule,
     DashboardModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: AppThrottlerGuard }],
 })
 export class AppModule {}

@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Ip, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import {
   changePasswordSchema,
   loginSchema,
@@ -22,7 +23,15 @@ import { AuthService } from './auth.service';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  /**
+   * Ten attempts a minute per address (P13.1). A kiln office is a handful of
+   * people who know their password; anyone needing more than ten tries a
+   * minute is guessing, and an ERP holding a company's books is worth
+   * guessing at. Deliberately not a per-account lockout: that lets anyone who
+   * knows an email address lock a real user out.
+   */
   @Public()
+  @Throttle({ default: { ttl: 60_000, limit: 10 } })
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login with email/mobile + password' })
@@ -35,6 +44,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { ttl: 60_000, limit: 30 } })
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Refresh access token using refresh token' })

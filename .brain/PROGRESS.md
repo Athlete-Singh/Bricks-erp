@@ -1,10 +1,12 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** P11 ✅ done and **audited** — dashboard + CST + three register reports with CSV exports, with the audit's three defects and three gaps fixed → **next: P13** (e2e + security, deploy + backups, onboarding + guide + UAT → CP1 sign-off)
+**Client Phase:** CP1 (MVP) · **Current step:** P13.1 ✅ done — e2e core flows + security review → **next: P13.2** (deploy + backups, needs the hosting accounts) · P11 ✅ done and **audited** — dashboard + CST + three register reports with CSV exports, with the audit's three defects and three gaps fixed → **next: P13** (e2e + security, deploy + backups, onboarding + guide + UAT → CP1 sign-off)
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
-- **Last green gate:** P11 complete, **audited, and the grade↔item schema gap closed** (2026-10-13). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 143 unit + **680 e2e** (23 suites), web **145**, shared 81.
+- **What shipped (P13.1):** the pre-go-live security pass and the first browser e2e. Three holes closed — no rate limiting on login, no security headers, Swagger served in production. `docs/14-security-review.md` records what was checked, what was fixed, what is accepted with a reason, and what P13.2 must do on the hosting platforms (TLS, real `CORS_ORIGINS`, fresh JWT secrets per environment, a database not on the public internet, `NODE_ENV=production`, a **restore** actually tested, and `pnpm seed` re-run when a release adds permission codes). Playwright covers sign-in, the unauthenticated redirect, a walk through all eight owner modules against a real API, and a cross-screen read of the yard balance; it skips without `E2E_EMAIL`/`E2E_PASSWORD`.
+- **Next step (exact):** **P13.2 — deploy + backups (ADM-09).** Needs the hosting accounts and secrets, which only the owner can create: Render (API), Vercel (web), Supabase (database). What can be done here is the configuration, the deploy runbook and the restore procedure; the account creation and the secrets cannot be.
+- **Last green gate:** P13.1 complete (2026-10-13). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 143 unit + **680 e2e** (23 suites), web **145**, shared 81.
 - **What the P11 audit found and fixed** — the phase was read back against what CP1 asks for, not against its own commit message:
   - **The labour register's kiln filter was a 500.** `labour_attendance` and `labour_groups` both carry `site_id` and the filter was unqualified, so Postgres refused the query outright — proved directly against the database before fixing it. Worse, the two branches shared one parameter list, so a Sardar filter on the attendance roll (or a group filter on wages) bound a parameter the SQL never mentioned and the whole request failed. Each branch now builds its own list, the column is qualified, and the roll reads by Sardar (through the gang), by group and by kiln. A group filter on the **wage** register is refused in the schema rather than ignored — an accrual has no group, and a filter that quietly does nothing is how a half-filtered wage register gets paid out.
   - **CST-01 had shipped only its first half.** The feature asks for cost *vs selling price → gross margin*; only cost was there. Both are now on every row — at **kiln-month**, not per grade, with `meta.realisationLevel` and the screen saying so (**ADR-050**), because a sales invoice line names an item and a warehouse and never a brick grade. Revenue is the net movement on `SALES_BRICKS`, so credit notes are netted; a month that sold nothing reports `null`, never `0.00`.
@@ -299,7 +301,9 @@ The P track is never blocked by the M track.
 | P10 | P10.2 | Web: expenses, cash & bank books, P&L / Balance Sheet, GST registers + reconciliation | ✅ |
 | P11 | P11.1 | Dashboard aggregates + **CST-01 cost per 1,000 vs the ₹4,100 benchmark** | ✅ |
 | P11 | P11.2 | Web dashboard, **RPT-02 daily report, RPT-03 sales register, RPT-04 labour registers**, exports | ✅ |
-| P13 | P13.1 / P13.2 / P13.3 | e2e + security / deploy + backups / onboarding + guide + UAT → **CP1 sign-off** | ⬜ |
+| P13 | P13.1 | e2e core flows (Playwright) + security review | ✅ |
+| P13 | P13.2 | deploy (Render/Vercel/Supabase) + backups — **needs the hosting accounts** | ⬜ |
+| P13 | P13.3 | CSV onboarding + user guide + UAT → **CP1 sign-off** | ⬜ |
 
 ### M track — Flutter supervisor app (later, wherever Flutter is installed)
 

@@ -52,3 +52,8 @@ mobile/ios/Flutter/Generated.xcconfig
 
 # Personal command cheat sheet, not shared
 RUN.md
+
+# Playwright (P13.1) — traces and reports are run artefacts, never committed
+web/test-results/
+web/playwright-report/
+web/blob-report/
