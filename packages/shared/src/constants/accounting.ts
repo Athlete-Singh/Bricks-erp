@@ -83,6 +83,14 @@ export interface LedgerSeed {
 export const LEDGER_SEED: readonly LedgerSeed[] = [
   { code: 'CASH', name: 'Cash', group: 'CASH_IN_HAND' },
 
+  /**
+   * The other side of the opening balances (ONB-01). Without it a kiln can
+   * enter what it owns on day one and have nothing to credit it to, so the
+   * opening set could never balance and the first Balance Sheet would be
+   * wrong by the whole of the owner's own money.
+   */
+  { code: 'OWNERS_CAPITAL', name: "Owner's Capital", group: 'CAPITAL' },
+
   // GST — split by place of supply at posting time (ACCOUNTING_RULES).
   { code: 'OUTPUT_CGST', name: 'Output CGST', group: 'DUTIES_TAXES' },
   { code: 'OUTPUT_SGST', name: 'Output SGST', group: 'DUTIES_TAXES' },

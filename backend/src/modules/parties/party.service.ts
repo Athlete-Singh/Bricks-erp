@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, ILike, Repository } from 'typeorm';
+import { DataSource, EntityManager, ILike, Repository } from 'typeorm';
 import type { CreatePartyDto, PartyQueryDto, PartyType, UpdatePartyDto } from '@brics/shared';
 import { AuditService } from '../audit/audit.service';
 import {
@@ -58,7 +58,19 @@ export class PartyService {
   ) {}
 
   async create(companyId: string, userId: string, dto: CreatePartyDto): Promise<Party> {
-    const duplicate = await this.partyRepo.findOne({
+    return this.dataSource.transaction((manager) => this.createWithin(manager, companyId, userId, dto));
+  }
+
+  /**
+   * The same creation, in the caller's transaction.
+   *
+   * A party is never only a party: it carries its own ledger, and the two have
+   * to appear together or neither (PTY-01). Anything that creates parties in
+   * bulk — the go-live import, say — needs that to be part of its own
+   * all-or-nothing transaction, which a nested one would quietly break.
+   */
+  async createWithin(manager: EntityManager, companyId: string, userId: string, dto: CreatePartyDto): Promise<Party> {
+    const duplicate = await manager.findOne(Party, {
       where: { companyId, name: ILike(dto.name) },
     });
     if (duplicate) {
@@ -66,14 +78,14 @@ export class PartyService {
     }
 
     const groupCode = ledgerGroupCodeForTypes(dto.partyTypes);
-    const group = await this.groupRepo.findOne({ where: { companyId, code: groupCode } });
+    const group = await manager.findOne(LedgerGroup, { where: { companyId, code: groupCode } });
     if (!group) {
       throw new Error(`Ledger group '${groupCode}' missing for company ${companyId}. Re-run the chart seed.`);
     }
 
-    const activeFy = await this.fyRepo.findOne({ where: { companyId, isActive: true } });
+    const activeFy = await manager.findOne(FinancialYear, { where: { companyId, isActive: true } });
 
-    return this.dataSource.transaction(async (manager) => {
+    {
       const ledgerRepo = manager.getRepository(Ledger);
       const partyRepo = manager.getRepository(Party);
 
@@ -129,7 +141,7 @@ export class PartyService {
       );
 
       return party;
-    });
+    }
   }
 
   async update(companyId: string, userId: string, id: string, dto: UpdatePartyDto): Promise<Party> {

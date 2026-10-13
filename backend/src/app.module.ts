@@ -29,6 +29,7 @@ import { ExpensesModule } from './modules/expenses/expenses.module';
 import { FinancialsModule } from './modules/financials/financials.module';
 import { GstModule } from './modules/gst/gst.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { OnboardingModule } from './modules/onboarding/onboarding.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -92,6 +93,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     FinancialsModule,
     GstModule,
     DashboardModule,
+    OnboardingModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: AppThrottlerGuard }],
 })

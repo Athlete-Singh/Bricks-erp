@@ -1,6 +1,6 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** P13.1 ✅ done — e2e core flows + security review → **next: P13.2** (deploy + backups, needs the hosting accounts) · P11 ✅ done and **audited** — dashboard + CST + three register reports with CSV exports, with the audit's three defects and three gaps fixed → **next: P13** (e2e + security, deploy + backups, onboarding + guide + UAT → CP1 sign-off)
+**Client Phase:** CP1 (MVP) · **Current step:** P13.3 — go-live import and user guide ✅ done; UAT remains. P13.1 ✅. P13.2: both apps deployed on Vercel against the development database; **backups (ADM-09) still open** · P11 ✅ done and **audited** — dashboard + CST + three register reports with CSV exports, with the audit's three defects and three gaps fixed → **next: P13** (e2e + security, deploy + backups, onboarding + guide + UAT → CP1 sign-off)
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
@@ -311,7 +311,7 @@ The P track is never blocked by the M track.
 | P11 | P11.2 | Web dashboard, **RPT-02 daily report, RPT-03 sales register, RPT-04 labour registers**, exports | ✅ |
 | P13 | P13.1 | e2e core flows (Playwright) + security review | ✅ |
 | P13 | P13.2 | deploy (Render/Vercel/Supabase) + backups — **needs the hosting accounts** | ⬜ |
-| P13 | P13.3 | CSV onboarding + user guide + UAT → **CP1 sign-off** | ⬜ |
+| P13 | P13.3 | CSV onboarding + user guide ✅ · UAT → **CP1 sign-off** | 🧩 |
 
 ### M track — Flutter supervisor app (later, wherever Flutter is installed)
 

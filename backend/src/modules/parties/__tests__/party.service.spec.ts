@@ -88,6 +88,7 @@ describe('PartyService', () => {
   let partyRepo: jest.Mocked<Repository<Party>>;
   let groupRepo: jest.Mocked<Repository<LedgerGroup>>;
   let ledgerRepo: jest.Mocked<Repository<Ledger>>;
+  let fyRepo: jest.Mocked<Repository<FinancialYear>>;
   let audit: jest.Mocked<AuditService>;
   let dataSource: jest.Mocked<DataSource>;
 
@@ -96,8 +97,20 @@ describe('PartyService', () => {
     save: jest.fn((entity: unknown) => Promise.resolve({ id: `saved-${Date.now()}`, ...(entity as object) })),
     update: jest.fn(() => Promise.resolve()),
   };
+  /**
+   * `createWithin` reads through the caller's manager so the import can join
+   * its own transaction, so the fake manager has to answer `findOne` the way
+   * the injected repositories do — otherwise these tests would pass against a
+   * service that looks nothing like the one that runs.
+   */
   const mockManager = {
     getRepository: jest.fn(() => mockRepo),
+    findOne: jest.fn((entity: unknown, options: unknown) => {
+      if (entity === Party) return partyRepo.findOne(options as never);
+      if (entity === LedgerGroup) return groupRepo.findOne(options as never);
+      if (entity === FinancialYear) return fyRepo.findOne(options as never);
+      return Promise.resolve(null);
+    }),
   } as unknown as EntityManager;
 
   beforeEach(async () => {
@@ -122,6 +135,7 @@ describe('PartyService', () => {
     partyRepo = module.get(getRepositoryToken(Party));
     groupRepo = module.get(getRepositoryToken(LedgerGroup));
     ledgerRepo = module.get(getRepositoryToken(Ledger));
+    fyRepo = module.get(getRepositoryToken(FinancialYear));
     audit = module.get(AuditService);
     dataSource = module.get(DataSource);
   });

@@ -12,6 +12,7 @@ const TABS = [
   { label: 'Kilns', href: '/settings/kilns' },
   { label: 'Financial years', href: '/settings/financial-years' },
   { label: 'Users', href: '/settings/users', permissions: [PERMISSIONS.USERS_MANAGE] },
+  { label: 'Go-live import', href: '/settings/onboarding', permissions: [PERMISSIONS.ACCOUNTS_MANAGE] },
 ];
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
@@ -21,7 +22,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader title="Settings" description="Company profile, kilns and financial years" />
+      <PageHeader title="Settings" description="Company profile, kilns, financial years and the go-live import" />
 
       {/* Scrolls horizontally on a phone rather than wrapping into two rows. */}
       <nav className="-mx-1 flex gap-1 overflow-x-auto border-b border-border px-1" aria-label="Settings sections">

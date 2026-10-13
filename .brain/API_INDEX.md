@@ -217,6 +217,9 @@ Add the row when you **plan** an endpoint (BE ⬜), and update it the moment any
 | GET | /reports/daily | RPT-02 — one page per day across every module (production, dispatch, sales, collection, expenses, coal, diesel, labour present) | accounts.view | RPT-02 | P11.2 | ✅ | ✅ | — |
 | GET | /reports/sales-register | RPT-03 — sales register, line by line with GST split | accounts.view | RPT-03 | P11.2 | ✅ | ✅ | — |
 | GET | /reports/labour-register | RPT-04 — labour attendance or wage register (`?kind=attendance\|wages`), filterable by kiln / Sardar / group (group on attendance only) | accounts.view | RPT-04 | P11.2 | ✅ | ✅ | — |
+| GET | /onboarding/reference | ONB-01 — the names an import can match against | accounts.manage | ONB-01 | P13.3 | ✅ | ✅ | — |
+| POST | /onboarding/preview | ONB-01 — what the file would do; writes nothing | accounts.manage | ONB-01 | P13.3 | ✅ | ✅ | — |
+| POST | /onboarding/commit | ONB-01 — import the file, all rows or none | accounts.manage | ONB-01 | P13.3 | ✅ | ✅ | — |
 ## Notes
 - **Tenancy:** no endpoint accepts a `company_id` from the client. Anything below a company reads it from the JWT; `/companies/:id` asserts membership. Proved by `backend/test/tenancy.e2e-spec.ts`.
 - **Envelope:** handlers return payloads raw; `ResponseEnvelopeInterceptor` adds `{ data }`, or `{ data, meta }` when a service returns `Paginated`.

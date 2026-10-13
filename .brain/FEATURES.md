@@ -141,7 +141,7 @@
 | ACC-01 | Chart of accounts + ledger groups (seeded Indian default, editable) | CP1 | P2 | ✅ | ✅ | — | ✅ | ✅ | Seeded per company at creation. Web: chart list with group and opening balance |
 | ACC-02 | Posting engine: balanced, atomic, immutable, reversal | CP1 | P2 | ✅ | ✅ | — | ✅ | ✅ | `PostingService` — balanced, FY-gated, caller's transaction. Reversal from the Day Book, never an edit |
 | ACC-03 | Manual vouchers: receipt, payment, contra, journal | CP1 | P2 | ✅ | ✅ | — | ✅ | ✅ | Receipt/payment/contra/journal with a live Dr/Cr total that blocks posting until it balances |
-| ACC-04 | Opening balances for ledgers | CP1 | P2 | ✅ | ⬜ | — | ✅ | 🟨 | Opening Dr/Cr per ledger, transactional. Deliberately accepts an unbalanced set and reports the difference — real opening figures rarely tie first time. **No web screen:** opening balances can only be posted through the API or ONB-01's CSV import (P13.3) |
+| ACC-04 | Opening balances for ledgers | CP1 | P2 | ✅ | ✅ | — | ✅ | ✅ | Opening Dr/Cr per ledger, transactional. Deliberately accepts an unbalanced set and reports the difference — real opening figures rarely tie first time. Entered through ONB-01's import (P13.3); an `OWNERS_CAPITAL` ledger was added so the other side has somewhere to go |
 | ACC-05 | Day Book, Ledger, Trial Balance | CP1 | P2 | ✅ | ✅ | — | ✅ | ✅ | Day Book, Ledger statement with running balance, Trial Balance with Σ Dr = Σ Cr and the difference surfaced |
 | ACC-06 | Sales & purchase vouchers auto-posted from documents; debit/credit notes | CP1 | P7/P8 | ✅ | ✅ | — | ✅ | ✅ | Row was stale — purchase bills and payments (P7), invoices, receipts and both note kinds (P8), all through `PostingService` |
 | ACC-07 | Cash Book, Bank Book | CP1 | P10 | ✅ | ✅ | — | ✅ | ✅ |  |
@@ -209,7 +209,7 @@
 | RPT-02 | Daily operations report: one page per day — production, dispatch, sales, collection, expenses, coal used, labour present | CP1 | P11 | ✅ | ✅ | — | ✅ | ✅ | `/reports/daily` + web daily page; coal is reported as quantity issued *and* as cost |
 | RPT-03 | Sales register by customer / brick type / period, with quantity, rate per 1,000, discount, GST and total | CP1 | P11 | ✅ | ✅ | — | ✅ | ✅ | `/reports/sales-register` + web page with customer / item / kiln filters and CSV export |
 | RPT-04 | Labour registers: attendance register and wage register by Sardar / group / period | CP1 | P11 | ✅ | ✅ | — | ✅ | ✅ | `/reports/labour-register?kind=attendance\|wages` + web tabs with Sardar / group / kiln filters and CSV export |
-| ONB-01 | Go-live onboarding: CSV import of parties, items, opening balances and opening stock (not historical transactions; those are excluded in the SOW) | CP1 | P13 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| ONB-01 | Go-live onboarding: CSV import of parties, items, opening balances and opening stock (not historical transactions; those are excluded in the SOW) | CP1 | P13 | ✅ | ✅ | — | ✅ | ✅ | Check-then-import, all rows or none. CSV is parsed in the browser — nothing is uploaded. Opening balances also close the ACC-04 screen gap |
 ## Client Phase 2 — Advanced (do NOT build in CP1)
 
 ### From the SOW (Phase 2 column)
