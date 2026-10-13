@@ -11,7 +11,7 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 101 | 73 | 6 | 1 | 21 | 0 |
+| CP1 MVP | 101 | 73 | 9 | 1 | 18 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 
 **CP1 done: 72 %** (73 of 101 features ✅)
@@ -20,10 +20,10 @@
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
-| Backend | 97 | 78 | 1 | 0 | 0 | 18 |
+| Backend | 97 | 81 | 1 | 0 | 0 | 15 |
 | Web | 94 | 76 | 0 | 0 | 0 | 18 |
 | Mobile | 11 | 0 | 0 | 0 | 0 | 11 |
-| Tests | 101 | 79 | 0 | 0 | 0 | 22 |
+| Tests | 101 | 82 | 0 | 0 | 0 | 19 |
 
 ## Client Phase 1 — MVP
 
@@ -202,9 +202,9 @@
 | EXP-01 | Expense categories (labour, coal, diesel, electricity, vehicle, machinery, repairs, salary, food, rent, office, govt charges, bank charges, misc) | CP1 | P10 | ✅ | ✅ | — | ✅ | ✅ |  |
 | EXP-02 | Expense entry by kiln with payment mode Cash / Bank / UPI / Credit | CP1 | P10 | ✅ | ✅ | — | ✅ | ✅ |  |
 | CSH-01 | Opening/closing cash; cash receipts/payments; bank deposit, withdrawal and transfer (contra); bank charges; cheque no. / UPI ref on vouchers | CP1 | P10 | ✅ | ✅ | — | ✅ | ✅ |  |
-| DSH-01 | Owner dashboard answering the "Key Management Questions": production today/month/year, stock, sold/dispatched, receivables, payables, labour payable, coal/diesel used, **expenses, estimated profit**, cost per 1,000, gross margin | CP1 | P11 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| DSH-02 | Monthly charts: production, sales, collection, expenses, fuel | CP1 | P11 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| CST-01 | Cost per 1,000 bricks by kiln, month **and brick type** (labour, coal, soil, electricity, loading, repairs, other) vs selling price → gross margin. Shown against the ₹4,100 benchmark from the Proposal §4 / Spec §22 | CP1 | P11 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| DSH-01 | Owner dashboard answering the "Key Management Questions": production today/month/year, stock, sold/dispatched, receivables, payables, labour payable, coal/diesel used, **expenses, estimated profit**, cost per 1,000, gross margin | CP1 | P11 | ✅ | ⬜ | — | ✅ | 🟨 | P11.1 backend complete; web screen in P11.2 |
+| DSH-02 | Monthly charts: production, sales, collection, expenses, fuel | CP1 | P11 | ✅ | ⬜ | — | ✅ | 🟨 | P11.1 backend complete; charts in P11.2 |
+| CST-01 | Cost per 1,000 bricks by kiln, month **and brick type** (labour, coal, soil, electricity, loading, repairs, other) vs selling price → gross margin. Shown against the ₹4,100 benchmark from the Proposal §4 / Spec §22 | CP1 | P11 | ✅ | ⬜ | — | ✅ | 🟨 | P11.1 backend complete; coal/soil/electricity/loading/repairs/labour/other buckets allocated by fired share (ADR-049); web table in P11.2 |
 | RPT-01 | Excel/PDF export for the main reports | CP1 | P11 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | RPT-02 | Daily operations report: one page per day — production, dispatch, sales, collection, expenses, coal used, labour present | CP1 | P11 | ⬜ | ⬜ | — | ⬜ | ⬜ | Functional Spec §19 `daily_reports`. The owner's "what happened today" sheet |
 | RPT-03 | Sales register by customer / brick type / period, with quantity, rate per 1,000, discount, GST and total | CP1 | P11 | ⬜ | ⬜ | — | ⬜ | ⬜ | Functional Spec §19 `sales_reports` |

@@ -22,3 +22,4 @@ export * from './schemas/transport-ops';
 export * from './schemas/expenses';
 export * from './schemas/financials';
 export * from './schemas/gst';
+export * from './schemas/dashboard';
