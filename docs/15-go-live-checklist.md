@@ -74,6 +74,39 @@ Remove the four `SEED_OWNER_*` values from Render after the first deploy. They
 are of no further use and a password sitting in a dashboard is a password that
 leaks.
 
+## 2b. If the API runs on Vercel instead of Render
+
+It works, and three things change — one of them undoes a fix made in P13.1, so
+it is not a free swap.
+
+1. **Rate limiting stops being worth much.** The throttler counts attempts in
+   the instance's own memory. A long-lived server has one memory; a function
+   host starts a fresh instance per burst, each with its own counter, so "ten
+   login attempts a minute" quietly becomes ten _per instance_. Getting the
+   limit back means a shared counter — Upstash Redis is the usual answer, free
+   tier adequate — which is one more account and one more credential
+   (`UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`). Without it, the
+   login limit is decoration.
+2. **Migrations have no pre-deploy hook.** Render runs them before the new code
+   serves traffic; on Vercel they have to be run by hand from a machine with
+   the **direct** connection string, before promoting the deployment. Worth a
+   written step in the release routine, because a deploy that serves new code
+   against an old schema fails in ways that look like data corruption.
+3. **Connections have to be rationed.** Set `DB_POOL_MAX=1` and point
+   `DATABASE_URL` at Supabase's **transaction pooler**. Fifty instances holding
+   ten connections each will exhaust the database while the app still looks
+   idle.
+
+Also worth knowing: a function times out (10s on Hobby, 60s on Pro) and Nest
+boots the whole application on every cold start, so the first request after an
+idle spell is slow and a long report — a year-end close, cost-per-1,000 across
+a wide window — can hit the ceiling. Neither is fatal; both are the kind of
+thing that is better known before the client finds it.
+
+The recommendation stands as Render for the API, because today it costs $7 and
+no extra moving parts. If Vercel is already running it, the first thing to add
+is the shared rate-limit store.
+
 ## 3. Web app — Vercel
 
 Create an account and a project with **root directory `web/`**.

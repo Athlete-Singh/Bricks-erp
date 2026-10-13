@@ -20,6 +20,7 @@ import { IdempotencyService } from '../../common/idempotency/idempotency.service
 import { toCalendarDate, todayCalendarDate } from '../../common/time/calendar-date';
 import { AuditService } from '../audit/audit.service';
 import { Party } from '../parties/entities/party.entity';
+import { Company } from '../company/entities/company.entity';
 import { Site } from '../company/entities/site.entity';
 import { Item } from '../inventory/entities/item.entity';
 import { StockService } from '../../stock/stock.service';
@@ -68,6 +69,48 @@ export class PurchasesService {
    * An id arriving in a request body is attacker-controlled (ADR-021).
    * `company_id` comes from the JWT, but the rows it points at must be checked.
    */
+  /**
+   * GST-03/GST-02, input side — the credit claimed has to match where the
+   * goods came from.
+   *
+   * A supplier in another state charges IGST; one in this state charges
+   * CGST + SGST. Booking the wrong pair claims input credit on the wrong
+   * heads, which the portal rejects at reconciliation and the kiln then has to
+   * unpick invoice by invoice.
+   *
+   * A supplier with no state recorded is treated as intra-state, the same
+   * reading as the sales side.
+   */
+  private assertInputTaxMatchesSupplierState(
+    company: Company,
+    supplier: Party,
+    rows: { cgstRate: string; sgstRate: string; igstRate: string }[],
+  ): void {
+    const interState = Boolean(supplier.stateCode) && supplier.stateCode !== company.stateCode;
+
+    for (const row of rows) {
+      const intra = new Decimal(row.cgstRate).plus(row.sgstRate);
+      if (interState && intra.greaterThan(0)) {
+        throw new BusinessRuleException(
+          'GST_PLACE_OF_SUPPLY_MISMATCH',
+          `${supplier.name} is in state ${supplier.stateCode} and the kiln is in ${company.stateCode}, so this bill carries IGST, not CGST + SGST`,
+        );
+      }
+      if (!interState && new Decimal(row.igstRate).greaterThan(0)) {
+        throw new BusinessRuleException(
+          'GST_PLACE_OF_SUPPLY_MISMATCH',
+          `${supplier.name} and the kiln are both in state ${company.stateCode}, so this bill carries CGST + SGST, not IGST`,
+        );
+      }
+    }
+  }
+
+  private async companyOf(manager: EntityManager, companyId: string): Promise<Company> {
+    const company = await manager.findOne(Company, { where: { id: companyId } });
+    if (!company) throw new BusinessRuleException('COMPANY_NOT_FOUND', 'That company does not exist');
+    return company;
+  }
+
   private async assertSupplier(manager: EntityManager, companyId: string, partyId: string): Promise<Party> {
     const party = await manager.findOne(Party, { where: { id: partyId, companyId } });
     if (!party) throw new BusinessRuleException('SUPPLIER_NOT_FOUND', 'That supplier does not exist');
@@ -344,6 +387,8 @@ export class PurchasesService {
         { companyId, userId, endpoint: 'POST /purchases/bills', key: idempotencyKey, body: dto },
         async () => {
           const supplier = await this.assertSupplier(manager, companyId, dto.supplierPartyId);
+          // GST-02/03 — the credit claimed has to match where the goods came from.
+          this.assertInputTaxMatchesSupplierState(await this.companyOf(manager, companyId), supplier, dto.lines);
           await this.assertSite(manager, companyId, dto.siteId);
           await this.assertItems(
             manager,

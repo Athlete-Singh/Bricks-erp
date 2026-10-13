@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import InvoicesPage from '@/app/(dashboard)/sales/invoices/page';
 import NotesPage from '@/app/(dashboard)/sales/notes/page';
@@ -18,12 +19,20 @@ vi.mock('@/features/auth/use-auth', async () => {
     useSession: () => ({
       can: (...codes: string[]) => codes.every((c) => granted.includes(c)),
       sites: [{ id: 's1', name: 'Kiln One' }],
+      company: { id: 'co1', name: 'My Brick Kiln', stateCode: '09' },
     }),
   };
 });
 
 vi.mock('@/features/masters/hooks', () => ({
-  useParties: () => ({ data: { items: [{ id: 'c1', name: 'Shri Krishna Builders' }] } }),
+  useParties: () => ({
+    data: {
+      items: [
+        { id: 'c1', name: 'Shri Krishna Builders', stateCode: '09' },
+        { id: 'c2', name: 'Delhi Builders', stateCode: '07' },
+      ],
+    },
+  }),
   useItems: () => ({ data: { items: [{ id: 'i1', name: 'Class 1 Brick' }] } }),
   useWarehouses: () => ({ data: { items: [{ id: 'w1', name: 'Finished Yard' }] } }),
 }));
@@ -123,6 +132,31 @@ describe('Sales screens (P8.2)', () => {
     granted = ['sales.view', 'sales.manage'];
     renderPage(<InvoicesPage />);
     expect(await screen.findByRole('button', { name: /new invoice/i })).toBeInTheDocument();
+  });
+
+  it('GST-02 — offers IGST for an out-of-state customer and CGST/SGST for a local one', async () => {
+    // Which tax applies is not the user's choice; it follows from where the
+    // goods are going. Offering all three invites the one mistake that costs
+    // the kiln interest at filing time.
+    const user = userEvent.setup();
+    granted = ['sales.view', 'sales.manage'];
+    invoices = [invoice()];
+
+    renderPage(<InvoicesPage />);
+    await user.click(await screen.findByRole('button', { name: /new invoice/i }));
+
+    // "Customer" also names a column header in the list behind the dialog, so
+    // the selector is matched exactly.
+    const picker = screen.getByLabelText('Customer *');
+    await user.selectOptions(picker, 'c2');
+    expect(screen.getByText(/inter-state, so the lines carry IGST/i)).toBeInTheDocument();
+    expect(screen.getByLabelText('IGST %')).toBeInTheDocument();
+    expect(screen.queryByLabelText('CGST %')).not.toBeInTheDocument();
+
+    await user.selectOptions(picker, 'c1');
+    expect(screen.getByText(/intra-state, so the lines carry CGST \+ SGST/i)).toBeInTheDocument();
+    expect(screen.getByLabelText('CGST %')).toBeInTheDocument();
+    expect(screen.queryByLabelText('IGST %')).not.toBeInTheDocument();
   });
 
   it('refuses the whole section to someone without sales.view', async () => {

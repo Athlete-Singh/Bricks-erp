@@ -26,6 +26,7 @@ import { IdempotencyService } from '../../common/idempotency/idempotency.service
 import { toCalendarDate, todayCalendarDate } from '../../common/time/calendar-date';
 import { AuditService } from '../audit/audit.service';
 import { Party } from '../parties/entities/party.entity';
+import { Company } from '../company/entities/company.entity';
 import { Site } from '../company/entities/site.entity';
 import { Item } from '../inventory/entities/item.entity';
 import { StockService } from '../../stock/stock.service';
@@ -130,6 +131,55 @@ export class SalesService {
       throw new BusinessRuleException('PARTY_NOT_A_CUSTOMER', `${party.name} is not marked as a customer`);
     }
     return party;
+  }
+
+  /**
+   * GST-02 — the tax charged has to match where the goods are going.
+   *
+   * Within the state it is CGST + SGST; across a state line it is IGST.
+   * Charging the wrong pair is not a rounding difference: it is tax paid to
+   * the wrong government, and the kiln answers for it at filing time, with
+   * interest. The invoice PDF already prints "Place of Supply … (Inter-state)"
+   * off the same two state codes, so without this check the one line that
+   * states it confidently is the line that is wrong.
+   *
+   * A party with no state recorded is treated as **intra-state**: for an
+   * unregistered buyer whose address was never taken, the place of supply is
+   * the supplier's own location, which is the kiln. That is the rule, and it
+   * also keeps a cash counter sale from being blocked by a blank field.
+   */
+  private assertTaxMatchesPlaceOfSupply(
+    company: Company,
+    party: Party,
+    rows: { cgstRate: string; sgstRate: string; igstRate: string }[],
+    documentLabel: string,
+  ): void {
+    const interState = Boolean(party.stateCode) && party.stateCode !== company.stateCode;
+
+    for (const row of rows) {
+      const intra = new Decimal(row.cgstRate).plus(row.sgstRate);
+      const igst = new Decimal(row.igstRate);
+
+      if (interState && intra.greaterThan(0)) {
+        throw new BusinessRuleException(
+          'GST_PLACE_OF_SUPPLY_MISMATCH',
+          `${party.name} is in state ${party.stateCode} and the kiln is in ${company.stateCode}, so this ${documentLabel} is inter-state and carries IGST, not CGST + SGST`,
+        );
+      }
+      if (!interState && igst.greaterThan(0)) {
+        throw new BusinessRuleException(
+          'GST_PLACE_OF_SUPPLY_MISMATCH',
+          `${party.name} and the kiln are both in state ${company.stateCode}, so this ${documentLabel} is intra-state and carries CGST + SGST, not IGST`,
+        );
+      }
+    }
+  }
+
+  /** The company's own registration, for the place-of-supply comparison. */
+  private async companyOf(manager: EntityManager, companyId: string): Promise<Company> {
+    const company = await manager.findOne(Company, { where: { id: companyId } });
+    if (!company) throw new BusinessRuleException('COMPANY_NOT_FOUND', 'That company does not exist');
+    return company;
   }
 
   private async assertSite(manager: EntityManager, companyId: string, siteId: string): Promise<void> {
@@ -543,6 +593,13 @@ export class SalesService {
         { companyId, userId, endpoint: 'POST /sales/invoices', key: idempotencyKey, body: dto },
         async () => {
           const customer = await this.assertCustomer(manager, companyId, dto.customerPartyId);
+          // GST-02 — the tax has to match where the goods are going.
+          this.assertTaxMatchesPlaceOfSupply(
+            await this.companyOf(manager, companyId),
+            customer,
+            [...dto.lines, ...(dto.charges ?? [])],
+            'invoice',
+          );
           await this.assertSite(manager, companyId, dto.siteId);
           await this.assertItems(
             manager,
@@ -1012,6 +1069,13 @@ export class SalesService {
         { companyId, userId, endpoint: 'POST /sales/credit-notes', key: idempotencyKey, body: dto },
         async () => {
           const customer = await this.assertCustomer(manager, companyId, dto.customerPartyId);
+          // GST-02 — the tax has to match where the goods are going.
+          this.assertTaxMatchesPlaceOfSupply(
+            await this.companyOf(manager, companyId),
+            customer,
+            dto.lines,
+            'credit note',
+          );
           await this.assertSite(manager, companyId, dto.siteId);
           await this.assertItems(
             manager,
@@ -1175,6 +1239,13 @@ export class SalesService {
         { companyId, userId, endpoint: 'POST /sales/debit-notes', key: idempotencyKey, body: dto },
         async () => {
           const customer = await this.assertCustomer(manager, companyId, dto.customerPartyId);
+          // GST-02 — the tax has to match where the goods are going.
+          this.assertTaxMatchesPlaceOfSupply(
+            await this.companyOf(manager, companyId),
+            customer,
+            dto.lines,
+            'debit note',
+          );
           await this.assertSite(manager, companyId, dto.siteId);
           await this.assertItems(
             manager,

@@ -11,6 +11,8 @@ export const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(4000),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
   DATABASE_URL: z.string().regex(/^postgres(ql)?:\/\//, 'must be a postgres:// URL'),
+  /** Serverless hosts want a pool of 1; a long-lived server wants the default. */
+  DB_POOL_MAX: z.coerce.number().int().positive().optional(),
   DATABASE_SSL: booleanString,
   CORS_ORIGINS: z.string().default('http://localhost:3000'),
   JWT_ACCESS_SECRET: z.string().min(32),

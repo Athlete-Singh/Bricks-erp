@@ -154,7 +154,7 @@
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
 | GST-01 | HSN/SAC master + GST rate config (configurable; clay building bricks usually HSN 6904, confirm with the client's CA) | CP1 | P3 | ✅ | ✅ | — | ✅ | ✅ |  |
-| GST-02 | CGST+SGST vs IGST by place of supply | CP1 | P8 | 🧩 | 🧩 | — | 🧩 | 🟨 | The split itself works and the two are mutually exclusive in schema and service. **The place of supply is not enforced against it:** an out-of-state invoice can be charged CGST+SGST and only the PDF notices, printing "Inter-state" beside intra-state tax. Needs a guard comparing the customer's state to the company's |
+| GST-02 | CGST+SGST vs IGST by place of supply | CP1 | P8 | ✅ | ✅ | — | ✅ | ✅ | Enforced on invoices, credit and debit notes and supplier bills: the party's state against the company's decides it, and the wrong pair is refused with `GST_PLACE_OF_SUPPLY_MISMATCH`. A party with no state is intra-state — for an unregistered buyer the place of supply is the kiln. The forms offer only the side that applies |
 | GST-03 | GST input on purchases | CP1 | P7 | ✅ | ✅ | — | ✅ | ✅ |  |
 | GST-04 | GSTR-1 register (B2B, B2C, HSN summary) with Excel export | CP1 | P10 | ✅ | ✅ | — | ✅ | ✅ |  |
 | GST-05 | GSTR-3B summary register | CP1 | P10 | ✅ | ✅ | — | ✅ | ✅ |  |

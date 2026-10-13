@@ -293,6 +293,53 @@ describe('Sales (e2e)', () => {
       soId = so.body.data.id as string;
     });
 
+    it('GST-02 — refuses CGST + SGST on a sale to another state', async () => {
+      // Not a rounding difference: it is tax paid to the wrong government, and
+      // the kiln answers for it at filing with interest. The invoice PDF
+      // already prints the place of supply off these same two state codes, so
+      // without this the one line that states it confidently is the wrong one.
+      const outOfState = await fx.app.get(PartyService).create(fx.companyA.id, SYSTEM_USER, {
+        name: 'Delhi Builders',
+        partyTypes: ['customer'],
+        gstin: null,
+        pan: null,
+        stateCode: '07',
+        address: null,
+        phone: null,
+        email: null,
+        openingDebit: '0.00',
+        openingCredit: '0.00',
+      });
+
+      const res = await post('invoices', fx.tokenA, {
+        customerPartyId: outOfState.id,
+        siteId: siteA.id,
+        invoiceDate: '2026-09-12',
+        lines: [
+          { itemId: bricks.id, warehouseId: yardA.id, quantity: '1', rate: '7000', cgstRate: '6', sgstRate: '6' },
+        ],
+      }).expect(422);
+      expect(res.body.error.code).toBe('GST_PLACE_OF_SUPPLY_MISMATCH');
+
+      // The same sale with IGST is accepted.
+      await post('invoices', fx.tokenA, {
+        customerPartyId: outOfState.id,
+        siteId: siteA.id,
+        invoiceDate: '2026-09-12',
+        lines: [{ itemId: bricks.id, warehouseId: yardA.id, quantity: '1', rate: '7000', igstRate: '12' }],
+      }).expect(201);
+    });
+
+    it('GST-02 — refuses IGST on a sale within the state', async () => {
+      const res = await post('invoices', fx.tokenA, {
+        customerPartyId: customer.id,
+        siteId: siteA.id,
+        invoiceDate: '2026-09-12',
+        lines: [{ itemId: bricks.id, warehouseId: yardA.id, quantity: '1', rate: '7000', igstRate: '12' }],
+      }).expect(422);
+      expect(res.body.error.code).toBe('GST_PLACE_OF_SUPPLY_MISMATCH');
+    });
+
     it('issues an invoice, splits GST same-state, deducts stock, posts a balanced journal', async () => {
       const before = await request(fx.app.getHttpServer())
         .get('/api/v1/stock/balance')

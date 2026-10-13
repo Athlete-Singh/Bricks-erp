@@ -31,7 +31,7 @@ const blankLine = (): BillLine => ({ itemId: '', quantity: '', rate: '', cgstRat
 
 function NewBillDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const mutation = useCreateBill();
-  const { sites } = useSession();
+  const { sites, company } = useSession();
   const { data: suppliers } = useParties({ limit: 100, type: 'supplier' });
   const { data: items } = useItems({ limit: 100, isActive: 'true' });
 
@@ -65,6 +65,14 @@ function NewBillDialog({ open, onClose }: { open: boolean; onClose: () => void }
    * Within a state tax splits into CGST + SGST; between states it is IGST. The
    * API refuses both on one line, so the form offers it as one choice.
    */
+  /**
+   * GST-02, input side — which tax the supplier charged follows from where
+   * they are, so the form reads it rather than asking. A supplier with no
+   * state recorded is treated as in-state, the same reading the API uses.
+   */
+  const supplier = (suppliers?.items ?? []).find((sup) => sup.id === supplierPartyId);
+  const interState = Boolean(supplier?.stateCode) && supplier?.stateCode !== company?.stateCode;
+
   const applyTax = (i: number, total: string, interState: boolean) => {
     const half = (Number(total) / 2).toFixed(2);
     update(
@@ -212,26 +220,21 @@ function NewBillDialog({ open, onClose }: { open: boolean; onClose: () => void }
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs text-muted-foreground">GST:</span>
+                  {/*
+                    Only the side that belongs is offered (GST-02). The
+                    supplier's state decides it, not the person typing, and
+                    claiming input credit on the wrong heads is unpicked
+                    invoice by invoice at reconciliation.
+                  */}
                   {['5', '12', '18', '28'].map((rate) => (
                     <Button
                       key={rate}
                       type="button"
                       size="sm"
                       variant="outline"
-                      onClick={() => applyTax(i, rate, false)}
+                      onClick={() => applyTax(i, rate, interState)}
                     >
-                      {rate}% in-state
-                    </Button>
-                  ))}
-                  {['5', '12', '18', '28'].map((rate) => (
-                    <Button
-                      key={`i${rate}`}
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => applyTax(i, rate, true)}
-                    >
-                      {rate}% IGST
+                      {rate}% {interState ? 'IGST' : 'in-state'}
                     </Button>
                   ))}
                   {(line.cgstRate || line.igstRate) && (

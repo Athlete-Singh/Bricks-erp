@@ -65,7 +65,11 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService<Env, true>) =>
-        buildTypeOrmOptions(config.get('DATABASE_URL', { infer: true }), config.get('DATABASE_SSL', { infer: true })),
+        buildTypeOrmOptions(
+          config.get('DATABASE_URL', { infer: true }),
+          config.get('DATABASE_SSL', { infer: true }),
+          config.get('DB_POOL_MAX', { infer: true }),
+        ),
     }),
     IdempotencyModule,
     HealthModule,

@@ -59,7 +59,7 @@ interface Charge {
 
 function NewInvoiceDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const mutation = useCreateInvoice();
-  const { sites } = useSession();
+  const { sites, company } = useSession();
   const { data: customers } = useParties({ limit: 100, type: 'customer' });
   const { data: items } = useItems({ limit: 100, isActive: 'true' });
   const { data: warehouses } = useWarehouses({ limit: 100 });
@@ -71,6 +71,17 @@ function NewInvoiceDialog({ open, onClose }: { open: boolean; onClose: () => voi
   const [customerPoNo, setCustomerPoNo] = useState('');
   const [lines, setLines] = useState<InvoiceLine[]>([empty()]);
   const [charges, setCharges] = useState<Charge[]>([]);
+
+  /**
+   * GST-02 — which tax applies is not the user's choice, it follows from where
+   * the goods are going. The form offers only the pair that belongs, because
+   * the API refuses the other one and an invoice charged to the wrong
+   * government costs the kiln interest at filing time. A customer with no
+   * state recorded is intra-state: for an unregistered buyer the place of
+   * supply is the kiln's own location.
+   */
+  const customer = (customers?.items ?? []).find((c) => c.id === customerPartyId);
+  const interState = Boolean(customer?.stateCode) && customer?.stateCode !== company?.stateCode;
 
   const close = () => {
     mutation.reset();
@@ -150,6 +161,13 @@ function NewInvoiceDialog({ open, onClose }: { open: boolean; onClose: () => voi
                 </option>
               ))}
             </Select>
+            {customer && (
+              <p className="text-xs text-muted-foreground sm:col-span-2">
+                {interState
+                  ? `${customer.name} is in state ${customer.stateCode} and this kiln is in ${company?.stateCode} — inter-state, so the lines carry IGST.`
+                  : `${customer.name} and this kiln are both in state ${company?.stateCode} — intra-state, so the lines carry CGST + SGST.`}
+              </p>
+            )}
             <Select label="Kiln *" value={siteId} required onChange={(e) => setSiteId(e.target.value)}>
               <option value="">Select…</option>
               {sites.map((s) => (
@@ -222,24 +240,29 @@ function NewInvoiceDialog({ open, onClose }: { open: boolean; onClose: () => voi
                   value={line.discount}
                   onChange={(e) => update(i, { discount: e.target.value })}
                 />
-                <Input
-                  label={i === 0 ? 'CGST %' : undefined}
-                  inputMode="decimal"
-                  value={line.cgstRate}
-                  onChange={(e) => update(i, { cgstRate: e.target.value })}
-                />
-                <Input
-                  label={i === 0 ? 'SGST %' : undefined}
-                  inputMode="decimal"
-                  value={line.sgstRate}
-                  onChange={(e) => update(i, { sgstRate: e.target.value })}
-                />
-                <Input
-                  label={i === 0 ? 'IGST %' : undefined}
-                  inputMode="decimal"
-                  value={line.igstRate}
-                  onChange={(e) => update(i, { igstRate: e.target.value })}
-                />
+                {interState ? (
+                  <Input
+                    label={i === 0 ? 'IGST %' : undefined}
+                    inputMode="decimal"
+                    value={line.igstRate}
+                    onChange={(e) => update(i, { igstRate: e.target.value, cgstRate: '', sgstRate: '' })}
+                  />
+                ) : (
+                  <>
+                    <Input
+                      label={i === 0 ? 'CGST %' : undefined}
+                      inputMode="decimal"
+                      value={line.cgstRate}
+                      onChange={(e) => update(i, { cgstRate: e.target.value, igstRate: '' })}
+                    />
+                    <Input
+                      label={i === 0 ? 'SGST %' : undefined}
+                      inputMode="decimal"
+                      value={line.sgstRate}
+                      onChange={(e) => update(i, { sgstRate: e.target.value, igstRate: '' })}
+                    />
+                  </>
+                )}
                 <Input
                   label={i === 0 ? 'HSN' : undefined}
                   value={line.hsnCode}
@@ -295,24 +318,29 @@ function NewInvoiceDialog({ open, onClose }: { open: boolean; onClose: () => voi
                   value={c.amount}
                   onChange={(e) => updateCharge(i, { amount: e.target.value })}
                 />
-                <Input
-                  label={i === 0 ? 'CGST %' : undefined}
-                  inputMode="decimal"
-                  value={c.cgstRate}
-                  onChange={(e) => updateCharge(i, { cgstRate: e.target.value })}
-                />
-                <Input
-                  label={i === 0 ? 'SGST %' : undefined}
-                  inputMode="decimal"
-                  value={c.sgstRate}
-                  onChange={(e) => updateCharge(i, { sgstRate: e.target.value })}
-                />
-                <Input
-                  label={i === 0 ? 'IGST %' : undefined}
-                  inputMode="decimal"
-                  value={c.igstRate}
-                  onChange={(e) => updateCharge(i, { igstRate: e.target.value })}
-                />
+                {interState ? (
+                  <Input
+                    label={i === 0 ? 'IGST %' : undefined}
+                    inputMode="decimal"
+                    value={c.igstRate}
+                    onChange={(e) => updateCharge(i, { igstRate: e.target.value, cgstRate: '', sgstRate: '' })}
+                  />
+                ) : (
+                  <>
+                    <Input
+                      label={i === 0 ? 'CGST %' : undefined}
+                      inputMode="decimal"
+                      value={c.cgstRate}
+                      onChange={(e) => updateCharge(i, { cgstRate: e.target.value, igstRate: '' })}
+                    />
+                    <Input
+                      label={i === 0 ? 'SGST %' : undefined}
+                      inputMode="decimal"
+                      value={c.sgstRate}
+                      onChange={(e) => updateCharge(i, { sgstRate: e.target.value, igstRate: '' })}
+                    />
+                  </>
+                )}
                 <div className="flex items-end pb-1">
                   <Button
                     type="button"
