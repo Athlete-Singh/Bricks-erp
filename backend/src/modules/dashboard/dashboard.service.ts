@@ -616,6 +616,17 @@ export class DashboardService {
       costParams.push(query.siteId);
       costSite = ` AND v."site_id" = $${costParams.length}`;
     }
+    const saleParams: unknown[] = [companyId, query.fromDate, query.toDate];
+    const noteParams: unknown[] = [companyId, query.fromDate, query.toDate];
+    let saleSite = '';
+    let noteSite = '';
+    if (query.siteId) {
+      saleParams.push(query.siteId);
+      saleSite = ` AND si."site_id" = $${saleParams.length}`;
+      noteParams.push(query.siteId);
+      noteSite = ` AND cn."site_id" = $${noteParams.length}`;
+    }
+
     const costRows = await this.em.query<{ site_id: string | null; ym: string; code: string; amount: string }[]>(
       `
       SELECT v."site_id", to_char(v."voucher_date", 'YYYY-MM') AS ym, l."code",
@@ -650,6 +661,79 @@ export class DashboardService {
       `,
       costParams,
     );
+
+    /**
+     * The other half of CST-01: cost alone does not say whether a grade pays
+     * for itself. Realisation is read at **kiln-month**, not per grade — a
+     * sales invoice line names an item and a warehouse, never a brick grade
+     * (ADR-050), so a per-grade price would be invented. Revenue comes off the
+     * SALES_BRICKS ledger, which is where every invoice and every credit note
+     * posts, so returns and rate corrections are already netted out.
+     */
+    const revenueRows = await this.em.query<{ site_id: string; ym: string; revenue: string }[]>(
+      `
+      SELECT v."site_id", to_char(v."voucher_date", 'YYYY-MM') AS ym,
+        (COALESCE(SUM(vl."credit"), 0) - COALESCE(SUM(vl."debit"), 0))::text AS revenue
+      FROM "ledgers" l
+      JOIN "voucher_lines" vl ON vl."ledger_id" = l."id" AND vl."deleted_at" IS NULL
+      JOIN "vouchers" v ON v."id" = vl."voucher_id" AND v."deleted_at" IS NULL
+      WHERE l."company_id" = $1 AND l."deleted_at" IS NULL AND l."code" = 'SALES_BRICKS'
+        AND v."site_id" IS NOT NULL
+        AND v."voucher_date" BETWEEN $2 AND $3${costSite}
+      GROUP BY v."site_id", to_char(v."voucher_date", 'YYYY-MM')
+      `,
+      costParams,
+    );
+
+    /** The quantity those rupees were earned on, netted the same way. */
+    const soldQtyRows = await this.em.query<{ site_id: string; ym: string; quantity: string }[]>(
+      `
+      SELECT si."site_id", to_char(si."invoice_date", 'YYYY-MM') AS ym,
+        COALESCE(SUM(sil."quantity"), 0)::text AS quantity
+      FROM "sales_invoice_lines" sil
+      JOIN "sales_invoices" si ON si."id" = sil."sales_invoice_id"
+        AND si."deleted_at" IS NULL AND si."status" <> 'cancelled'
+      WHERE sil."company_id" = $1 AND sil."deleted_at" IS NULL
+        AND si."invoice_date" BETWEEN $2 AND $3${saleSite}
+      GROUP BY si."site_id", to_char(si."invoice_date", 'YYYY-MM')
+      `,
+      saleParams,
+    );
+
+    /**
+     * Only a credit note that carried a quantity took bricks back (ADR-040);
+     * a value-only note is a rate correction and must not reduce the count.
+     */
+    const returnedQtyRows = await this.em.query<{ site_id: string; ym: string; quantity: string }[]>(
+      `
+      SELECT cn."site_id", to_char(cn."note_date", 'YYYY-MM') AS ym,
+        COALESCE(SUM(cnl."quantity"), 0)::text AS quantity
+      FROM "credit_note_lines" cnl
+      JOIN "credit_notes" cn ON cn."id" = cnl."credit_note_id" AND cn."deleted_at" IS NULL
+      WHERE cnl."company_id" = $1 AND cnl."deleted_at" IS NULL AND cnl."quantity" IS NOT NULL
+        AND cn."note_date" BETWEEN $2 AND $3${noteSite}
+      GROUP BY cn."site_id", to_char(cn."note_date", 'YYYY-MM')
+      `,
+      noteParams,
+    );
+
+    const realisation = new Map<string, { revenue: Decimal; quantity: Decimal }>();
+    const realisationAt = (key: string) =>
+      realisation.get(key) ?? { revenue: new Decimal(0), quantity: new Decimal(0) };
+    for (const r of revenueRows) {
+      const k = `${r.site_id}|${r.ym}`;
+      realisation.set(k, { ...realisationAt(k), revenue: new Decimal(r.revenue) });
+    }
+    for (const r of soldQtyRows) {
+      const k = `${r.site_id}|${r.ym}`;
+      const cur = realisationAt(k);
+      realisation.set(k, { ...cur, quantity: cur.quantity.plus(r.quantity) });
+    }
+    for (const r of returnedQtyRows) {
+      const k = `${r.site_id}|${r.ym}`;
+      const cur = realisationAt(k);
+      realisation.set(k, { ...cur, quantity: cur.quantity.minus(r.quantity) });
+    }
 
     // Site-month totals of fired bricks — used both for pro-rating and for the
     // benchmark comparison on the row.
@@ -694,6 +778,25 @@ export class DashboardService {
       const costPerThousandDec = costPerThousand === null ? null : new Decimal(costPerThousand);
       const deltaVsBenchmark = costPerThousandDec === null ? null : money(costPerThousandDec.minus(benchmark));
 
+      /**
+       * Nothing sold in the kiln-month leaves this null — bricks that sat in
+       * the yard have no realised price, and a zero would read as "given away".
+       */
+      const realised = realisation.get(sharedKey);
+      const soldBricks = realised ? bricks(realised.quantity) : '0.000';
+      const sellingPricePerThousand =
+        realised && realised.quantity.greaterThan(0)
+          ? realised.revenue.dividedBy(realised.quantity).times(1000).toFixed(2)
+          : null;
+      const grossMarginPercent =
+        sellingPricePerThousand === null || costPerThousandDec === null || new Decimal(sellingPricePerThousand).isZero()
+          ? null
+          : new Decimal(sellingPricePerThousand)
+              .minus(costPerThousandDec)
+              .dividedBy(sellingPricePerThousand)
+              .times(100)
+              .toFixed(2);
+
       return {
         siteId: r.site_id,
         month: r.ym,
@@ -712,6 +815,9 @@ export class DashboardService {
         },
         totalCost: money(totalCost),
         costPerThousand,
+        soldBricks,
+        sellingPricePerThousand,
+        grossMarginPercent,
         benchmark: COST_PER_THOUSAND_BENCHMARK,
         deltaVsBenchmark,
         /** The row is **over benchmark** when the delta is positive. */
@@ -728,6 +834,11 @@ export class DashboardService {
         brickTypeId: query.brickTypeId ?? null,
         rowCount: items.length,
         benchmark: COST_PER_THOUSAND_BENCHMARK,
+        /**
+         * Says out loud which figures on a row are per grade and which are not,
+         * so a screen can label them rather than letting the reader assume.
+         */
+        realisationLevel: 'kiln-month' as const,
       },
     };
   }
@@ -756,9 +867,10 @@ export class DashboardService {
       sfDispatch = ` AND d."site_id" = ${idx}`;
     }
 
-    const [production, dispatched, sales, collection, expenses, coalDiesel, attendance] = await Promise.all([
-      this.em.query<{ fired: string; sorted: string }[]>(
-        `
+    const [production, dispatched, sales, collection, expenses, coalDiesel, attendance, consumption] =
+      await Promise.all([
+        this.em.query<{ fired: string; sorted: string }[]>(
+          `
         SELECT
           COALESCE(SUM(pe."fired_bricks") FILTER (WHERE pe."stage" = 'firing'), 0)::text AS fired,
           COALESCE(SUM(pso."quantity"), 0)::text AS sorted
@@ -767,10 +879,10 @@ export class DashboardService {
         LEFT JOIN "production_sorting_outputs" pso ON pso."entry_id" = pe."id" AND pso."deleted_at" IS NULL
         WHERE pb."company_id" = $1 AND pe."entry_date" = $2 AND pe."deleted_at" IS NULL${sfBatch}
         `,
-        params,
-      ),
-      this.em.query<{ dispatched: string; challans: string }[]>(
-        `
+          params,
+        ),
+        this.em.query<{ dispatched: string; challans: string }[]>(
+          `
         SELECT
           COALESCE(SUM(dl."quantity"), 0)::text AS dispatched,
           COUNT(DISTINCT d."id")::text AS challans
@@ -779,34 +891,34 @@ export class DashboardService {
         WHERE d."company_id" = $1 AND d."dispatch_date" = $2
           AND d."status" IN ('confirmed', 'delivered') AND d."deleted_at" IS NULL${sfDispatch}
         `,
-        params,
-      ),
-      this.em.query<{ invoiced: string; count: string }[]>(
-        `
+          params,
+        ),
+        this.em.query<{ invoiced: string; count: string }[]>(
+          `
         SELECT COALESCE(SUM("total_amount"), 0)::text AS invoiced, COUNT(*)::text AS count
         FROM "sales_invoices"
         WHERE "company_id" = $1 AND "invoice_date" = $2 AND "status" <> 'cancelled' AND "deleted_at" IS NULL${sfSite}
         `,
-        params,
-      ),
-      this.em.query<{ collected: string }[]>(
-        `
+          params,
+        ),
+        this.em.query<{ collected: string }[]>(
+          `
         SELECT COALESCE(SUM("amount"), 0)::text AS collected
         FROM "customer_receipts"
         WHERE "company_id" = $1 AND "receipt_date" = $2 AND "deleted_at" IS NULL${sfSite}
         `,
-        params,
-      ),
-      this.em.query<{ amount: string }[]>(
-        `
+          params,
+        ),
+        this.em.query<{ amount: string }[]>(
+          `
         SELECT COALESCE(SUM("amount"), 0)::text AS amount
         FROM "expenses"
         WHERE "company_id" = $1 AND "expense_date" = $2 AND "deleted_at" IS NULL${sfSite}
         `,
-        params,
-      ),
-      this.em.query<{ code: string; amount: string }[]>(
-        `
+          params,
+        ),
+        this.em.query<{ code: string; amount: string }[]>(
+          `
         SELECT l."code", (COALESCE(SUM(vl."debit"), 0) - COALESCE(SUM(vl."credit"), 0))::text AS amount
         FROM "ledgers" l
         JOIN "voucher_lines" vl ON vl."ledger_id" = l."id" AND vl."deleted_at" IS NULL
@@ -814,18 +926,39 @@ export class DashboardService {
         WHERE l."company_id" = $1 AND l."code" IN ('COAL', 'VEHICLE_DIESEL') AND l."deleted_at" IS NULL
         GROUP BY l."code"
         `,
-        params,
-      ),
-      this.em.query<{ present: string }[]>(
-        `
+          params,
+        ),
+        this.em.query<{ present: string }[]>(
+          `
         SELECT COUNT(*)::text AS present
         FROM "labour_attendance"
         WHERE "company_id" = $1 AND "date" = $2
           AND "status" IN ('present', 'half_day') AND "deleted_at" IS NULL${sfSite}
         `,
-        params,
-      ),
-    ]);
+          params,
+        ),
+        /**
+         * "Coal used" is a quantity question, and rupees cannot answer it — a
+         * dearer load of coal raises the cost without a gram more being burnt.
+         * Every item issued to production that day is listed in its own unit;
+         * which of them is coal is the kiln's naming, not ours to guess.
+         */
+        this.em.query<{ item_id: string; item_name: string; unit: string; quantity: string }[]>(
+          `
+        SELECT pc."item_id", i."name" AS item_name, u."abbreviation" AS unit,
+          COALESCE(SUM(pc."quantity"), 0)::text AS quantity
+        FROM "production_consumptions" pc
+        JOIN "production_entries" pe ON pe."id" = pc."entry_id" AND pe."deleted_at" IS NULL
+        JOIN "production_batches" pb ON pb."id" = pe."batch_id" AND pb."deleted_at" IS NULL
+        JOIN "items" i ON i."id" = pc."item_id"
+        JOIN "units" u ON u."id" = i."unit_id"
+        WHERE pc."company_id" = $1 AND pe."entry_date" = $2 AND pc."deleted_at" IS NULL${sfBatch}
+        GROUP BY pc."item_id", i."name", u."abbreviation"
+        ORDER BY i."name"
+        `,
+          params,
+        ),
+      ]);
 
     const coal = coalDiesel.find((r) => r.code === 'COAL')?.amount ?? '0';
     const diesel = coalDiesel.find((r) => r.code === 'VEHICLE_DIESEL')?.amount ?? '0';
@@ -844,6 +977,12 @@ export class DashboardService {
         expenses: money(expenses[0]!.amount),
         coalCost: money(coal),
         dieselCost: money(diesel),
+        consumption: consumption.map((c) => ({
+          itemId: c.item_id,
+          itemName: c.item_name,
+          unit: c.unit,
+          quantity: bricks(c.quantity),
+        })),
         labourPresent: Number(attendance[0]!.present),
       },
     };
@@ -967,24 +1106,30 @@ export class DashboardService {
       throw new BusinessRuleException('DATE_RANGE_INVALID', 'The end of the window is before its start');
     }
 
-    const params: unknown[] = [companyId, query.fromDate, query.toDate];
-    let sfSite = '';
-    let sfSardar = '';
-    let sfGroup = '';
-    if (query.siteId) {
-      params.push(query.siteId);
-      sfSite = ` AND "site_id" = $${params.length}`;
-    }
-    if (query.sardarId) {
-      params.push(query.sardarId);
-      sfSardar = ` AND "sardar_party_id" = $${params.length}`;
-    }
-    if (query.groupId) {
-      params.push(query.groupId);
-      sfGroup = ` AND "labour_group_id" = $${params.length}`;
-    }
-
+    // Each branch builds its own parameter list. One shared list would push a
+    // value for a filter the other branch's SQL never mentions, and pg refuses
+    // a bind that carries more parameters than the statement uses.
     if (query.kind === 'attendance') {
+      const params: unknown[] = [companyId, query.fromDate, query.toDate];
+      let sfSite = '';
+      let sfGroup = '';
+      let sfSardar = '';
+      if (query.siteId) {
+        params.push(query.siteId);
+        // Qualified on purpose: labour_attendance and labour_groups both carry
+        // site_id, so a bare "site_id" is ambiguous and Postgres refuses it.
+        sfSite = ` AND la."site_id" = $${params.length}`;
+      }
+      if (query.groupId) {
+        params.push(query.groupId);
+        sfGroup = ` AND la."labour_group_id" = $${params.length}`;
+      }
+      if (query.sardarId) {
+        // A worker belongs to a Sardar through the group, which is where the
+        // field register's "whose gang is this" question actually lives.
+        params.push(query.sardarId);
+        sfSardar = ` AND lg."sardar_party_id" = $${params.length}`;
+      }
       const rows = await this.em.query<
         {
           id: string;
@@ -993,6 +1138,8 @@ export class DashboardService {
           group_name: string | null;
           worker_id: string | null;
           worker_name: string | null;
+          sardar_party_id: string | null;
+          sardar_name: string | null;
           status: string;
           overtime_hours: string;
         }[]
@@ -1000,12 +1147,15 @@ export class DashboardService {
         `
         SELECT la."id", la."date"::text AS date, la."labour_group_id",
           lg."name" AS group_name,
+          lg."sardar_party_id", sp."name" AS sardar_name,
           la."worker_id", w."name" AS worker_name,
           la."status", la."overtime_hours"::text AS overtime_hours
         FROM "labour_attendance" la
         LEFT JOIN "labour_groups" lg ON lg."id" = la."labour_group_id"
+        LEFT JOIN "parties" sp ON sp."id" = lg."sardar_party_id"
         LEFT JOIN "workers" w ON w."id" = la."worker_id"
-        WHERE la."company_id" = $1 AND la."date" BETWEEN $2 AND $3 AND la."deleted_at" IS NULL${sfSite}${sfGroup}
+        WHERE la."company_id" = $1 AND la."date" BETWEEN $2 AND $3
+          AND la."deleted_at" IS NULL${sfSite}${sfGroup}${sfSardar}
         ORDER BY la."date", lg."name", w."name"
         `,
         params,
@@ -1016,6 +1166,8 @@ export class DashboardService {
           date: r.date,
           groupId: r.labour_group_id,
           groupName: r.group_name,
+          sardarId: r.sardar_party_id,
+          sardarName: r.sardar_name,
           workerId: r.worker_id,
           workerName: r.worker_name,
           status: r.status,
@@ -1031,6 +1183,18 @@ export class DashboardService {
           absentDays: rows.filter((r) => r.status === 'absent').length,
         },
       };
+    }
+
+    const params: unknown[] = [companyId, query.fromDate, query.toDate];
+    let sfSite = '';
+    let sfSardar = '';
+    if (query.siteId) {
+      params.push(query.siteId);
+      sfSite = ` AND a."site_id" = $${params.length}`;
+    }
+    if (query.sardarId) {
+      params.push(query.sardarId);
+      sfSardar = ` AND a."sardar_party_id" = $${params.length}`;
     }
 
     const rows = await this.em.query<
@@ -1049,7 +1213,8 @@ export class DashboardService {
         a."gross_wages"::text AS gross_wages
       FROM "labour_wage_accruals" a
       JOIN "parties" p ON p."id" = a."sardar_party_id"
-      WHERE a."company_id" = $1 AND a."period_from" >= $2 AND a."period_to" <= $3 AND a."deleted_at" IS NULL${sfSite}${sfSardar}
+      WHERE a."company_id" = $1 AND a."period_from" >= $2 AND a."period_to" <= $3
+        AND a."deleted_at" IS NULL${sfSite}${sfSardar}
       ORDER BY a."period_from", p."name"
       `,
       params,

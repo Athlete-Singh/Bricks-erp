@@ -5,6 +5,7 @@ import { PERMISSIONS, formatINR, formatQty, todayISO } from '@brics/shared';
 import { Alert } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSession } from '@/features/auth/use-auth';
 import { useDailyReport } from '@/features/dashboard/hooks';
@@ -15,9 +16,10 @@ import { useDailyReport } from '@/features/dashboard/hooks';
  * expenses, coal and diesel cost, and the headcount actually present on site.
  */
 export default function DailyReportPage() {
-  const { can } = useSession();
+  const { can, sites } = useSession();
   const [date, setDate] = useState(todayISO());
-  const { data, isLoading } = useDailyReport({ date });
+  const [siteId, setSiteId] = useState('');
+  const { data, isLoading } = useDailyReport({ date, siteId: siteId || undefined });
 
   if (!can(PERMISSIONS.ACCOUNTS_VIEW)) {
     return <Alert variant="info">You do not have access to the accounts.</Alert>;
@@ -32,6 +34,14 @@ export default function DailyReportPage() {
           <span className="mb-1 block text-muted-foreground">Date</span>
           <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         </label>
+        <Select label="Kiln" value={siteId} onChange={(e) => setSiteId(e.target.value)}>
+          <option value="">All kilns</option>
+          {sites.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </Select>
       </div>
 
       {isLoading ? (
@@ -65,6 +75,24 @@ export default function DailyReportPage() {
           <Tile label="Diesel cost" value={formatINR(meta.dieselCost)} />
           <Tile label="Labour present" value={String(meta.labourPresent)} />
         </div>
+      )}
+
+      {meta && meta.consumption.length > 0 && (
+        <section className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-3">
+          <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Issued to production</h2>
+          {/* "How much coal went in" is a quantity question: a dearer load
+              raises the cost without a gram more being burnt. */}
+          <ul className="flex flex-col gap-1 text-sm">
+            {meta.consumption.map((c) => (
+              <li key={c.itemId} className="flex justify-between">
+                <span>{c.itemName}</span>
+                <span className="tabular-nums">
+                  {formatQty(Number(c.quantity))} {c.unit}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
     </div>
   );

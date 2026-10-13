@@ -7,6 +7,8 @@ import { Warehouse } from '../src/modules/inventory/entities/warehouse.entity';
 import { BrickType } from '../src/modules/inventory/entities/brick-type.entity';
 import { Item } from '../src/modules/inventory/entities/item.entity';
 import { Unit } from '../src/modules/inventory/entities/unit.entity';
+import { LabourAttendance } from '../src/modules/labour/entities/labour-attendance.entity';
+import { LabourGroup } from '../src/modules/labour/entities/labour-group.entity';
 import { Party } from '../src/modules/parties/entities/party.entity';
 import { PartyService } from '../src/modules/parties/party.service';
 import { StockService } from '../src/stock/stock.service';
@@ -60,6 +62,8 @@ describe('Dashboard & costing (e2e)', () => {
       prefix: 'Dashboard Test',
       domain: 'dashboard.test',
       tables: [
+        'labour_attendance',
+        'labour_groups',
         'dispatch_lines',
         'dispatches',
         'customer_receipt_allocations',
@@ -441,6 +445,40 @@ describe('Dashboard & costing (e2e)', () => {
       expect(Number(row.deltaVsBenchmark)).toBeGreaterThan(0);
     });
 
+    it('reads the realised price and the margin the kiln actually earned', async () => {
+      const res = await get('reports/cost-per-1000', fx.tokenA, {
+        fromDate: '2026-10-01',
+        toDate: '2026-10-31',
+      }).expect(200);
+      const row = res.body.data[0] as {
+        costPerThousand: string;
+        soldBricks: string;
+        sellingPricePerThousand: string | null;
+        grossMarginPercent: string | null;
+      };
+
+      // October's one invoice: 4,000 bricks for ₹32,000 taxable → ₹8,000
+      // realised per 1,000, against ₹4,263.16 of cost.
+      expect(row.soldBricks).toBe('4000.000');
+      expect(Number(row.sellingPricePerThousand)).toBeCloseTo(8000, 2);
+      expect(Number(row.grossMarginPercent)).toBeCloseTo(46.71, 1);
+
+      // The price is the kiln-month's, not the grade's — an invoice line names
+      // an item and a warehouse, never a brick grade, so the screen has to say
+      // which of the two it is showing.
+      expect(res.body.meta.realisationLevel).toBe('kiln-month');
+    });
+
+    it('leaves the price unknown rather than zero when the month sold nothing', async () => {
+      const res = await get('reports/cost-per-1000', fx.tokenA, {
+        fromDate: '2026-09-01',
+        toDate: '2026-09-30',
+      }).expect(200);
+      for (const row of res.body.data as { sellingPricePerThousand: string | null }[]) {
+        expect(row.sellingPricePerThousand).toBeNull();
+      }
+    });
+
     it('refuses a window that ends before it starts', async () => {
       const res = await get('reports/cost-per-1000', fx.tokenA, {
         fromDate: '2026-10-31',
@@ -488,6 +526,33 @@ describe('Dashboard & costing (e2e)', () => {
       expect(meta.sales.invoiced).toBe('0.00');
       expect(meta.expenses).toBe('0.00');
     });
+
+    it('answers "how much coal went in" in kilograms, not only in rupees', async () => {
+      // A dearer load of coal raises the cost without a gram more being burnt,
+      // so the rupee figure alone cannot answer the question the owner asks at
+      // the kiln mouth.
+      const batch = await post('production/batches', fx.tokenA, {
+        siteId: siteA.id,
+        chamber: 'C2',
+        batchDate: '2026-10-08',
+      }).expect(201);
+      await post(`production/batches/${batch.body.data.id}/making`, fx.tokenA, {
+        entryDate: '2026-10-08',
+        greenBricks: '5000',
+        consumption: [{ itemId: coalItem.id, warehouseId: rawYardA.id, quantity: '750' }],
+      }).expect(201);
+
+      const res = await get('reports/daily', fx.tokenA, { date: '2026-10-08' }).expect(200);
+      const consumption = res.body.meta.consumption as {
+        itemName: string;
+        unit: string;
+        quantity: string;
+      }[];
+      expect(consumption).toHaveLength(1);
+      expect(consumption[0]!.itemName).toBe('Coal');
+      expect(consumption[0]!.quantity).toBe('750.000');
+      expect(consumption[0]!.unit).toBe('kg');
+    });
   });
 
   describe('RPT-03 sales register', () => {
@@ -524,11 +589,132 @@ describe('Dashboard & costing (e2e)', () => {
   });
 
   describe('RPT-04 labour register', () => {
-    it('returns an empty attendance register when nothing is posted', async () => {
+    let groupId: string;
+    let otherSiteId: string;
+
+    beforeAll(async () => {
+      // A second kiln so a kiln filter has something to exclude. Attendance is
+      // written straight to the table: P6 owns how it gets there, and this
+      // suite only needs rows to filter.
+      const otherSite = await ds
+        .getRepository(Site)
+        .save(ds.getRepository(Site).create({ companyId: fx.companyA.id, name: 'Kiln Two', code: 'K2' }));
+      otherSiteId = otherSite.id;
+
+      const groups = ds.getRepository(LabourGroup);
+      const gangOne = await groups.save(
+        groups.create({
+          companyId: fx.companyA.id,
+          siteId: siteA.id,
+          sardarPartyId: sardar.id,
+          name: 'Ramesh gang',
+          activity: 'moulding',
+        }),
+      );
+      groupId = gangOne.id;
+
+      const attendance = ds.getRepository(LabourAttendance);
+      await attendance.save([
+        attendance.create({
+          companyId: fx.companyA.id,
+          siteId: siteA.id,
+          date: '2026-10-06',
+          labourGroupId: gangOne.id,
+          status: 'present',
+          overtimeHours: '2.00',
+        }),
+        attendance.create({
+          companyId: fx.companyA.id,
+          siteId: otherSite.id,
+          date: '2026-10-07',
+          labourGroupId: gangOne.id,
+          status: 'absent',
+          overtimeHours: '0.00',
+        }),
+      ]);
+    });
+
+    it('narrows the attendance roll to one kiln', async () => {
+      // labour_attendance and labour_groups both carry site_id, so an
+      // unqualified filter is ambiguous and Postgres refuses the whole query —
+      // the register used to answer 500 to the most ordinary question an owner
+      // asks of it.
       const res = await get('reports/labour-register', fx.tokenA, {
         kind: 'attendance',
         fromDate: '2026-10-01',
         toDate: '2026-10-31',
+        siteId: siteA.id,
+      }).expect(200);
+      expect(res.body.data).toHaveLength(1);
+      expect(res.body.data[0].date).toBe('2026-10-06');
+      expect(res.body.meta.presentDays).toBe(1);
+
+      const other = await get('reports/labour-register', fx.tokenA, {
+        kind: 'attendance',
+        fromDate: '2026-10-01',
+        toDate: '2026-10-31',
+        siteId: otherSiteId,
+      }).expect(200);
+      expect(other.body.data).toHaveLength(1);
+      expect(other.body.meta.absentDays).toBe(1);
+    });
+
+    it('reads the roll by Sardar and by group, and names the Sardar on the row', async () => {
+      const bySardar = await get('reports/labour-register', fx.tokenA, {
+        kind: 'attendance',
+        fromDate: '2026-10-01',
+        toDate: '2026-10-31',
+        sardarId: sardar.id,
+      }).expect(200);
+      expect(bySardar.body.data).toHaveLength(2);
+      expect(bySardar.body.data[0].sardarName).toBe('Ramesh Sardar');
+
+      const byGroup = await get('reports/labour-register', fx.tokenA, {
+        kind: 'attendance',
+        fromDate: '2026-10-01',
+        toDate: '2026-10-31',
+        groupId,
+      }).expect(200);
+      expect(byGroup.body.data).toHaveLength(2);
+
+      // A Sardar with no gang on this kiln gets an empty roll, not everyone's.
+      const stranger = await get('reports/labour-register', fx.tokenA, {
+        kind: 'attendance',
+        fromDate: '2026-10-01',
+        toDate: '2026-10-31',
+        sardarId: customer.id,
+      }).expect(200);
+      expect(stranger.body.data).toHaveLength(0);
+    });
+
+    it('filters the wage register by kiln and Sardar', async () => {
+      const res = await get('reports/labour-register', fx.tokenA, {
+        kind: 'wages',
+        fromDate: '2026-10-01',
+        toDate: '2026-10-31',
+        siteId: siteA.id,
+        sardarId: sardar.id,
+      }).expect(200);
+      expect(res.body.meta.kind).toBe('wages');
+    });
+
+    it('refuses a group filter on the wage register instead of ignoring it', async () => {
+      // An accrual is raised for a Sardar over a period; it has no group. A
+      // filter that silently does nothing is how a half-filtered wage register
+      // gets paid out.
+      await get('reports/labour-register', fx.tokenA, {
+        kind: 'wages',
+        fromDate: '2026-10-01',
+        toDate: '2026-10-31',
+        groupId,
+      }).expect(400);
+    });
+
+    it('returns an empty attendance register when nothing is posted', async () => {
+      const res = await get('reports/labour-register', fx.tokenA, {
+        kind: 'attendance',
+        fromDate: '2026-08-01',
+        toDate: '2026-08-31',
       }).expect(200);
       expect(res.body.data).toHaveLength(0);
       expect(res.body.meta.kind).toBe('attendance');

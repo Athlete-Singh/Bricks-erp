@@ -25,6 +25,18 @@ vi.mock('@/features/auth/use-auth', async () => {
   };
 });
 
+// The register screens read masters for their filters; the filter lists are
+// not what these tests are about.
+vi.mock('@/features/masters/hooks', () => ({
+  useParties: () => ({ data: { items: [{ id: 'c1', name: 'Shri Krishna Builders' }] } }),
+  useItems: () => ({ data: { items: [{ id: 'i1', name: 'Class 1 Brick' }] } }),
+  useBrickTypes: () => ({ data: { items: [{ id: 'bt1', grade: 'Class 1' }] } }),
+}));
+
+vi.mock('@/features/labour/hooks', () => ({
+  useLabourGroups: () => ({ data: [{ id: 'g1', name: 'Ramesh gang' }] }),
+}));
+
 vi.mock('../api', () => ({
   fetchDashboardSummary: () => Promise.resolve({ items: [], meta: summary }),
   fetchDashboardMonthly: () =>
@@ -57,6 +69,7 @@ vi.mock('../api', () => ({
         expenses: '20500.00',
         coalCost: '15000.00',
         dieselCost: '0.00',
+        consumption: [{ itemId: 'coal', itemName: 'Coal', unit: 'kg', quantity: '750.000' }],
         labourPresent: 12,
       },
     }),
@@ -211,12 +224,39 @@ describe('Dashboard & reports screens (P11.2)', () => {
         costPerThousand: '4263.16',
         benchmark: '4100.00',
         deltaVsBenchmark: '163.16',
+        soldBricks: '4000.000',
+        sellingPricePerThousand: '8000.00',
+        grossMarginPercent: '46.71',
         overBenchmark: true,
       },
     ];
     renderPage(<CostPerThousandPage />);
-    expect((await screen.findAllByText(/Class 1/i)).length).toBeGreaterThan(0);
+    // Wait on a figure only a row carries — "Class 1" also names an option in
+    // the brick-type filter, so matching it would not prove the table loaded.
+    expect((await screen.findAllByText('₹40,500.00')).length).toBeGreaterThan(0);
     expect(screen.getAllByTestId('cost-row-over').length).toBeGreaterThan(0);
+  });
+
+  it('CST-01 shows what the bricks fetched beside what they cost', async () => {
+    granted = ['accounts.view'];
+    renderPage(<CostPerThousandPage />);
+
+    // Cost alone does not answer "is this grade worth firing" — the realised
+    // price and the margin are the other half of CST-01.
+    expect((await screen.findAllByText('₹8,000.00')).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('46.71%').length).toBeGreaterThan(0);
+    // The kiln is on the row: two kilns firing the same grade in the same
+    // month would otherwise be two identical-looking lines.
+    expect(screen.getAllByText('Kiln One').length).toBeGreaterThan(0);
+    expect(screen.getByLabelText(/Export cost per 1,000 as CSV/i)).toBeInTheDocument();
+  });
+
+  it('daily report says how much coal went in, not only what it cost', async () => {
+    granted = ['accounts.view'];
+    renderPage(<DailyReportPage />);
+    // A dearer load raises the rupees without a gram more being burnt.
+    expect(await screen.findByText(/Issued to production/i)).toBeInTheDocument();
+    expect(screen.getByText(/750 kg/)).toBeInTheDocument();
   });
 
   it('daily report rolls up a day across every module', async () => {

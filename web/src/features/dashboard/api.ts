@@ -92,6 +92,11 @@ export interface CostRow {
   };
   totalCost: string;
   costPerThousand: string | null;
+  /** Bricks invoiced out of this kiln in the month, net of returns. */
+  soldBricks: string;
+  /** Realised per 1,000 for the kiln-month — null when the month sold nothing. */
+  sellingPricePerThousand: string | null;
+  grossMarginPercent: string | null;
   benchmark: string;
   deltaVsBenchmark: string | null;
   overBenchmark: boolean | null;
@@ -104,6 +109,12 @@ export interface CostMeta {
   brickTypeId: string | null;
   rowCount: number;
   benchmark: string;
+  /**
+   * Cost is per brick type; the realised price is not. An invoice line names
+   * an item and a warehouse, never a grade, so the price is the kiln-month's
+   * blended realisation and the screen has to say so.
+   */
+  realisationLevel: 'kiln-month';
 }
 
 export const fetchCostPerThousand = (params: CostPerThousandQueryDto, signal?: AbortSignal) =>
@@ -121,6 +132,8 @@ export interface DailyReport {
   expenses: string;
   coalCost: string;
   dieselCost: string;
+  /** What was issued to production that day, in each item's own unit. */
+  consumption: { itemId: string; itemName: string; unit: string; quantity: string }[];
   labourPresent: number;
 }
 
@@ -171,6 +184,8 @@ export interface AttendanceRow {
   date: string;
   groupId: string;
   groupName: string | null;
+  sardarId: string | null;
+  sardarName: string | null;
   workerId: string | null;
   workerName: string | null;
   status: string;

@@ -7,9 +7,12 @@ import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 import { DataTable, type Column } from '@/components/shared/data-table';
 import { useSession } from '@/features/auth/use-auth';
 import { useAttendanceRegister, useWageRegister } from '@/features/dashboard/hooks';
+import { useLabourGroups } from '@/features/labour/hooks';
+import { useParties } from '@/features/masters/hooks';
 import type { AttendanceRow, WageAccrualRow } from '@/features/dashboard/api';
 import { downloadCsv } from '@/features/dashboard/csv';
 import { cn } from '@/lib/cn';
@@ -25,12 +28,33 @@ function startOfMonth(): string {
  * so present / half / absent reads at a glance; export is CSV.
  */
 export default function LabourRegisterPage() {
-  const { can } = useSession();
+  const { can, sites } = useSession();
   const [kind, setKind] = useState<'attendance' | 'wages'>('attendance');
-  const [filters, setFilters] = useState({ fromDate: startOfMonth(), toDate: todayISO() });
+  const [filters, setFilters] = useState({
+    fromDate: startOfMonth(),
+    toDate: todayISO(),
+    siteId: '',
+    sardarId: '',
+    groupId: '',
+  });
 
-  const attendance = useAttendanceRegister(kind === 'attendance' ? filters : { ...filters, fromDate: '', toDate: '' });
-  const wages = useWageRegister(kind === 'wages' ? filters : { ...filters, fromDate: '', toDate: '' });
+  const sardars = useParties({ type: 'sardar' });
+  const groups = useLabourGroups();
+
+  const common = {
+    fromDate: filters.fromDate,
+    toDate: filters.toDate,
+    siteId: filters.siteId || undefined,
+    sardarId: filters.sardarId || undefined,
+  };
+  const attendance = useAttendanceRegister(
+    kind === 'attendance'
+      ? { ...common, groupId: filters.groupId || undefined }
+      : { ...common, fromDate: '', toDate: '' },
+  );
+  // A wage accrual is raised per Sardar over a period and has no group, so the
+  // group filter is not sent here — the API refuses it rather than pretending.
+  const wages = useWageRegister(kind === 'wages' ? common : { ...common, fromDate: '', toDate: '' });
 
   if (!can(PERMISSIONS.ACCOUNTS_VIEW)) {
     return <Alert variant="info">You do not have access to the accounts.</Alert>;
@@ -44,6 +68,7 @@ export default function LabourRegisterPage() {
   const attColumns: Column<AttendanceRow>[] = [
     { key: 'date', header: 'Date', render: (r) => <span className="tabular-nums">{r.date}</span> },
     { key: 'group', header: 'Group', render: (r) => r.groupName ?? '—' },
+    { key: 'sardar', header: 'Sardar', render: (r) => r.sardarName ?? '—' },
     { key: 'worker', header: 'Worker', render: (r) => r.workerName ?? '—' },
     {
       key: 'status',
@@ -72,8 +97,15 @@ export default function LabourRegisterPage() {
       if (!attRows.length) return;
       downloadCsv(
         `attendance-${filters.fromDate}-${filters.toDate}.csv`,
-        ['Date', 'Group', 'Worker', 'Status', 'OT hours'],
-        attRows.map((r) => [r.date, r.groupName ?? '', r.workerName ?? '', r.status, r.overtimeHours]),
+        ['Date', 'Group', 'Sardar', 'Worker', 'Status', 'OT hours'],
+        attRows.map((r) => [
+          r.date,
+          r.groupName ?? '',
+          r.sardarName ?? '',
+          r.workerName ?? '',
+          r.status,
+          r.overtimeHours,
+        ]),
       );
     } else {
       if (!wageRows.length) return;
@@ -124,6 +156,44 @@ export default function LabourRegisterPage() {
               onChange={(e) => setFilters((f) => ({ ...f, toDate: e.target.value }))}
             />
           </label>
+          <Select
+            label="Kiln"
+            value={filters.siteId}
+            onChange={(e) => setFilters((f) => ({ ...f, siteId: e.target.value }))}
+          >
+            <option value="">All kilns</option>
+            {sites.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </Select>
+          <Select
+            label="Sardar"
+            value={filters.sardarId}
+            onChange={(e) => setFilters((f) => ({ ...f, sardarId: e.target.value }))}
+          >
+            <option value="">All Sardars</option>
+            {(sardars.data?.items ?? []).map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </Select>
+          {kind === 'attendance' && (
+            <Select
+              label="Group"
+              value={filters.groupId}
+              onChange={(e) => setFilters((f) => ({ ...f, groupId: e.target.value }))}
+            >
+              <option value="">All groups</option>
+              {(groups.data ?? []).map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name}
+                </option>
+              ))}
+            </Select>
+          )}
         </div>
         <Button
           variant="outline"

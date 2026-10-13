@@ -213,10 +213,10 @@ Add the row when you **plan** an endpoint (BE ⬜), and update it the moment any
 | GET | /production/report | PRD-07 — production report by day / month / year, per kiln and grade | production.view | PRD-07 | P5.1b/P5.2 | ✅ | ✅ | — |
 | GET | /dashboard/summary | DSH-01 — Key Management Questions on one call (production, stock, sold/dispatched, receivables, payables, labour, coal/diesel, expenses, estimated profit, cost per 1,000) | accounts.view | DSH-01 | P11.1 | ✅ | ✅ | — |
 | GET | /dashboard/monthly | DSH-02 — rolling monthly series for production, sales, collection, expenses, coal, diesel | accounts.view | DSH-02 | P11.1 | ✅ | ✅ | — |
-| GET | /reports/cost-per-1000 | CST-01 — Cost per 1,000 bricks by kiln × month × brick type with seven cost buckets vs the ₹4,100 benchmark | accounts.view | CST-01 | P11.1 | ✅ | ✅ | — |
+| GET | /reports/cost-per-1000 | CST-01 — Cost per 1,000 bricks by kiln × month × brick type with seven cost buckets vs the ₹4,100 benchmark, plus the kiln-month realised price and gross margin (ADR-050) | accounts.view | CST-01 | P11.1 | ✅ | ✅ | — |
 | GET | /reports/daily | RPT-02 — one page per day across every module (production, dispatch, sales, collection, expenses, coal, diesel, labour present) | accounts.view | RPT-02 | P11.2 | ✅ | ✅ | — |
 | GET | /reports/sales-register | RPT-03 — sales register, line by line with GST split | accounts.view | RPT-03 | P11.2 | ✅ | ✅ | — |
-| GET | /reports/labour-register | RPT-04 — labour attendance or wage register (`?kind=attendance\|wages`) | accounts.view | RPT-04 | P11.2 | ✅ | ✅ | — |
+| GET | /reports/labour-register | RPT-04 — labour attendance or wage register (`?kind=attendance\|wages`), filterable by kiln / Sardar / group (group on attendance only) | accounts.view | RPT-04 | P11.2 | ✅ | ✅ | — |
 ## Notes
 - **Tenancy:** no endpoint accepts a `company_id` from the client. Anything below a company reads it from the JWT; `/companies/:id` asserts membership. Proved by `backend/test/tenancy.e2e-spec.ts`.
 - **Envelope:** handlers return payloads raw; `ResponseEnvelopeInterceptor` adds `{ data }`, or `{ data, meta }` when a service returns `Paginated`.

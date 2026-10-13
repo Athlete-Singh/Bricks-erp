@@ -6,9 +6,11 @@ import { PERMISSIONS, formatINR, formatQty, todayISO } from '@brics/shared';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 import { DataTable, type Column } from '@/components/shared/data-table';
 import { useSession } from '@/features/auth/use-auth';
 import { useSalesRegister } from '@/features/dashboard/hooks';
+import { useItems, useParties } from '@/features/masters/hooks';
 import type { SalesRegisterRow } from '@/features/dashboard/api';
 import { downloadCsv } from '@/features/dashboard/csv';
 
@@ -23,9 +25,25 @@ function startOfMonth(): string {
  * total. CSV export downloads what's on screen; filters apply.
  */
 export default function SalesRegisterPage() {
-  const { can } = useSession();
-  const [filters, setFilters] = useState({ fromDate: startOfMonth(), toDate: todayISO() });
-  const { data, isLoading } = useSalesRegister(filters);
+  const { can, sites } = useSession();
+  const [filters, setFilters] = useState({
+    fromDate: startOfMonth(),
+    toDate: todayISO(),
+    customerId: '',
+    itemId: '',
+    siteId: '',
+  });
+  const { data, isLoading } = useSalesRegister({
+    fromDate: filters.fromDate,
+    toDate: filters.toDate,
+    customerId: filters.customerId || undefined,
+    itemId: filters.itemId || undefined,
+    siteId: filters.siteId || undefined,
+  });
+  // RPT-03 is read "by customer / brick type / period" — the period alone is
+  // the report nobody asked for.
+  const customers = useParties({ type: 'customer' });
+  const items = useItems();
 
   if (!can(PERMISSIONS.ACCOUNTS_VIEW)) {
     return <Alert variant="info">You do not have access to the accounts.</Alert>;
@@ -116,6 +134,42 @@ export default function SalesRegisterPage() {
               onChange={(e) => setFilters((f) => ({ ...f, toDate: e.target.value }))}
             />
           </label>
+          <Select
+            label="Customer"
+            value={filters.customerId}
+            onChange={(e) => setFilters((f) => ({ ...f, customerId: e.target.value }))}
+          >
+            <option value="">All customers</option>
+            {(customers.data?.items ?? []).map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </Select>
+          <Select
+            label="Brick type"
+            value={filters.itemId}
+            onChange={(e) => setFilters((f) => ({ ...f, itemId: e.target.value }))}
+          >
+            <option value="">All items</option>
+            {(items.data?.items ?? []).map((i) => (
+              <option key={i.id} value={i.id}>
+                {i.name}
+              </option>
+            ))}
+          </Select>
+          <Select
+            label="Kiln"
+            value={filters.siteId}
+            onChange={(e) => setFilters((f) => ({ ...f, siteId: e.target.value }))}
+          >
+            <option value="">All kilns</option>
+            {sites.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </Select>
         </div>
         <Button
           variant="outline"

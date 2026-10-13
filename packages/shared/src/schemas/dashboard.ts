@@ -93,13 +93,30 @@ export type SalesRegisterQueryDto = z.infer<typeof salesRegisterQuerySchema>;
 
 // ── RPT-04 Labour registers ─────────────────────────────────────────────────
 
-/** `attendance` or `wages` — the two labour registers the spec names. */
-export const labourRegisterQuerySchema = z.object({
-  kind: z.enum(['attendance', 'wages']),
-  fromDate: isoDate,
-  toDate: isoDate,
-  sardarId: uuid.optional(),
-  groupId: uuid.optional(),
-  siteId: uuid.optional(),
-});
+/**
+ * `attendance` or `wages` — the two labour registers the spec names. Both read
+ * by Sardar, kiln and period; only attendance has a labour group, because a
+ * wage accrual is raised for a Sardar over a period and never for one group.
+ * Asking for a group on the wage register is refused rather than quietly
+ * ignored — a filter that silently does nothing is how a half-filtered
+ * register gets paid out.
+ */
+export const labourRegisterQuerySchema = z
+  .object({
+    kind: z.enum(['attendance', 'wages']),
+    fromDate: isoDate,
+    toDate: isoDate,
+    sardarId: uuid.optional(),
+    groupId: uuid.optional(),
+    siteId: uuid.optional(),
+  })
+  .superRefine((q, ctx) => {
+    if (q.kind === 'wages' && q.groupId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['groupId'],
+        message: 'A wage accrual is raised per Sardar, not per group — filter the wage register by Sardar.',
+      });
+    }
+  });
 export type LabourRegisterQueryDto = z.infer<typeof labourRegisterQuerySchema>;
