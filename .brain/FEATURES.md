@@ -11,19 +11,20 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 101 | 80 | 6 | 1 | 14 | 0 |
+| CP1 MVP | 101 | 85 | 6 | 1 | 9 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
+| S — SaaS platform | 11 | 0 | 0 | 0 | 10 | 1 |
 
-**CP1 done: 79 %** (80 of 101 features ✅)
+**CP1 done: 84 %** (85 of 101 features ✅)
 
 ### Per app
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
-| Backend | 97 | 85 | 1 | 0 | 0 | 11 |
-| Web | 94 | 83 | 0 | 0 | 0 | 11 |
+| Backend | 97 | 91 | 0 | 0 | 0 | 6 |
+| Web | 94 | 88 | 0 | 0 | 0 | 6 |
 | Mobile | 11 | 0 | 0 | 0 | 0 | 11 |
-| Tests | 101 | 86 | 0 | 0 | 0 | 15 |
+| Tests | 101 | 91 | 0 | 0 | 0 | 10 |
 
 ## Client Phase 1 — MVP
 
@@ -188,12 +189,31 @@
 
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| MOB-01 | Login, kiln selection, role-based home | CP1 | M1 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |  |
+| MOB-01 | Login, kiln selection, role-based home | CP1 | M1 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | Handle a **suspended tenant** at sign-in (PLT-06): say the company's access is on hold and who to contact, not "login failed" |
 | MOB-02 | Offline storage + sync queue + sync status badge (skeleton) | CP1 | M1 | — | — | ⬜ | ⬜ | ⬜ |  |
 | MOB-03 | Feature screens: production, attendance, GRN, dispatch/delivery | CP1 | M2–M5 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |  |
 | MOB-04 | A full working day offline; syncs with no duplicates; conflict handling | CP1 | M6 | — | — | ⬜ | ⬜ | ⬜ |  |
 | MOB-05 | Android release APK | CP1 | M6 | — | — | ⬜ | ⬜ | ⬜ |  |
 | MOB-06 | iOS build + TestFlight/App Store release | CP1 | M6 | — | — | ⬜ | ⬜ | ⬜ | **Contracted:** SOW §1 says "Cross-platform iOS & Android"; §3 excludes only the Apple $99/yr fee. Was wrongly filed under "CP2 candidates" |
+
+### S — SaaS platform (the vendor's own surface, not a kiln's)
+
+Outside CP1: this is what selling BRICS needs, not what a kiln uses. Design and
+reasoning in `.brain/modules/saas-platform.md`, decision in ADR-052.
+
+| ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| PLT-01 | Tenant record: `status` (trial/active/suspended), plan name, trial end, last active | S | S1.1 | ⬜ | — | — | ⬜ | ⬜ |  |
+| PLT-02 | Platform permissions and a `platform_admin` role, holding **no** business permissions; the `isSuperAdmin` bypass in `RolesGuard` removed | S | S1.1 | ⬜ | — | — | ⬜ | ⬜ | That one line is what makes the separation meaningless |
+| PLT-03 | `/admin` — its own surface and navigation, no business menu | S | S1.2 | — | ⬜ | — | ⬜ | ⬜ | The fastest way to make an admin behave like an owner is to show them an owner's screen |
+| PLT-04 | Tenant list: metadata only — counts and dates, never money and never the client's own parties | S | S1.2 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| PLT-05 | Onboarding: company + **first financial year** + owner user, in one transaction | S | S1.2 | ⬜ | ⬜ | — | ⬜ | ⬜ | Without an active FY the go-live import stops on its first row |
+| PLT-06 | Suspend / reactivate a tenant; sign-in refused with a message naming who to contact | S | S1.2 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | Mobile shows it too (MOB-01) |
+| PLT-07 | Support sessions: reason required, two hours, closes itself, business permissions scoped to one tenant | S | S2.1 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| PLT-08 | Audit rows marked `platform_support`; the owner sees that support looked, and why | S | S2.2 | ⬜ | ⬜ | — | ⬜ | ⬜ | Announced after, not approved before — a kiln owner is not reliably reachable |
+| PLT-09 | Tenant detail: users and roles, counts, last activity, support session history | S | S3.1 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| PLT-10 | Per-tenant setting: *require my approval before support access* | S | S3.2 | ⬜ | ⬜ | — | ⬜ | ⬜ | For a client who asks for it |
+| PLT-11 | Billing: plans, trial expiry, payment status, automatic suspension | S | S4 | ⏭️ | ⏭️ | — | ⏭️ | ⏭️ | Deferred until invoicing by hand hurts |
 
 ### Basics from the Functional Spec needed to run the business (CP1, basic depth)
 

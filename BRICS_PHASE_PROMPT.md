@@ -2,7 +2,7 @@
 
 > **How to use:** fill in the step ID (e.g. `P1.1`, `P5.3`, `A1`) and paste the block under the line into Claude Code / Cursor / Codex / Antigravity, opened in the repo root.
 > Use **one step per session**. The step list lives in `.brain/PROGRESS.md` (copied from §12 of `BRICS_MASTER_PROMPT.md`).
-> Special cases: **§B** if the last session left something broken or half-done, **§C** to start Client Phase 2.
+> Special cases: **§B** if the last session left something broken or half-done, **§C** to start Client Phase 2, **§D** for an S-track step (the SaaS platform).
 
 ---
 
@@ -81,3 +81,25 @@ You are continuing the BRICS ERP project. **CP1 MVP is released. We are starting
 1. Load context as in §A.1. Confirm in `.brain/PROGRESS.md` that P13 is ✅ and CP1 is signed off. If not, stop and tell me.
 2. Read FEATURES.md §CP2 and the "CP2 candidates" list. Ask me which approved items are in scope for this step. Do not build candidates that I have not approved.
 3. Then follow §A steps 2–8. CP2 features must not break CP1 flows: run the full CP1 e2e suite as part of the gate.
+
+---
+
+## D. SaaS platform step (the S track)
+
+You are continuing the BRICS ERP project. **Step for this session: `S_._`.** This is the **S track** — the vendor's own surface for selling BRICS to many kilns. It is not part of CP1, and a kiln's own experience must not change.
+
+1. **Load context.** `AGENTS.md` → `.brain/PROGRESS.md` → **"Resume here: S track"** → `.brain/modules/saas-platform.md` → **ADR-052** in DECISIONS.md → the **PLT-** rows in FEATURES.md. Open source files only when the step needs them.
+
+2. **Preflight.** Same as §A.2 — clean tree, green gate first. The S track runs on the P-track stack (NestJS + Next.js), so the JS gate applies in full: `pnpm lint && pnpm typecheck && pnpm test && pnpm build` plus backend e2e. Flutter is not involved.
+
+3. **Hold these four, they are decided (ADR-052) — do not quietly redesign them.**
+   - A platform admin holds **no business permissions**. Business access comes only from an active support session, scoped to one tenant.
+   - The tenant list shows **metadata only** — counts and dates. Never an amount, never the client's own parties. The test for a new field: would the kiln mind a competitor seeing it?
+   - Support access is **announced afterwards and expires** — a reason typed in, two hours, closed automatically, every audit row marked. Not approved beforehand.
+   - `/admin` is **its own surface**, with its own navigation and no business menu.
+
+4. **Plan, then wait for my OK** — as §A.4, plus: say which existing behaviour the step changes for a _kiln_ user. The answer should usually be "none"; when it is not, say so plainly before building.
+
+5. **Build, gate, and update the brain** — follow §A.5 to §A.8 unchanged. The CP1 e2e suite is part of the gate for every S step: the S track touches guards, permissions and the audit log, which is exactly the machinery CP1 runs on. A green S step that reddens CP1 is a failed step.
+
+6. **One thing that has bitten before.** Creating a company seeds the chart of accounts but **not** a financial year. Anything that onboards a tenant must create its first FY too, or the go-live import stops on its first row.

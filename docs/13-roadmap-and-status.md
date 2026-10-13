@@ -5,23 +5,24 @@
 
 ## Where we are
 
-**Client Phase:** CP1 (MVP) · **Current step:** P11 ✅ done — dashboard + CST + three register reports with CSV exports → **next: P13** (e2e + security, deploy + backups, onboarding + guide + UAT → CP1 sign-off)
+**Client Phase:** CP1 (MVP) · **Current step:** P13.3 — go-live import and user guide ✅ done; UAT remains. P13.1 ✅. P13.2: both apps deployed on Vercel against the development database; **backups (ADM-09) still open** · P11 ✅ done and **audited** — dashboard + CST + three register reports with CSV exports, with the audit's three defects and three gaps fixed → **next: P13** (e2e + security, deploy + backups, onboarding + guide + UAT → CP1 sign-off)
 
-**Client Phase 1 (MVP) progress: 79 %** (80 of 101 features done)
+**Client Phase 1 (MVP) progress: 84 %** (85 of 101 features done)
 
-|              | Total | ✅  | 🟨  | ⚠️  | ⬜  | ⏭️  |
-| ------------ | ----- | --- | --- | --- | --- | --- |
-| CP1 MVP      | 101   | 80  | 6   | 1   | 14  | 0   |
-| CP2 Advanced | 10    | 0   | 0   | 0   | 0   | 10  |
+|                   | Total | ✅  | 🟨  | ⚠️  | ⬜  | ⏭️  |
+| ----------------- | ----- | --- | --- | --- | --- | --- |
+| CP1 MVP           | 101   | 85  | 6   | 1   | 9   | 0   |
+| CP2 Advanced      | 10    | 0   | 0   | 0   | 0   | 10  |
+| S — SaaS platform | 11    | 0   | 0   | 0   | 10  | 1   |
 
 ### Progress per app (CP1)
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 | ----------------------------------- | ---------- | ------- | ---------------- | -------------- | ---------- | -------------- |
-| Backend                             | 97         | 85      | 1                | 0              | 0          | 11             |
-| Web                                 | 94         | 83      | 0                | 0              | 0          | 11             |
+| Backend                             | 97         | 91      | 0                | 0              | 0          | 6              |
+| Web                                 | 94         | 88      | 0                | 0              | 0          | 6              |
 | Mobile                              | 11         | 0       | 0                | 0              | 0          | 11             |
-| Tests                               | 101        | 86      | 0                | 0              | 0          | 15             |
+| Tests                               | 101        | 91      | 0                | 0              | 0          | 10             |
 
 ## Client phases
 
@@ -73,9 +74,9 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 
 - _none_
 
-**Features with a part marked 🧩 (built but not connected)** (1)
+**Features with a part marked 🧩 (built but not connected)** (0)
 
-- **ACC-04** Opening balances for ledgers: BE 🧩 · Web ⬜ · Mob —
+- _none_
 
 #### All endpoints
 
@@ -246,6 +247,9 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 | GET    | `/reports/daily`                   | RPT-02               | ✅      | ✅  | —      |
 | GET    | `/reports/sales-register`          | RPT-03               | ✅      | ✅  | —      |
 | GET    | `/reports/labour-register`         | RPT-04               | ✅      | ✅  | —      |
+| GET    | `/onboarding/reference`            | ONB-01               | ✅      | ✅  | —      |
+| POST   | `/onboarding/preview`              | ONB-01               | ✅      | ✅  | —      |
+| POST   | `/onboarding/commit`               | ONB-01               | ✅      | ✅  | —      |
 
 ## Implemented so far (CP1)
 
@@ -276,6 +280,7 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 - ✅ **INV-02** Warehouses / stock locations per kiln _(P3)_
 - ✅ **INV-03** Opening stock entry _(P4)_
 - ✅ **INV-04** Stock movement ledger via a single `StockService` (every in/out linked to its source document) _(P4)_
+- ✅ **INV-05** Automatic updates from GRN, production, dispatch and wastage (wired in P5/P7/P9) _(P4)_
 - ✅ **INV-06** Manual stock adjustment with reason (restricted role) _(P4)_
 - ✅ **INV-07** Stock reports: current stock by kiln/grade/item, movement register, Opening + Production + Purchase − Sales − Wastage = Closing _(P4)_
 - ✅ **VEH-01** Vehicles (own/hired; truck/tractor/tipper) and drivers _(P3)_
@@ -304,12 +309,15 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 - ✅ **ACC-01** Chart of accounts + ledger groups (seeded Indian default, editable) _(P2)_
 - ✅ **ACC-02** Posting engine: balanced, atomic, immutable, reversal _(P2)_
 - ✅ **ACC-03** Manual vouchers: receipt, payment, contra, journal _(P2)_
+- ✅ **ACC-04** Opening balances for ledgers _(P2)_
 - ✅ **ACC-05** Day Book, Ledger, Trial Balance _(P2)_
+- ✅ **ACC-06** Sales & purchase vouchers auto-posted from documents; debit/credit notes _(P7/P8)_
 - ✅ **ACC-07** Cash Book, Bank Book _(P10)_
 - ✅ **ACC-08** Profit & Loss, Balance Sheet (closing stock valuation method: see open questions) _(P10)_
 - ✅ **ACC-09** Receivables & payables summary reports _(P10)_
 - ✅ **ACC-10** Financial year lock and year-end carry-forward of balances _(P10)_
 - ✅ **GST-01** HSN/SAC master + GST rate config (configurable; clay building bricks usually HSN 6904, confirm with the client's CA) _(P3)_
+- ✅ **GST-02** CGST+SGST vs IGST by place of supply _(P8)_
 - ✅ **GST-03** GST input on purchases _(P7)_
 - ✅ **GST-04** GSTR-1 register (B2B, B2C, HSN summary) with Excel export _(P10)_
 - ✅ **GST-05** GSTR-3B summary register _(P10)_
@@ -329,33 +337,29 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 - ✅ **RPT-02** Daily operations report: one page per day — production, dispatch, sales, collection, expenses, coal used, labour present _(P11)_
 - ✅ **RPT-03** Sales register by customer / brick type / period, with quantity, rate per 1,000, discount, GST and total _(P11)_
 - ✅ **RPT-04** Labour registers: attendance register and wage register by Sardar / group / period _(P11)_
+- ✅ **ONB-01** Go-live onboarding: CSV import of parties, items, opening balances and opening stock (not historical transactions; those are excluded in the SOW) _(P13)_
 
 ## In progress / partial (CP1)
 
 - 🟨 **ADM-05** Users: login (email or mobile + password), JWT access/refresh, logout, change password _(P1)_
+- 🟨 **ADM-08** Company bank accounts (as Bank ledgers) _(P2)_
 - 🟨 **LAB-02** Daily attendance by group/worker (web + mobile offline) _(P6)_
 - 🟨 **PUR-02** GRN (goods receipt) on web + mobile offline → stock in _(P7)_
-- 🟨 **ACC-04** Opening balances for ledgers _(P2)_
 - 🟨 **SYN-01** `Idempotency-Key` header on every mobile-facing create endpoint + `idempotency_keys` table; a repeat with the same key returns the original result instead of creating a duplicate _(P5)_
 - 🟨 **SYN-02** Delta pull endpoints (`?since=`) for the masters the app caches: kilns, parties, items, brick types, wage rates _(P5)_
 - ⚠️ **NTF-01** SMS/WhatsApp alerts (dispatch sent, payment received, advance limit crossed) via MSG91/Twilio _(P13)_
 
 ## Remaining for CP1
 
-- ⬜ **ADM-08** Company bank accounts (as Bank ledgers) _(P2)_
 - ⬜ **ADM-09** Backups via managed DB (Supabase daily backups) + documented restore procedure _(P13)_
 - ⬜ **PRD-06** Production entry on mobile (offline) _(P5)_
-- ⬜ **INV-05** Automatic updates from GRN, production, dispatch and wastage (wired in P5/P7/P9) _(P4)_
 - ⬜ **DSP-04** Dispatch challan + delivery update on mobile (offline) _(P9)_
-- ⬜ **ACC-06** Sales & purchase vouchers auto-posted from documents; debit/credit notes _(P7/P8)_
-- ⬜ **GST-02** CGST+SGST vs IGST by place of supply _(P8)_
 - ⬜ **MOB-01** Login, kiln selection, role-based home _(M1)_
 - ⬜ **MOB-02** Offline storage + sync queue + sync status badge (skeleton) _(M1)_
 - ⬜ **MOB-03** Feature screens: production, attendance, GRN, dispatch/delivery _(M2–M5)_
 - ⬜ **MOB-04** A full working day offline; syncs with no duplicates; conflict handling _(M6)_
 - ⬜ **MOB-05** Android release APK _(M6)_
 - ⬜ **MOB-06** iOS build + TestFlight/App Store release _(M6)_
-- ⬜ **ONB-01** Go-live onboarding: CSV import of parties, items, opening balances and opening stock (not historical transactions; those are excluded in the SOW) _(P13)_
 
 ## Feature status by module
 
@@ -370,7 +374,7 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 | ADM-05 | Users: login (email or mobile + password), JWT access/refresh, logout, change password          | CP1 | P1    | ✅      | ✅  | ⬜     | ✅    | 🟨     |
 | ADM-06 | 9 seeded roles with default permission sets; Owner assigns role + kiln access per user          | CP1 | P1    | ✅      | ✅  | —      | ✅    | ✅     |
 | ADM-07 | Audit log (who / what / when / before-after) on financial + stock data; simple viewer for Owner | CP1 | P1    | ✅      | ✅  | —      | ✅    | ✅     |
-| ADM-08 | Company bank accounts (as Bank ledgers)                                                         | CP1 | P2    | ⬜      | ⬜  | —      | ⬜    | ⬜     |
+| ADM-08 | Company bank accounts (as Bank ledgers)                                                         | CP1 | P2    | ✅      | ⬜  | —      | ✅    | 🟨     |
 | ADM-09 | Backups via managed DB (Supabase daily backups) + documented restore procedure                  | CP1 | P13   | ⬜      | —   | —      | ⬜    | ⬜     |
 
 ### M02 Party Masters (SOW #2)
@@ -415,7 +419,7 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 | INV-02 | Warehouses / stock locations per kiln                                                                                           | CP1 | P3    | ✅      | ✅  | —      | ✅    | ✅     |
 | INV-03 | Opening stock entry                                                                                                             | CP1 | P4    | ✅      | ✅  | —      | ✅    | ✅     |
 | INV-04 | Stock movement ledger via a single `StockService` (every in/out linked to its source document)                                  | CP1 | P4    | ✅      | ✅  | —      | ✅    | ✅     |
-| INV-05 | Automatic updates from GRN, production, dispatch and wastage (wired in P5/P7/P9)                                                | CP1 | P4    | ⬜      | ⬜  | —      | ⬜    | ⬜     |
+| INV-05 | Automatic updates from GRN, production, dispatch and wastage (wired in P5/P7/P9)                                                | CP1 | P4    | ✅      | ✅  | —      | ✅    | ✅     |
 | INV-06 | Manual stock adjustment with reason (restricted role)                                                                           | CP1 | P4    | ✅      | ✅  | —      | ✅    | ✅     |
 | INV-07 | Stock reports: current stock by kiln/grade/item, movement register, Opening + Production + Purchase − Sales − Wastage = Closing | CP1 | P4    | ✅      | ✅  | —      | ✅    | ✅     |
 
@@ -471,9 +475,9 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 | ACC-01 | Chart of accounts + ledger groups (seeded Indian default, editable)               | CP1 | P2    | ✅      | ✅  | —      | ✅    | ✅     |
 | ACC-02 | Posting engine: balanced, atomic, immutable, reversal                             | CP1 | P2    | ✅      | ✅  | —      | ✅    | ✅     |
 | ACC-03 | Manual vouchers: receipt, payment, contra, journal                                | CP1 | P2    | ✅      | ✅  | —      | ✅    | ✅     |
-| ACC-04 | Opening balances for ledgers                                                      | CP1 | P2    | 🧩      | ⬜  | —      | ✅    | 🟨     |
+| ACC-04 | Opening balances for ledgers                                                      | CP1 | P2    | ✅      | ✅  | —      | ✅    | ✅     |
 | ACC-05 | Day Book, Ledger, Trial Balance                                                   | CP1 | P2    | ✅      | ✅  | —      | ✅    | ✅     |
-| ACC-06 | Sales & purchase vouchers auto-posted from documents; debit/credit notes          | CP1 | P7/P8 | ⬜      | ⬜  | —      | ⬜    | ⬜     |
+| ACC-06 | Sales & purchase vouchers auto-posted from documents; debit/credit notes          | CP1 | P7/P8 | ✅      | ✅  | —      | ✅    | ✅     |
 | ACC-07 | Cash Book, Bank Book                                                              | CP1 | P10   | ✅      | ✅  | —      | ✅    | ✅     |
 | ACC-08 | Profit & Loss, Balance Sheet (closing stock valuation method: see open questions) | CP1 | P10   | ✅      | ✅  | —      | ✅    | ✅     |
 | ACC-09 | Receivables & payables summary reports                                            | CP1 | P10   | ✅      | ✅  | —      | ✅    | ✅     |
@@ -484,7 +488,7 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 | ID     | Feature                                                                                                                                          | CP  | Phase | Backend | Web | Mobile | Tests | Status |
 | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------ | --- | ----- | ------- | --- | ------ | ----- | ------ |
 | GST-01 | HSN/SAC master + GST rate config (configurable; clay building bricks usually HSN 6904, confirm with the client's CA)                             | CP1 | P3    | ✅      | ✅  | —      | ✅    | ✅     |
-| GST-02 | CGST+SGST vs IGST by place of supply                                                                                                             | CP1 | P8    | ⬜      | ⬜  | —      | ⬜    | ⬜     |
+| GST-02 | CGST+SGST vs IGST by place of supply                                                                                                             | CP1 | P8    | ✅      | ✅  | —      | ✅    | ✅     |
 | GST-03 | GST input on purchases                                                                                                                           | CP1 | P7    | ✅      | ✅  | —      | ✅    | ✅     |
 | GST-04 | GSTR-1 register (B2B, B2C, HSN summary) with Excel export                                                                                        | CP1 | P10   | ✅      | ✅  | —      | ✅    | ✅     |
 | GST-05 | GSTR-3B summary register                                                                                                                         | CP1 | P10   | ✅      | ✅  | —      | ✅    | ✅     |
@@ -518,6 +522,22 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 | MOB-05 | Android release APK                                                     | CP1 | M6    | —       | —   | ⬜     | ⬜    | ⬜     |
 | MOB-06 | iOS build + TestFlight/App Store release                                | CP1 | M6    | —       | —   | ⬜     | ⬜    | ⬜     |
 
+### S — SaaS platform (the vendor's own surface, not a kiln's)
+
+| ID     | Feature                                                                                                                                  | CP  | Phase | Backend | Web | Mobile | Tests | Status |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------- | --- | ----- | ------- | --- | ------ | ----- | ------ |
+| PLT-01 | Tenant record: `status` (trial/active/suspended), plan name, trial end, last active                                                      | S   | S1.1  | ⬜      | —   | —      | ⬜    | ⬜     |
+| PLT-02 | Platform permissions and a `platform_admin` role, holding **no** business permissions; the `isSuperAdmin` bypass in `RolesGuard` removed | S   | S1.1  | ⬜      | —   | —      | ⬜    | ⬜     |
+| PLT-03 | `/admin` — its own surface and navigation, no business menu                                                                              | S   | S1.2  | —       | ⬜  | —      | ⬜    | ⬜     |
+| PLT-04 | Tenant list: metadata only — counts and dates, never money and never the client's own parties                                            | S   | S1.2  | ⬜      | ⬜  | —      | ⬜    | ⬜     |
+| PLT-05 | Onboarding: company + **first financial year** + owner user, in one transaction                                                          | S   | S1.2  | ⬜      | ⬜  | —      | ⬜    | ⬜     |
+| PLT-06 | Suspend / reactivate a tenant; sign-in refused with a message naming who to contact                                                      | S   | S1.2  | ⬜      | ⬜  | ⬜     | ⬜    | ⬜     |
+| PLT-07 | Support sessions: reason required, two hours, closes itself, business permissions scoped to one tenant                                   | S   | S2.1  | ⬜      | ⬜  | —      | ⬜    | ⬜     |
+| PLT-08 | Audit rows marked `platform_support`; the owner sees that support looked, and why                                                        | S   | S2.2  | ⬜      | ⬜  | —      | ⬜    | ⬜     |
+| PLT-09 | Tenant detail: users and roles, counts, last activity, support session history                                                           | S   | S3.1  | ⬜      | ⬜  | —      | ⬜    | ⬜     |
+| PLT-10 | Per-tenant setting: _require my approval before support access_                                                                          | S   | S3.2  | ⬜      | ⬜  | —      | ⬜    | ⬜     |
+| PLT-11 | Billing: plans, trial expiry, payment status, automatic suspension                                                                       | S   | S4    | ⏭️      | ⏭️  | —      | ⏭️    | ⏭️     |
+
 ### Basics from the Functional Spec needed to run the business (CP1, basic depth)
 
 | ID     | Feature                                                                                                                                                                                                                              | CP  | Phase | Backend | Web | Mobile | Tests | Status |
@@ -532,7 +552,7 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 | RPT-02 | Daily operations report: one page per day — production, dispatch, sales, collection, expenses, coal used, labour present                                                                                                             | CP1 | P11   | ✅      | ✅  | —      | ✅    | ✅     |
 | RPT-03 | Sales register by customer / brick type / period, with quantity, rate per 1,000, discount, GST and total                                                                                                                             | CP1 | P11   | ✅      | ✅  | —      | ✅    | ✅     |
 | RPT-04 | Labour registers: attendance register and wage register by Sardar / group / period                                                                                                                                                   | CP1 | P11   | ✅      | ✅  | —      | ✅    | ✅     |
-| ONB-01 | Go-live onboarding: CSV import of parties, items, opening balances and opening stock (not historical transactions; those are excluded in the SOW)                                                                                    | CP1 | P13   | ⬜      | ⬜  | —      | ⬜    | ⬜     |
+| ONB-01 | Go-live onboarding: CSV import of parties, items, opening balances and opening stock (not historical transactions; those are excluded in the SOW)                                                                                    | CP1 | P13   | ✅      | ✅  | —      | ✅    | ✅     |
 
 ### From the SOW (Phase 2 column)
 

@@ -243,6 +243,16 @@ correctness" — a step is ✅ only when a test proves a *second tenant is refus
 
 - **Work split (updated 2026-10-08):** the **P track** (backend + web) is built here; the **M track** (Flutter app) is built later, wherever the Flutter SDK is available — another machine, or this one once Flutter is installed. **Backend and web come first either way.** Each track keeps its own Resume block below. Whoever builds the M track edits only the **Mob** columns in FEATURES/API_INDEX, then runs `pnpm status`.
 
+## ▶ Resume here: S track — the SaaS platform (built here, same stack)
+
+- **What it is:** the vendor's own surface — creating tenants, suspending them, and supporting them without reading a client's books by default. Not part of CP1; a kiln's own experience does not change.
+- **Read first:** `.brain/modules/saas-platform.md` (design and reasoning) and **ADR-052** in DECISIONS.md. The feature rows are the **PLT-** block in FEATURES.md.
+- **Decided with the owner (2026-10-13):** one instance for all tenants · the admin creates a company and its owner, nothing else without a session · support access is **announced afterwards and expires**, not approved beforehand · **no billing yet**.
+- **Status:** ⬜ not started. **Next step: S1.1.**
+- **The line that must go in S1.1:** `RolesGuard`'s `if (user.isSuperAdmin) return true`. While it stands, a platform admin is an owner with longer arms and every other control is decoration.
+- **The thing easily missed in S1.2:** creating a company must also create its **first financial year**. `CompanyService.create` seeds the chart of accounts but not an FY, and without an active one the go-live import stops on its first row.
+- **Where the metadata line sits:** counts and dates are the platform's business; money and the client's own parties are not. The test for a new field — would the kiln mind a competitor seeing it?
+
 ## ▶ Resume here: M track — the Flutter app (needs the Flutter SDK)
 - **State:** M0 not started. `mobile/` holds `pubspec.yaml` (no packages), `lib/main.dart` + `lib/app.dart` placeholders,
   `test/app_test.dart`, the full `lib/core/*` and `lib/features/<auth|production|attendance|grn|dispatch|sync>/{data,domain,presentation}`
@@ -312,9 +322,12 @@ The P track is never blocked by the M track.
 | P13 | P13.1 | e2e core flows (Playwright) + security review | ✅ |
 | P13 | P13.2 | deploy (Render/Vercel/Supabase) + backups — **needs the hosting accounts** | ⬜ |
 | P13 | P13.3 | CSV onboarding + user guide ✅ · UAT → **CP1 sign-off** | 🧩 |
-| **S** (SaaS) | S1 | Tenant model, platform roles, `/admin` panel, onboarding wizard, suspend | ⬜ |
-| **S** (SaaS) | S2 | Support sessions — time-boxed business access, announced, audited | ⬜ |
-| **S** (SaaS) | S3 | Tenant detail, session history, per-tenant approval setting | ⬜ |
+| **S** (SaaS) | S1.1 | Backend: tenant fields, platform permissions + role, guard change, onboarding + suspend endpoints | ⬜ |
+| **S** (SaaS) | S1.2 | Web: `/admin` surface, tenant list, onboarding wizard, suspend/reactivate | ⬜ |
+| **S** (SaaS) | S2.1 | Backend: `support_sessions`, permissions resolved from the session, audit marking | ⬜ |
+| **S** (SaaS) | S2.2 | Web: open/close a session in `/admin`, support markers in the owner's audit log | ⬜ |
+| **S** (SaaS) | S3.1 | Tenant detail page + support session history | ⬜ |
+| **S** (SaaS) | S3.2 | Per-tenant *require my approval* setting | ⬜ |
 | **S** (SaaS) | S4 | Billing and plans | ⏭️ deferred |
 
 ### M track — Flutter supervisor app (later, wherever Flutter is installed)

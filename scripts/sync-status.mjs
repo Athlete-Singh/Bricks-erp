@@ -27,8 +27,11 @@ const APPS = [
 const errors = [];
 
 // ── FEATURES.md ─────────────────────────────────────────────────────────────
+// `CP1` / `CP2` are the client's phases. `S` is the SaaS platform track — the
+// vendor's own surface, outside what the client bought, counted separately so
+// it can never flatter or deflate CP1's percentage.
 const FEATURE_ROW =
-  /^\| ([A-Z]{2,3}-\d\d) \| (.+?) \| (CP\d) \| ([^|]+?) \| (\S+) \| (\S+) \| (\S+) \| (\S+) \| (\S+) \|(.*)\|$/;
+  /^\| ([A-Z]{2,3}-\d\d) \| (.+?) \| (CP\d|S) \| ([^|]+?) \| (\S+) \| (\S+) \| (\S+) \| (\S+) \| (\S+) \|(.*)\|$/;
 const featuresText = readFileSync(paths.features, 'utf8');
 const modules = [];
 let currentModule;
@@ -99,6 +102,7 @@ const cp = (name) => ({
 });
 const cp1 = cp('CP1');
 const cp2 = cp('CP2');
+const saas = cp('S');
 const pct = cp1.total ? Math.round((cp1['✅'] / cp1.total) * 100) : 0;
 
 const summaryTable = [
@@ -107,6 +111,7 @@ const summaryTable = [
   ...[
     ['CP1 MVP', cp1],
     ['CP2 Advanced', cp2],
+    ['S — SaaS platform', saas],
   ].map(([label, c]) => `| ${label} | ${c.total} | ${c['✅']} | ${c['🟨']} | ${c['⚠️']} | ${c['⬜']} | ${c['⏭️']} |`),
 ].join('\n');
 

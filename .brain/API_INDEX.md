@@ -44,8 +44,8 @@ Add the row when you **plan** an endpoint (BE ⬜), and update it the moment any
 **Screen built but the API is not ready / not connected** (0)
 - _none_
 
-**Features with a part marked 🧩 (built but not connected)** (1)
-- **ACC-04** Opening balances for ledgers: BE 🧩 · Web ⬜ · Mob —
+**Features with a part marked 🧩 (built but not connected)** (0)
+- _none_
 <!-- wiring-gaps:end -->
 
 ## Endpoints
