@@ -5,6 +5,14 @@ Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
 - **What shipped (P13.1):** the pre-go-live security pass and the first browser e2e. Three holes closed — no rate limiting on login, no security headers, Swagger served in production. `docs/14-security-review.md` records what was checked, what was fixed, what is accepted with a reason, and what P13.2 must do on the hosting platforms (TLS, real `CORS_ORIGINS`, fresh JWT secrets per environment, a database not on the public internet, `NODE_ENV=production`, a **restore** actually tested, and `pnpm seed` re-run when a release adds permission codes). Playwright covers sign-in, the unauthenticated redirect, a walk through all eight owner modules against a real API, and a cross-screen read of the yard balance; it skips without `E2E_EMAIL`/`E2E_PASSWORD`.
+- **What is left for CP1, as at 2026-10-13** (checked against the register, not from memory):
+  1. **The mobile app — the entire M track (M0–M6).** CP1 scope per the SOW (MOB-01…06, plus the mobile halves of PRD-06, LAB-02, PUR-02, DSP-04). Nothing is built; it needs a machine with the Flutter SDK. This is the largest remaining piece by far, and it is not deployment.
+  2. **P13.2 — deploy + backups (ADM-09).** Needs the hosting accounts.
+  3. **P13.3 — CSV onboarding (ONB-01), user guide, UAT.**
+  4. **Two web gaps that block go-live:** no screen to add a bank or any other ledger (**ADM-08** — the API has it, nothing calls it), and no screen for opening balances (**ACC-04**; ONB-01's CSV import would also cover it).
+  5. **GST-02 is half-built.** The CGST/SGST-vs-IGST split works and the two are mutually exclusive, but nothing checks the choice against the place of supply — an out-of-state invoice can be charged CGST+SGST, and the PDF then prints "Inter-state" beside intra-state tax. A compliance error the kiln would answer for.
+  6. **NTF-01 (SMS/WhatsApp alerts)** — blocked on the client, OPEN_QUESTIONS #14.
+- **Register hygiene (2026-10-13):** INV-05 and ACC-06 were still ⬜ in FEATURES.md although both shipped in P5/P7/P8; corrected. ADM-08 and ACC-04 were ⬜ for the right reason — the backend exists, the screen does not.
 - **Next step (exact):** **P13.2 — deploy + backups (ADM-09).** Needs the hosting accounts and secrets, which only the owner can create: Render (API), Vercel (web), Supabase (database). What can be done here is the configuration, the deploy runbook and the restore procedure; the account creation and the secrets cannot be.
 - **Last green gate:** P13.1 complete (2026-10-13). Gate green: lint ✓ typecheck ✓ test ✓ build ✓ · backend 143 unit + **680 e2e** (23 suites), web **145**, shared 81.
 - **What the P11 audit found and fixed** — the phase was read back against what CP1 asks for, not against its own commit message:

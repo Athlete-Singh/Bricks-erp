@@ -40,7 +40,7 @@
 | ADM-07 | Audit log (who / what / when / before-after) on financial + stock data; simple viewer for Owner | CP1 | P1 | ✅ | ✅ | — | ✅ | ✅ | AuditService writes on every company/kiln/FY/user/auth change; filtered, paged viewer at /audit-logs |
 
 
-| ADM-08 | Company bank accounts (as Bank ledgers) | CP1 | P2 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| ADM-08 | Company bank accounts (as Bank ledgers) | CP1 | P2 | ✅ | ⬜ | — | ✅ | 🟨 | `POST /ledgers` creates one under Bank Accounts; **no web screen calls it**, so an owner cannot add their bank in the app. Blocks go-live — expenses and receipts need a bank ledger to pay from |
 | ADM-09 | Backups via managed DB (Supabase daily backups) + documented restore procedure | CP1 | P13 | ⬜ | — | — | ⬜ | ⬜ |  |
 
 ### M02 Party Masters (SOW #2)
@@ -85,7 +85,7 @@
 | INV-02 | Warehouses / stock locations per kiln | CP1 | P3 | ✅ | ✅ | — | ✅ | ✅ |  |
 | INV-03 | Opening stock entry | CP1 | P4 | ✅ | ✅ | — | ✅ | ✅ |  |
 | INV-04 | Stock movement ledger via a single `StockService` (every in/out linked to its source document) | CP1 | P4 | ✅ | ✅ | — | ✅ | ✅ | One balance per item per warehouse; a grade's movements carry its item (ADR-051) |
-| INV-05 | Automatic updates from GRN, production, dispatch and wastage (wired in P5/P7/P9) | CP1 | P4 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| INV-05 | Automatic updates from GRN, production, dispatch and wastage (wired in P5/P7/P9) | CP1 | P4 | ✅ | ✅ | — | ✅ | ✅ | Row was stale — shipped with P5 (sorting/wastage), P7 (GRN, returns) and P9 (challan). Every one goes through `StockService` |
 | INV-06 | Manual stock adjustment with reason (restricted role) | CP1 | P4 | ✅ | ✅ | — | ✅ | ✅ |  |
 | INV-07 | Stock reports: current stock by kiln/grade/item, movement register, Opening + Production + Purchase − Sales − Wastage = Closing | CP1 | P4 | ✅ | ✅ | — | ✅ | ✅ |  |
 
@@ -141,9 +141,9 @@
 | ACC-01 | Chart of accounts + ledger groups (seeded Indian default, editable) | CP1 | P2 | ✅ | ✅ | — | ✅ | ✅ | Seeded per company at creation. Web: chart list with group and opening balance |
 | ACC-02 | Posting engine: balanced, atomic, immutable, reversal | CP1 | P2 | ✅ | ✅ | — | ✅ | ✅ | `PostingService` — balanced, FY-gated, caller's transaction. Reversal from the Day Book, never an edit |
 | ACC-03 | Manual vouchers: receipt, payment, contra, journal | CP1 | P2 | ✅ | ✅ | — | ✅ | ✅ | Receipt/payment/contra/journal with a live Dr/Cr total that blocks posting until it balances |
-| ACC-04 | Opening balances for ledgers | CP1 | P2 | 🧩 | ⬜ | — | ✅ | 🟨 | Opening Dr/Cr per ledger, transactional. Deliberately accepts an unbalanced set and reports the difference — real opening figures rarely tie first time |
+| ACC-04 | Opening balances for ledgers | CP1 | P2 | ✅ | ⬜ | — | ✅ | 🟨 | Opening Dr/Cr per ledger, transactional. Deliberately accepts an unbalanced set and reports the difference — real opening figures rarely tie first time. **No web screen:** opening balances can only be posted through the API or ONB-01's CSV import (P13.3) |
 | ACC-05 | Day Book, Ledger, Trial Balance | CP1 | P2 | ✅ | ✅ | — | ✅ | ✅ | Day Book, Ledger statement with running balance, Trial Balance with Σ Dr = Σ Cr and the difference surfaced |
-| ACC-06 | Sales & purchase vouchers auto-posted from documents; debit/credit notes | CP1 | P7/P8 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| ACC-06 | Sales & purchase vouchers auto-posted from documents; debit/credit notes | CP1 | P7/P8 | ✅ | ✅ | — | ✅ | ✅ | Row was stale — purchase bills and payments (P7), invoices, receipts and both note kinds (P8), all through `PostingService` |
 | ACC-07 | Cash Book, Bank Book | CP1 | P10 | ✅ | ✅ | — | ✅ | ✅ |  |
 | ACC-08 | Profit & Loss, Balance Sheet (closing stock valuation method: see open questions) | CP1 | P10 | ✅ | ✅ | — | ✅ | ✅ |  |
 | ACC-09 | Receivables & payables summary reports | CP1 | P10 | ✅ | ✅ | — | ✅ | ✅ |  |
@@ -154,7 +154,7 @@
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
 | GST-01 | HSN/SAC master + GST rate config (configurable; clay building bricks usually HSN 6904, confirm with the client's CA) | CP1 | P3 | ✅ | ✅ | — | ✅ | ✅ |  |
-| GST-02 | CGST+SGST vs IGST by place of supply | CP1 | P8 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
+| GST-02 | CGST+SGST vs IGST by place of supply | CP1 | P8 | 🧩 | 🧩 | — | 🧩 | 🟨 | The split itself works and the two are mutually exclusive in schema and service. **The place of supply is not enforced against it:** an out-of-state invoice can be charged CGST+SGST and only the PDF notices, printing "Inter-state" beside intra-state tax. Needs a guard comparing the customer's state to the company's |
 | GST-03 | GST input on purchases | CP1 | P7 | ✅ | ✅ | — | ✅ | ✅ |  |
 | GST-04 | GSTR-1 register (B2B, B2C, HSN summary) with Excel export | CP1 | P10 | ✅ | ✅ | — | ✅ | ✅ |  |
 | GST-05 | GSTR-3B summary register | CP1 | P10 | ✅ | ✅ | — | ✅ | ✅ |  |
