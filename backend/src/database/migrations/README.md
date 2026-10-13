@@ -26,17 +26,27 @@ DATABASE_URL="postgres://brics:brics@localhost:5432/brics_test" DATABASE_SSL=fal
 
 ## Production
 
-Use the **direct** connection string (`DATABASE_DIRECT_URL` in
-`backend/.env.production`), not the pooled one — a pooled connection cannot run
-DDL reliably.
+Fill in `backend/.env.production` once — connection strings and the first-owner
+values — then from the repo root:
 
 ```bash
-DATABASE_URL="<direct production URL>" DATABASE_SSL=true \
-  pnpm --filter @brics/backend migration:run
+pnpm db:setup:prod
 ```
 
-An inline `DATABASE_URL` wins over `backend/.env`, so this does not touch your
-local setup.
+That runs the migrations and then the first-run seed against that file. Nothing
+to retype, so nothing to mistype: the long inline command this replaces was how
+a production job ends up pointed at the wrong database, or seeded with the
+development owner's name.
+
+Either half on its own:
+
+```bash
+pnpm --filter @brics/backend migration:run:prod
+pnpm --filter @brics/backend seed:prod
+```
+
+Migrations use `DATABASE_DIRECT_URL` when it is set, because a pooled
+connection cannot run DDL reliably. The app keeps using the pooled `DATABASE_URL`.
 
 **Run this before the new code goes live.** If the order is reversed, new code
 runs against the old schema and the errors read like data corruption rather

@@ -16,7 +16,10 @@
     "migration:create": "typeorm-ts-node-commonjs migration:create",
     "migration:run": "pnpm typeorm migration:run",
     "migration:revert": "pnpm typeorm migration:revert",
-    "seed": "ts-node src/database/seeds/run-seed.ts"
+    "seed": "ts-node src/database/seeds/run-seed.ts",
+    "migration:run:prod": "ENV_FILE=.env.production pnpm typeorm migration:run",
+    "seed:prod": "ENV_FILE=.env.production ts-node src/database/seeds/run-seed.ts",
+    "db:setup:prod": "pnpm migration:run:prod && pnpm seed:prod"
   },
   "dependencies": {
     "@brics/shared": "workspace:*",

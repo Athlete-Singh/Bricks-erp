@@ -18,7 +18,8 @@
     "seed": "pnpm --filter @brics/backend seed",
     "db:up": "docker compose -f infra/docker-compose.yml up -d",
     "db:down": "docker compose -f infra/docker-compose.yml down",
-    "prepare": "husky"
+    "prepare": "husky",
+    "db:setup:prod": "pnpm --filter @brics/backend db:setup:prod"
   },
   "devDependencies": {
     "@brics/config": "workspace:*",
