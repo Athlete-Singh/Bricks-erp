@@ -312,6 +312,10 @@ The P track is never blocked by the M track.
 | P13 | P13.1 | e2e core flows (Playwright) + security review | ✅ |
 | P13 | P13.2 | deploy (Render/Vercel/Supabase) + backups — **needs the hosting accounts** | ⬜ |
 | P13 | P13.3 | CSV onboarding + user guide ✅ · UAT → **CP1 sign-off** | 🧩 |
+| **S** (SaaS) | S1 | Tenant model, platform roles, `/admin` panel, onboarding wizard, suspend | ⬜ |
+| **S** (SaaS) | S2 | Support sessions — time-boxed business access, announced, audited | ⬜ |
+| **S** (SaaS) | S3 | Tenant detail, session history, per-tenant approval setting | ⬜ |
+| **S** (SaaS) | S4 | Billing and plans | ⏭️ deferred |
 
 ### M track — Flutter supervisor app (later, wherever Flutter is installed)
 
