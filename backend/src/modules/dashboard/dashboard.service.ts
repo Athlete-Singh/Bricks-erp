@@ -5,8 +5,11 @@ import { EntityManager } from 'typeorm';
 import {
   COST_PER_THOUSAND_BENCHMARK,
   type CostPerThousandQueryDto,
+  type DailyReportQueryDto,
   type DashboardMonthlyQueryDto,
   type DashboardSummaryQueryDto,
+  type LabourRegisterQueryDto,
+  type SalesRegisterQueryDto,
 } from '@brics/shared';
 import { BusinessRuleException } from '../../common/exceptions/business-rule.exception';
 import { todayCalendarDate } from '../../common/time/calendar-date';
@@ -725,6 +728,348 @@ export class DashboardService {
         brickTypeId: query.brickTypeId ?? null,
         rowCount: items.length,
         benchmark: COST_PER_THOUSAND_BENCHMARK,
+      },
+    };
+  }
+
+  // ── RPT-02 — daily operations ─────────────────────────────────────────────
+
+  /**
+   * One day at a time: fired bricks, sorted output, dispatched quantity, sales
+   * invoiced and collected, expenses, coal cost, and the headcount actually
+   * present (attendance rows marked present or half-day). The result is one
+   * line each so the printed page reads top to bottom without a reader having
+   * to join rows across modules.
+   */
+  async daily(companyId: string, query: DailyReportQueryDto) {
+    const params: unknown[] = [companyId, query.date];
+    let sfSite = '';
+    let sfVou = '';
+    let sfBatch = '';
+    let sfDispatch = '';
+    if (query.siteId) {
+      params.push(query.siteId);
+      const idx = `$${params.length}`;
+      sfSite = ` AND "site_id" = ${idx}`;
+      sfVou = ` AND v."site_id" = ${idx}`;
+      sfBatch = ` AND pb."site_id" = ${idx}`;
+      sfDispatch = ` AND d."site_id" = ${idx}`;
+    }
+
+    const [production, dispatched, sales, collection, expenses, coalDiesel, attendance] = await Promise.all([
+      this.em.query<{ fired: string; sorted: string }[]>(
+        `
+        SELECT
+          COALESCE(SUM(pe."fired_bricks") FILTER (WHERE pe."stage" = 'firing'), 0)::text AS fired,
+          COALESCE(SUM(pso."quantity"), 0)::text AS sorted
+        FROM "production_entries" pe
+        JOIN "production_batches" pb ON pb."id" = pe."batch_id" AND pb."deleted_at" IS NULL
+        LEFT JOIN "production_sorting_outputs" pso ON pso."entry_id" = pe."id" AND pso."deleted_at" IS NULL
+        WHERE pb."company_id" = $1 AND pe."entry_date" = $2 AND pe."deleted_at" IS NULL${sfBatch}
+        `,
+        params,
+      ),
+      this.em.query<{ dispatched: string; challans: string }[]>(
+        `
+        SELECT
+          COALESCE(SUM(dl."quantity"), 0)::text AS dispatched,
+          COUNT(DISTINCT d."id")::text AS challans
+        FROM "dispatches" d
+        LEFT JOIN "dispatch_lines" dl ON dl."dispatch_id" = d."id" AND dl."deleted_at" IS NULL
+        WHERE d."company_id" = $1 AND d."dispatch_date" = $2
+          AND d."status" IN ('confirmed', 'delivered') AND d."deleted_at" IS NULL${sfDispatch}
+        `,
+        params,
+      ),
+      this.em.query<{ invoiced: string; count: string }[]>(
+        `
+        SELECT COALESCE(SUM("total_amount"), 0)::text AS invoiced, COUNT(*)::text AS count
+        FROM "sales_invoices"
+        WHERE "company_id" = $1 AND "invoice_date" = $2 AND "status" <> 'cancelled' AND "deleted_at" IS NULL${sfSite}
+        `,
+        params,
+      ),
+      this.em.query<{ collected: string }[]>(
+        `
+        SELECT COALESCE(SUM("amount"), 0)::text AS collected
+        FROM "customer_receipts"
+        WHERE "company_id" = $1 AND "receipt_date" = $2 AND "deleted_at" IS NULL${sfSite}
+        `,
+        params,
+      ),
+      this.em.query<{ amount: string }[]>(
+        `
+        SELECT COALESCE(SUM("amount"), 0)::text AS amount
+        FROM "expenses"
+        WHERE "company_id" = $1 AND "expense_date" = $2 AND "deleted_at" IS NULL${sfSite}
+        `,
+        params,
+      ),
+      this.em.query<{ code: string; amount: string }[]>(
+        `
+        SELECT l."code", (COALESCE(SUM(vl."debit"), 0) - COALESCE(SUM(vl."credit"), 0))::text AS amount
+        FROM "ledgers" l
+        JOIN "voucher_lines" vl ON vl."ledger_id" = l."id" AND vl."deleted_at" IS NULL
+        JOIN "vouchers" v ON v."id" = vl."voucher_id" AND v."deleted_at" IS NULL AND v."voucher_date" = $2${sfVou}
+        WHERE l."company_id" = $1 AND l."code" IN ('COAL', 'VEHICLE_DIESEL') AND l."deleted_at" IS NULL
+        GROUP BY l."code"
+        `,
+        params,
+      ),
+      this.em.query<{ present: string }[]>(
+        `
+        SELECT COUNT(*)::text AS present
+        FROM "labour_attendance"
+        WHERE "company_id" = $1 AND "date" = $2
+          AND "status" IN ('present', 'half_day') AND "deleted_at" IS NULL${sfSite}
+        `,
+        params,
+      ),
+    ]);
+
+    const coal = coalDiesel.find((r) => r.code === 'COAL')?.amount ?? '0';
+    const diesel = coalDiesel.find((r) => r.code === 'VEHICLE_DIESEL')?.amount ?? '0';
+    return {
+      items: [],
+      meta: {
+        date: query.date,
+        siteId: query.siteId ?? null,
+        production: { fired: bricks(production[0]!.fired), sorted: bricks(production[0]!.sorted) },
+        dispatch: {
+          bricks: bricks(dispatched[0]!.dispatched),
+          challans: Number(dispatched[0]!.challans),
+        },
+        sales: { invoiced: money(sales[0]!.invoiced), invoices: Number(sales[0]!.count) },
+        collection: money(collection[0]!.collected),
+        expenses: money(expenses[0]!.amount),
+        coalCost: money(coal),
+        dieselCost: money(diesel),
+        labourPresent: Number(attendance[0]!.present),
+      },
+    };
+  }
+
+  // ── RPT-03 — sales register ───────────────────────────────────────────────
+
+  async salesRegister(companyId: string, query: SalesRegisterQueryDto) {
+    if (query.toDate < query.fromDate) {
+      throw new BusinessRuleException('DATE_RANGE_INVALID', 'The end of the window is before its start');
+    }
+    const params: unknown[] = [companyId, query.fromDate, query.toDate];
+    let sfSite = '';
+    let sfCust = '';
+    let sfItem = '';
+    if (query.siteId) {
+      params.push(query.siteId);
+      sfSite = ` AND si."site_id" = $${params.length}`;
+    }
+    if (query.customerId) {
+      params.push(query.customerId);
+      sfCust = ` AND si."customer_party_id" = $${params.length}`;
+    }
+    if (query.itemId) {
+      params.push(query.itemId);
+      sfItem = ` AND sil."item_id" = $${params.length}`;
+    }
+
+    const rows = await this.em.query<
+      {
+        invoice_id: string;
+        invoice_no: string;
+        invoice_date: string;
+        customer_id: string;
+        customer_name: string;
+        item_id: string;
+        item_name: string;
+        quantity: string;
+        rate: string;
+        discount: string;
+        taxable_amount: string;
+        cgst_amount: string;
+        sgst_amount: string;
+        igst_amount: string;
+        line_total: string;
+        hsn_code: string | null;
+      }[]
+    >(
+      `
+      SELECT
+        si."id" AS invoice_id, si."invoice_no", si."invoice_date"::text AS invoice_date,
+        p."id" AS customer_id, p."name" AS customer_name,
+        sil."item_id", i."name" AS item_name,
+        sil."quantity"::text AS quantity,
+        sil."rate"::text AS rate,
+        sil."discount"::text AS discount,
+        sil."taxable_amount"::text AS taxable_amount,
+        sil."cgst_amount"::text AS cgst_amount,
+        sil."sgst_amount"::text AS sgst_amount,
+        sil."igst_amount"::text AS igst_amount,
+        (sil."taxable_amount" + sil."cgst_amount" + sil."sgst_amount" + sil."igst_amount")::text AS line_total,
+        sil."hsn_code"
+      FROM "sales_invoices" si
+      JOIN "sales_invoice_lines" sil ON sil."sales_invoice_id" = si."id" AND sil."deleted_at" IS NULL
+      JOIN "parties" p ON p."id" = si."customer_party_id"
+      JOIN "items" i ON i."id" = sil."item_id"
+      WHERE si."company_id" = $1 AND si."invoice_date" BETWEEN $2 AND $3
+        AND si."status" <> 'cancelled' AND si."deleted_at" IS NULL${sfSite}${sfCust}${sfItem}
+      ORDER BY si."invoice_date", si."invoice_no", sil."created_at"
+      `,
+      params,
+    );
+
+    const items = rows.map((r) => ({
+      invoiceId: r.invoice_id,
+      invoiceNo: r.invoice_no,
+      invoiceDate: r.invoice_date,
+      customerId: r.customer_id,
+      customerName: r.customer_name,
+      itemId: r.item_id,
+      itemName: r.item_name,
+      hsnCode: r.hsn_code,
+      quantity: new Decimal(r.quantity).toFixed(3),
+      rate: money(r.rate),
+      discount: money(r.discount),
+      taxableAmount: money(r.taxable_amount),
+      cgstAmount: money(r.cgst_amount),
+      sgstAmount: money(r.sgst_amount),
+      igstAmount: money(r.igst_amount),
+      lineTotal: money(r.line_total),
+    }));
+
+    const sum = (pick: (r: (typeof items)[number]) => string) =>
+      money(items.reduce((a, r) => a.plus(pick(r)), new Decimal(0)));
+
+    return {
+      items,
+      meta: {
+        fromDate: query.fromDate,
+        toDate: query.toDate,
+        rowCount: items.length,
+        taxableAmount: sum((r) => r.taxableAmount),
+        cgstAmount: sum((r) => r.cgstAmount),
+        sgstAmount: sum((r) => r.sgstAmount),
+        igstAmount: sum((r) => r.igstAmount),
+        total: sum((r) => r.lineTotal),
+      },
+    };
+  }
+
+  // ── RPT-04 — labour registers ─────────────────────────────────────────────
+
+  /**
+   * Two shapes under one endpoint: `attendance` lists each worker × day row,
+   * `wages` sums the posted wage accruals per Sardar across the window. LAB-08
+   * (the Sardar ledger) is a different thing — this one is the owner-friendly
+   * register the field keeps.
+   */
+  async labourRegister(companyId: string, query: LabourRegisterQueryDto) {
+    if (query.toDate < query.fromDate) {
+      throw new BusinessRuleException('DATE_RANGE_INVALID', 'The end of the window is before its start');
+    }
+
+    const params: unknown[] = [companyId, query.fromDate, query.toDate];
+    let sfSite = '';
+    let sfSardar = '';
+    let sfGroup = '';
+    if (query.siteId) {
+      params.push(query.siteId);
+      sfSite = ` AND "site_id" = $${params.length}`;
+    }
+    if (query.sardarId) {
+      params.push(query.sardarId);
+      sfSardar = ` AND "sardar_party_id" = $${params.length}`;
+    }
+    if (query.groupId) {
+      params.push(query.groupId);
+      sfGroup = ` AND "labour_group_id" = $${params.length}`;
+    }
+
+    if (query.kind === 'attendance') {
+      const rows = await this.em.query<
+        {
+          id: string;
+          date: string;
+          labour_group_id: string;
+          group_name: string | null;
+          worker_id: string | null;
+          worker_name: string | null;
+          status: string;
+          overtime_hours: string;
+        }[]
+      >(
+        `
+        SELECT la."id", la."date"::text AS date, la."labour_group_id",
+          lg."name" AS group_name,
+          la."worker_id", w."name" AS worker_name,
+          la."status", la."overtime_hours"::text AS overtime_hours
+        FROM "labour_attendance" la
+        LEFT JOIN "labour_groups" lg ON lg."id" = la."labour_group_id"
+        LEFT JOIN "workers" w ON w."id" = la."worker_id"
+        WHERE la."company_id" = $1 AND la."date" BETWEEN $2 AND $3 AND la."deleted_at" IS NULL${sfSite}${sfGroup}
+        ORDER BY la."date", lg."name", w."name"
+        `,
+        params,
+      );
+      return {
+        items: rows.map((r) => ({
+          id: r.id,
+          date: r.date,
+          groupId: r.labour_group_id,
+          groupName: r.group_name,
+          workerId: r.worker_id,
+          workerName: r.worker_name,
+          status: r.status,
+          overtimeHours: r.overtime_hours,
+        })),
+        meta: {
+          kind: 'attendance' as const,
+          fromDate: query.fromDate,
+          toDate: query.toDate,
+          rowCount: rows.length,
+          presentDays: rows.filter((r) => r.status === 'present').length,
+          halfDays: rows.filter((r) => r.status === 'half_day').length,
+          absentDays: rows.filter((r) => r.status === 'absent').length,
+        },
+      };
+    }
+
+    const rows = await this.em.query<
+      {
+        id: string;
+        period_from: string;
+        period_to: string;
+        sardar_party_id: string;
+        sardar_name: string;
+        gross_wages: string;
+      }[]
+    >(
+      `
+      SELECT a."id", a."period_from"::text AS period_from, a."period_to"::text AS period_to,
+        a."sardar_party_id", p."name" AS sardar_name,
+        a."gross_wages"::text AS gross_wages
+      FROM "labour_wage_accruals" a
+      JOIN "parties" p ON p."id" = a."sardar_party_id"
+      WHERE a."company_id" = $1 AND a."period_from" >= $2 AND a."period_to" <= $3 AND a."deleted_at" IS NULL${sfSite}${sfSardar}
+      ORDER BY a."period_from", p."name"
+      `,
+      params,
+    );
+    const items = rows.map((r) => ({
+      accrualId: r.id,
+      periodFrom: r.period_from,
+      periodTo: r.period_to,
+      sardarId: r.sardar_party_id,
+      sardarName: r.sardar_name,
+      grossWages: money(r.gross_wages),
+    }));
+    return {
+      items,
+      meta: {
+        kind: 'wages' as const,
+        fromDate: query.fromDate,
+        toDate: query.toDate,
+        rowCount: items.length,
+        totalGrossWages: money(items.reduce((a, r) => a.plus(r.grossWages), new Decimal(0))),
       },
     };
   }

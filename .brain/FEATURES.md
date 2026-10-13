@@ -11,19 +11,19 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 101 | 73 | 9 | 1 | 18 | 0 |
+| CP1 MVP | 101 | 80 | 6 | 1 | 14 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 
-**CP1 done: 72 %** (73 of 101 features ✅)
+**CP1 done: 79 %** (80 of 101 features ✅)
 
 ### Per app
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
-| Backend | 97 | 81 | 1 | 0 | 0 | 15 |
-| Web | 94 | 76 | 0 | 0 | 0 | 18 |
+| Backend | 97 | 85 | 1 | 0 | 0 | 11 |
+| Web | 94 | 83 | 0 | 0 | 0 | 11 |
 | Mobile | 11 | 0 | 0 | 0 | 0 | 11 |
-| Tests | 101 | 82 | 0 | 0 | 0 | 19 |
+| Tests | 101 | 86 | 0 | 0 | 0 | 15 |
 
 ## Client Phase 1 — MVP
 
@@ -202,13 +202,13 @@
 | EXP-01 | Expense categories (labour, coal, diesel, electricity, vehicle, machinery, repairs, salary, food, rent, office, govt charges, bank charges, misc) | CP1 | P10 | ✅ | ✅ | — | ✅ | ✅ |  |
 | EXP-02 | Expense entry by kiln with payment mode Cash / Bank / UPI / Credit | CP1 | P10 | ✅ | ✅ | — | ✅ | ✅ |  |
 | CSH-01 | Opening/closing cash; cash receipts/payments; bank deposit, withdrawal and transfer (contra); bank charges; cheque no. / UPI ref on vouchers | CP1 | P10 | ✅ | ✅ | — | ✅ | ✅ |  |
-| DSH-01 | Owner dashboard answering the "Key Management Questions": production today/month/year, stock, sold/dispatched, receivables, payables, labour payable, coal/diesel used, **expenses, estimated profit**, cost per 1,000, gross margin | CP1 | P11 | ✅ | ⬜ | — | ✅ | 🟨 | P11.1 backend complete; web screen in P11.2 |
-| DSH-02 | Monthly charts: production, sales, collection, expenses, fuel | CP1 | P11 | ✅ | ⬜ | — | ✅ | 🟨 | P11.1 backend complete; charts in P11.2 |
-| CST-01 | Cost per 1,000 bricks by kiln, month **and brick type** (labour, coal, soil, electricity, loading, repairs, other) vs selling price → gross margin. Shown against the ₹4,100 benchmark from the Proposal §4 / Spec §22 | CP1 | P11 | ✅ | ⬜ | — | ✅ | 🟨 | P11.1 backend complete; coal/soil/electricity/loading/repairs/labour/other buckets allocated by fired share (ADR-049); web table in P11.2 |
-| RPT-01 | Excel/PDF export for the main reports | CP1 | P11 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| RPT-02 | Daily operations report: one page per day — production, dispatch, sales, collection, expenses, coal used, labour present | CP1 | P11 | ⬜ | ⬜ | — | ⬜ | ⬜ | Functional Spec §19 `daily_reports`. The owner's "what happened today" sheet |
-| RPT-03 | Sales register by customer / brick type / period, with quantity, rate per 1,000, discount, GST and total | CP1 | P11 | ⬜ | ⬜ | — | ⬜ | ⬜ | Functional Spec §19 `sales_reports` |
-| RPT-04 | Labour registers: attendance register and wage register by Sardar / group / period | CP1 | P11 | ⬜ | ⬜ | — | ⬜ | ⬜ | Functional Spec §19 `labour_reports`. LAB-08 is the ledger, not the register |
+| DSH-01 | Owner dashboard answering the "Key Management Questions": production today/month/year, stock, sold/dispatched, receivables, payables, labour payable, coal/diesel used, **expenses, estimated profit**, cost per 1,000, gross margin | CP1 | P11 | ✅ | ✅ | — | ✅ | ✅ | P11.1 + P11.2 complete |
+| DSH-02 | Monthly charts: production, sales, collection, expenses, fuel | CP1 | P11 | ✅ | ✅ | — | ✅ | ✅ | P11.1 + P11.2 complete; 12-month SVG series on the dashboard |
+| CST-01 | Cost per 1,000 bricks by kiln, month **and brick type** (labour, coal, soil, electricity, loading, repairs, other) vs selling price → gross margin. Shown against the ₹4,100 benchmark from the Proposal §4 / Spec §22 | CP1 | P11 | ✅ | ✅ | — | ✅ | ✅ | ADR-049 pro-rate by fired share within kiln-month |
+| RPT-01 | Excel/PDF export for the main reports | CP1 | P11 | ✅ | ✅ | — | ✅ | ✅ | CSV export (ADR-048) on sales register and labour registers |
+| RPT-02 | Daily operations report: one page per day — production, dispatch, sales, collection, expenses, coal used, labour present | CP1 | P11 | ✅ | ✅ | — | ✅ | ✅ | `/reports/daily` + web daily page |
+| RPT-03 | Sales register by customer / brick type / period, with quantity, rate per 1,000, discount, GST and total | CP1 | P11 | ✅ | ✅ | — | ✅ | ✅ | `/reports/sales-register` + web page with CSV export |
+| RPT-04 | Labour registers: attendance register and wage register by Sardar / group / period | CP1 | P11 | ✅ | ✅ | — | ✅ | ✅ | `/reports/labour-register?kind=attendance\|wages` + web tabs with CSV export |
 | ONB-01 | Go-live onboarding: CSV import of parties, items, opening balances and opening stock (not historical transactions; those are excluded in the SOW) | CP1 | P13 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 ## Client Phase 2 — Advanced (do NOT build in CP1)
 

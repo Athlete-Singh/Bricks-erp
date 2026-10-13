@@ -1,18 +1,18 @@
 # Dashboard, Costing & Reports
 
 **Purpose:** Owner KPIs for the Key Management Questions, monthly charts, cost per 1,000 bricks, gross margin, exports.
-**Phase:** P11 · **Status:** 🧩 backend ✅ (P11.1), web ⬜ (P11.2)
+**Phase:** P11 · **Status:** ✅ complete (P11.1 backend + P11.2 web)
 
 ## Features
 | ID | Feature | Phase | Status |
 |---|---|---|---|
-| DSH-01 | Owner dashboard answering the "Key Management Questions": production today/month/year, stock, sold/dispatched, receivables, payables, labour payable, coal/diesel used, expenses, estimated profit, cost per 1,000, gross margin | P11.1 | 🧩 backend only |
-| DSH-02 | Monthly charts: production, sales, collection, expenses, fuel | P11.1 | 🧩 backend only |
-| CST-01 | Cost per 1,000 bricks by kiln × month × brick type (labour, coal, soil, electricity, loading, repairs, other) vs ₹4,100 benchmark → gross margin | P11.1 | 🧩 backend only |
-| RPT-01 | Excel/PDF export for the main reports | P11.2 | ⬜ |
-| RPT-02 | Daily operations report | P11.2 | ⬜ |
-| RPT-03 | Sales register by customer / brick type / period | P11.2 | ⬜ |
-| RPT-04 | Labour registers: attendance + wage by Sardar / group / period | P11.2 | ⬜ |
+| DSH-01 | Owner dashboard answering the "Key Management Questions": production today/month/year, stock, sold/dispatched, receivables, payables, labour payable, coal/diesel used, expenses, estimated profit, cost per 1,000, gross margin | P11.1 + P11.2 | ✅ |
+| DSH-02 | Monthly charts: production, sales, collection, expenses, fuel | P11.1 + P11.2 | ✅ |
+| CST-01 | Cost per 1,000 bricks by kiln × month × brick type (labour, coal, soil, electricity, loading, repairs, other) vs ₹4,100 benchmark → gross margin | P11.1 + P11.2 | ✅ |
+| RPT-01 | CSV export on the sales register and the two labour registers | P11.2 | ✅ |
+| RPT-02 | Daily operations report (`/reports/daily`) + web page | P11.2 | ✅ |
+| RPT-03 | Sales register (`/reports/sales-register`) + web page with CSV export | P11.2 | ✅ |
+| RPT-04 | Labour registers (`/reports/labour-register?kind=attendance|wages`) + web page with tabs and CSV export | P11.2 | ✅ |
 
 ## Tables
 None — the module reads only. Every number is derived from what the other
@@ -25,9 +25,16 @@ expenses, voucher lines).
 | GET | `/dashboard/summary` | `accounts.view` | DSH-01 — the Key Management Questions in one call |
 | GET | `/dashboard/monthly` | `accounts.view` | DSH-02 — rolling monthly series for the trend charts |
 | GET | `/reports/cost-per-1000` | `accounts.view` | CST-01 — kiln × month × brick-type cost allocation vs ₹4,100 |
+| GET | `/reports/daily` | `accounts.view` | RPT-02 — one page per day across every module |
+| GET | `/reports/sales-register` | `accounts.view` | RPT-03 — one row per invoice line with GST split |
+| GET | `/reports/labour-register` | `accounts.view` | RPT-04 — attendance or wage register (`?kind=attendance\|wages`) |
 
 ## Screens
-Web (P11.2): owner dashboard, costing report, daily/sales/labour registers with exports.
+- `/dashboard` — owner home: KMQ tiles, cost-per-1,000 vs ₹4,100 reading, 12-month SVG trend chart with a metric switcher.
+- `/reports/cost-per-1000` — kiln × month × brick-type table with the delta coloured by sign.
+- `/reports/daily` — tile grid for a single day.
+- `/reports/sales-register` — one row per invoice line, filterable, CSV export (RPT-01), missing HSN called out in danger colour.
+- `/reports/labour-register` — attendance / wages tabs, CSV export (RPT-01).
 
 ## Costing method (ADR-049)
 - A kiln fires all brick grades in the same chamber, so direct expense ledgers

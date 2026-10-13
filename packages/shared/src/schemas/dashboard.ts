@@ -61,3 +61,45 @@ export const costPerThousandQuerySchema = z.object({
   brickTypeId: uuid.optional(),
 });
 export type CostPerThousandQueryDto = z.infer<typeof costPerThousandQuerySchema>;
+
+// ── RPT-02 Daily operations ─────────────────────────────────────────────────
+
+/**
+ * One page per day — production, dispatch, sales, collection, expenses, coal
+ * used, labour present. The report rolls up every module into a single answer
+ * to the owner's "what happened yesterday" question.
+ */
+export const dailyReportQuerySchema = z.object({
+  date: isoDate,
+  siteId: uuid.optional(),
+});
+export type DailyReportQueryDto = z.infer<typeof dailyReportQuerySchema>;
+
+// ── RPT-03 Sales register ───────────────────────────────────────────────────
+
+/**
+ * One row per sales-invoice line — customer, brick type, rate per 1,000,
+ * discount, GST, total. The filterable version of GST-06 for a sales-only
+ * reader (the GST register is tax-first, this is customer-first).
+ */
+export const salesRegisterQuerySchema = z.object({
+  fromDate: isoDate,
+  toDate: isoDate,
+  customerId: uuid.optional(),
+  itemId: uuid.optional(),
+  siteId: uuid.optional(),
+});
+export type SalesRegisterQueryDto = z.infer<typeof salesRegisterQuerySchema>;
+
+// ── RPT-04 Labour registers ─────────────────────────────────────────────────
+
+/** `attendance` or `wages` — the two labour registers the spec names. */
+export const labourRegisterQuerySchema = z.object({
+  kind: z.enum(['attendance', 'wages']),
+  fromDate: isoDate,
+  toDate: isoDate,
+  sardarId: uuid.optional(),
+  groupId: uuid.optional(),
+  siteId: uuid.optional(),
+});
+export type LabourRegisterQueryDto = z.infer<typeof labourRegisterQuerySchema>;

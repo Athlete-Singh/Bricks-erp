@@ -461,6 +461,100 @@ describe('Dashboard & costing (e2e)', () => {
 
   // ──────────────────────────────────────────────────────────────────────────
 
+  describe('RPT-02 daily report', () => {
+    it('rolls up October 10 across every module', async () => {
+      // The seed step posted an invoice and an expense on 2026-10-10.
+      const res = await get('reports/daily', fx.tokenA, { date: '2026-10-10' }).expect(200);
+      const meta = res.body.meta as {
+        production: { fired: string; sorted: string };
+        dispatch: { bricks: string; challans: number };
+        sales: { invoiced: string; invoices: number };
+        collection: string;
+        expenses: string;
+        coalCost: string;
+        dieselCost: string;
+        labourPresent: number;
+      };
+      expect(meta.sales.invoices).toBe(1);
+      expect(meta.sales.invoiced).toBe('35840.00');
+      expect(meta.expenses).toBe('20500.00');
+      expect(meta.dispatch.bricks).toBe('0.000'); // dispatch is on the 12th
+      expect(meta.labourPresent).toBe(0);
+    });
+
+    it('shows nothing happened on a quiet day', async () => {
+      const res = await get('reports/daily', fx.tokenA, { date: '2026-10-20' }).expect(200);
+      const meta = res.body.meta as { sales: { invoiced: string }; expenses: string };
+      expect(meta.sales.invoiced).toBe('0.00');
+      expect(meta.expenses).toBe('0.00');
+    });
+  });
+
+  describe('RPT-03 sales register', () => {
+    it('lists one row per invoice line with GST split', async () => {
+      const res = await get('reports/sales-register', fx.tokenA, {
+        fromDate: '2026-10-01',
+        toDate: '2026-10-31',
+      }).expect(200);
+      const items = res.body.data as {
+        customerName: string;
+        quantity: string;
+        rate: string;
+        taxableAmount: string;
+        cgstAmount: string;
+        sgstAmount: string;
+        lineTotal: string;
+      }[];
+      expect(items).toHaveLength(1);
+      expect(items[0]!.customerName).toBe('Shri Krishna Builders');
+      expect(items[0]!.taxableAmount).toBe('32000.00');
+      expect(items[0]!.cgstAmount).toBe('1920.00');
+      expect(items[0]!.sgstAmount).toBe('1920.00');
+      expect(items[0]!.lineTotal).toBe('35840.00');
+      expect(res.body.meta.total).toBe('35840.00');
+    });
+
+    it('refuses a window that ends before it starts', async () => {
+      const res = await get('reports/sales-register', fx.tokenA, {
+        fromDate: '2026-10-31',
+        toDate: '2026-10-01',
+      }).expect(422);
+      expect(res.body.error.code).toBe('DATE_RANGE_INVALID');
+    });
+  });
+
+  describe('RPT-04 labour register', () => {
+    it('returns an empty attendance register when nothing is posted', async () => {
+      const res = await get('reports/labour-register', fx.tokenA, {
+        kind: 'attendance',
+        fromDate: '2026-10-01',
+        toDate: '2026-10-31',
+      }).expect(200);
+      expect(res.body.data).toHaveLength(0);
+      expect(res.body.meta.kind).toBe('attendance');
+    });
+
+    it('switches to wages mode with the kind flag', async () => {
+      const res = await get('reports/labour-register', fx.tokenA, {
+        kind: 'wages',
+        fromDate: '2026-10-01',
+        toDate: '2026-10-31',
+      }).expect(200);
+      expect(res.body.meta.kind).toBe('wages');
+      // Our seed posted a journal to the sardar's ledger, not a labour_wage_accrual
+      // row — that endpoint is for LAB-04 accrual records, so this is 0.
+      expect(res.body.meta.totalGrossWages).toBe('0.00');
+    });
+
+    it('refuses an unknown kind', async () => {
+      await get('reports/labour-register', fx.tokenA, {
+        kind: 'other',
+        fromDate: '2026-10-01',
+        toDate: '2026-10-31',
+      }).expect(400);
+    });
+  });
+
   describe('tenancy', () => {
     it('rejects an unauthenticated request', async () => {
       await request(fx.app.getHttpServer()).get('/api/v1/dashboard/summary').expect(401);

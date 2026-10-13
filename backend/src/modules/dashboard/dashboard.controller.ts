@@ -2,12 +2,18 @@ import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   costPerThousandQuerySchema,
+  dailyReportQuerySchema,
   dashboardMonthlyQuerySchema,
   dashboardSummaryQuerySchema,
+  labourRegisterQuerySchema,
+  salesRegisterQuerySchema,
   PERMISSIONS,
   type CostPerThousandQueryDto,
+  type DailyReportQueryDto,
   type DashboardMonthlyQueryDto,
   type DashboardSummaryQueryDto,
+  type LabourRegisterQueryDto,
+  type SalesRegisterQueryDto,
 } from '@brics/shared';
 import { CurrentCompany, RequirePermissions } from '../../common/decorators/auth.decorators';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -57,5 +63,35 @@ export class DashboardController {
     @Query(new ZodValidationPipe(costPerThousandQuerySchema)) query: CostPerThousandQueryDto,
   ) {
     return this.dashboard.costPerThousand(companyId, query);
+  }
+
+  @Get('reports/daily')
+  @RequirePermissions(PERMISSIONS.ACCOUNTS_VIEW)
+  @ApiOperation({ summary: 'RPT-02 — one page per day across every module' })
+  async daily(
+    @CurrentCompany() companyId: string,
+    @Query(new ZodValidationPipe(dailyReportQuerySchema)) query: DailyReportQueryDto,
+  ) {
+    return this.dashboard.daily(companyId, query);
+  }
+
+  @Get('reports/sales-register')
+  @RequirePermissions(PERMISSIONS.ACCOUNTS_VIEW)
+  @ApiOperation({ summary: 'RPT-03 — sales register, line by line with GST' })
+  async salesRegister(
+    @CurrentCompany() companyId: string,
+    @Query(new ZodValidationPipe(salesRegisterQuerySchema)) query: SalesRegisterQueryDto,
+  ) {
+    return this.dashboard.salesRegister(companyId, query);
+  }
+
+  @Get('reports/labour-register')
+  @RequirePermissions(PERMISSIONS.ACCOUNTS_VIEW)
+  @ApiOperation({ summary: 'RPT-04 — labour attendance or wage register' })
+  async labourRegister(
+    @CurrentCompany() companyId: string,
+    @Query(new ZodValidationPipe(labourRegisterQuerySchema)) query: LabourRegisterQueryDto,
+  ) {
+    return this.dashboard.labourRegister(companyId, query);
   }
 }

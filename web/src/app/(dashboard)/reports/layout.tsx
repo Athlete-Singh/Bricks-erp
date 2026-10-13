@@ -10,6 +10,10 @@ const TABS = [
   { label: 'Cash & bank', href: '/reports/cash-bank' },
   { label: 'P&L / Balance Sheet', href: '/reports/statements' },
   { label: 'GST', href: '/reports/gst' },
+  { label: 'Cost per 1,000', href: '/reports/cost-per-1000' },
+  { label: 'Daily report', href: '/reports/daily' },
+  { label: 'Sales register', href: '/reports/sales-register' },
+  { label: 'Labour', href: '/reports/labour-register' },
 ];
 
 export default function ReportsLayout({ children }: { children: React.ReactNode }) {
