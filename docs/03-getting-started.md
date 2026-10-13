@@ -12,13 +12,37 @@
 
 Authoring machine at P0 (2026-10-07): Node 24.12, pnpm 12.4, Docker 29, no Flutter. The build machine must have Flutter.
 
+## Which database to develop against
+
+Two options, and they are not equivalent.
+
+|                         | Local Docker                                       | Hosted (Neon)                                                   |
+| ----------------------- | -------------------------------------------------- | --------------------------------------------------------------- |
+| A query costs           | a fraction of a millisecond                        | **~275 ms** from India to a US region (measured, not estimated) |
+| Works offline           | yes                                                | no                                                              |
+| Shared between machines | no                                                 | yes                                                             |
+| Set-up                  | `docker compose -f infra/docker-compose.yml up -d` | a URL in `.env`                                                 |
+
+`backend/.env` ships pointing at the hosted **`development`** database, with the
+Docker line commented out directly beneath it — swap the two whenever a slow
+round trip is in the way, or when there is no internet.
+
+**The test database stays local either way.** The e2e suite makes tens of
+thousands of round trips; against a remote database the same run goes from
+about four minutes to several hours, and a suite nobody can afford to run is a
+suite that stops being run. `TEST_DATABASE_URL` therefore points at Docker even
+when development does not, which is why `infra/docker-compose.yml` is still
+worth keeping.
+
 ## Environment files: one per app
 
-| App     | Template (committed)          | Your copy (git-ignored) | Production                                       |
-| ------- | ----------------------------- | ----------------------- | ------------------------------------------------ |
-| Backend | `backend/.env.example`        | `backend/.env`          | Render → Environment                             |
-| Web     | `web/.env.example`            | `web/.env.local`        | Vercel → Environment Variables                   |
-| Mobile  | `mobile/env/dev.example.json` | `mobile/env/dev.json`   | `--dart-define-from-file=env/prod.json` at build |
+| App     | Template (committed)              | Your copy (git-ignored)   | Production                                       |
+| ------- | --------------------------------- | ------------------------- | ------------------------------------------------ |
+| Backend | `backend/.env.example`            | `backend/.env`            | Render / Vercel → Environment                    |
+| Backend | `backend/.env.production.example` | `backend/.env.production` | the written record of what production needs      |
+| Web     | `web/.env.example`                | `web/.env.local`          | Vercel → Environment Variables                   |
+| Web     | `web/.env.production.example`     | `web/.env.production`     | the same record for the web app                  |
+| Mobile  | `mobile/env/dev.example.json`     | `mobile/env/dev.json`     | `--dart-define-from-file=env/prod.json` at build |
 
 ## First run
 

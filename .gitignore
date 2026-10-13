@@ -8,9 +8,14 @@ coverage/
 .turbo/
 *.tsbuildinfo
 # env & secrets
+# Every real env file is ignored; only the templates are tracked, and they are
+# tracked on purpose — they are the written record of what each environment
+# needs. `.env.production` holds the keys to the company's books and must never
+# be committed; `.env.production.example` is the same file with TODOs.
 .env
 .env.*
 !.env.example
+!.env.*.example
 # Private keys and certificates — never belong in a repo, even by accident.
 *.pem
 *.key
