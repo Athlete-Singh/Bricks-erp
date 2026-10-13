@@ -20,9 +20,11 @@ export class StockMovement extends TenantBaseEntity {
   warehouseId: string;
 
   /** Exactly one of `itemId` / `brickTypeId` is set — ADR-023. */
-  @Column({ name: 'item_id', type: 'uuid', nullable: true })
-  itemId: string | null;
+  /** The subject of the balance. Every movement has one, bricks included (ADR-051). */
+  @Column({ name: 'item_id', type: 'uuid' })
+  itemId: string;
 
+  /** The grade, when the item is one. Descriptive — the balance is keyed on the item. */
   @Column({ name: 'brick_type_id', type: 'uuid', nullable: true })
   brickTypeId: string | null;
 

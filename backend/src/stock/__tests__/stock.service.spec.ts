@@ -88,9 +88,14 @@ describe('StockService', () => {
       await expectRefusal(service.record(manager as never, input()), 'WAREHOUSE_INACTIVE');
     });
 
-    it('refuses a movement naming both an item and a grade', async () => {
-      manager.findOne.mockResolvedValue(WAREHOUSE);
-      await expectRefusal(service.record(manager as never, input({ brickTypeId: 'b1' })), 'STOCK_SUBJECT_INVALID');
+    it('refuses a movement whose item and grade are not the same pile', async () => {
+      // Naming both is allowed — a grade is stocked as an item (ADR-051) — but
+      // a pair that disagrees means one of the two is wrong, and picking a
+      // winner would move the wrong pile.
+      manager.findOne
+        .mockResolvedValueOnce(WAREHOUSE)
+        .mockResolvedValueOnce({ id: 'b1', grade: 'Class 1', itemId: 'another-item', isActive: true });
+      await expectRefusal(service.record(manager as never, input({ brickTypeId: 'b1' })), 'STOCK_SUBJECT_MISMATCH');
     });
 
     it('refuses a movement naming neither', async () => {

@@ -6,6 +6,7 @@ import { Unit } from '../src/modules/inventory/entities/unit.entity';
 import { Item } from '../src/modules/inventory/entities/item.entity';
 import { BrickType } from '../src/modules/inventory/entities/brick-type.entity';
 import { StockMovement } from '../src/stock/entities/stock-movement.entity';
+import { makeBrickGrade } from './helpers/brick-grade';
 import { createTenantFixture, type TenantFixture } from './helpers/tenant-fixture';
 
 jest.setTimeout(40000);
@@ -72,12 +73,16 @@ describe('Stock reports (e2e)', () => {
   ) {
     const repo = ds.getRepository(StockMovement);
     const wh = await ds.getRepository(Warehouse).findOneByOrFail({ id: warehouseId });
+    // A grade's movements carry its item as the subject (ADR-051); naming the
+    // grade alone here would write a row the service itself could not write.
+    const itemId =
+      subject.itemId ?? (await ds.getRepository(BrickType).findOneByOrFail({ id: subject.brickTypeId! })).itemId;
     return repo.save(
       repo.create({
         companyId: fx.companyA.id,
         siteId: wh.siteId,
         warehouseId,
-        itemId: subject.itemId ?? null,
+        itemId,
         brickTypeId: subject.brickTypeId ?? null,
         movementType: movementType as never,
         quantityIn: direction === 'in' ? quantity : '0',
@@ -92,7 +97,7 @@ describe('Stock reports (e2e)', () => {
     fx = await createTenantFixture({
       prefix: 'Stock Report Test',
       domain: 'stockreport.test',
-      tables: ['stock_movements', 'items', 'warehouses', 'brick_types', 'units', 'sites'],
+      tables: ['stock_movements', 'brick_types', 'items', 'warehouses', 'units', 'sites'],
       mobilePrefix: '910000007',
     });
     ds = fx.dataSource;
@@ -122,7 +127,7 @@ describe('Stock reports (e2e)', () => {
 
     classOne = await ds
       .getRepository(BrickType)
-      .save(ds.getRepository(BrickType).create({ companyId: fx.companyA.id, grade: 'Class 1' }));
+      .save(await makeBrickGrade(ds, { companyId: fx.companyA.id, grade: 'Class 1' }));
 
     // A full year of a brick grade: opening, produced, sold, wasted, adjusted.
     await move({ brickTypeId: classOne.id }, 'opening', 'in', '10000', '2026-04-01');
@@ -178,7 +183,10 @@ describe('Stock reports (e2e)', () => {
       const rows = rowsOf(res);
 
       expect(rows.find((r) => r.subjectName === 'Coal')?.unit).toBe('t');
-      expect(rows.find((r) => r.subjectName === 'Class 1')?.unit).toBeNull();
+      // A grade is stocked as an item now (ADR-051), so it has that item's
+      // unit — bricks used to show no unit at all, which read as a bug to
+      // anyone comparing two rows.
+      expect(rows.find((r) => r.subjectName === 'Class 1')?.unit).not.toBeNull();
     });
 
     it('answers as at a past date, ignoring everything after it', async () => {
@@ -284,7 +292,7 @@ describe('Stock reports (e2e)', () => {
       // page has to break the tie the same way the page ordering does.
       const sameDay = await ds
         .getRepository(BrickType)
-        .save(ds.getRepository(BrickType).create({ companyId: fx.companyA.id, grade: 'Same Day' }));
+        .save(await makeBrickGrade(ds, { companyId: fx.companyA.id, grade: 'Same Day' }));
       for (const qty of ['100', '200', '300', '400']) {
         await move({ brickTypeId: sameDay.id }, 'production', 'in', qty, '2026-08-01');
       }

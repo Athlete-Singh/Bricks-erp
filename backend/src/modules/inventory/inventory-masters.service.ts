@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import type {
   CreateBrickTypeDto,
   CreateItemDto,
@@ -19,6 +19,7 @@ import { Item } from './entities/item.entity';
 import { Site } from '../company/entities/site.entity';
 import { HsnRate } from '../taxes/entities/hsn-rate.entity';
 import { AuditService } from '../audit/audit.service';
+import { BusinessRuleException } from '../../common/exceptions/business-rule.exception';
 import { DataSource } from 'typeorm';
 import {
   applySince,
@@ -112,6 +113,7 @@ export class InventoryMastersService {
   async createBrickType(companyId: string, userId: string, dto: CreateBrickTypeDto): Promise<BrickType> {
     return this.dataSource.transaction(async (manager) => {
       const repo = manager.getRepository(BrickType);
+      await this.assertItemIsFreeForAGrade(manager, companyId, dto.itemId);
       const bt = await repo.save(repo.create({ companyId, ...dto, createdBy: userId, updatedBy: userId }));
       await this.audit.record(
         { companyId, userId, entityName: 'brick_types', entityId: bt.id, action: 'CREATE', after: this.diffable(bt) },
@@ -119,6 +121,24 @@ export class InventoryMastersService {
       );
       return bt;
     });
+  }
+
+  /**
+   * A grade is stocked and sold as exactly one item (ADR-051). The item has to
+   * be this company's — an id in a request body is attacker-controlled
+   * (ADR-021) — and it cannot already stand for another grade, or one pile in
+   * the yard would answer to two names and the register could not say which
+   * was sold.
+   */
+  private async assertItemIsFreeForAGrade(manager: EntityManager, companyId: string, itemId: string): Promise<void> {
+    const item = await manager.findOne(Item, { where: { id: itemId, companyId } });
+    if (!item) throw new BusinessRuleException('ITEM_NOT_FOUND', 'That item does not exist');
+    if (!item.isActive) throw new BusinessRuleException('ITEM_INACTIVE', `${item.name} is no longer in use`);
+
+    const taken = await manager.findOne(BrickType, { where: { itemId, companyId } });
+    if (taken) {
+      throw new BusinessRuleException('BRICK_TYPE_ITEM_TAKEN', `${item.name} is already the item for ${taken.grade}`);
+    }
   }
 
   async updateBrickType(companyId: string, userId: string, id: string, dto: UpdateBrickTypeDto): Promise<BrickType> {

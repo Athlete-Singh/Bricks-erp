@@ -13,7 +13,14 @@ import { StockMovement } from './entities/stock-movement.entity';
 
 Decimal.set({ precision: 30, rounding: Decimal.ROUND_HALF_UP });
 
-/** What identifies a stock balance: one subject, in one place. */
+/**
+ * What identifies a stock balance: one subject, in one place.
+ *
+ * The subject is always the **item** (ADR-051). `brickTypeId` names the grade
+ * the movement was about and may be given on its own — the item is then read
+ * off the grade — but it never keys a balance of its own, because production
+ * sorting into a grade and a sale out of the same pile have to be one number.
+ */
 export interface StockSubject {
   warehouseId: string;
   itemId?: string | null;
@@ -62,22 +69,39 @@ export class StockService {
     return this.balanceOf(this.em, companyId, subject);
   }
 
-  /** The subject's balance right now, as a decimal string. */
+  /**
+   * The subject's balance right now, as a decimal string.
+   *
+   * Keyed on the item alone. A grade's movements carry the grade as well, but
+   * summing by grade would hide every brick that left on an invoice — the
+   * balance has to be the pile, not the paperwork that named it.
+   */
   async balanceOf(manager: EntityManager, companyId: string, subject: StockSubject): Promise<string> {
-    const qb = manager
+    const itemId = subject.itemId ?? (await this.itemOfGrade(manager, companyId, subject.brickTypeId));
+
+    const row = await manager
       .createQueryBuilder(StockMovement, 'm')
       .select('COALESCE(SUM(m.quantity_in), 0) - COALESCE(SUM(m.quantity_out), 0)', 'balance')
       .where('m.company_id = :companyId', { companyId })
-      .andWhere('m.warehouse_id = :warehouseId', { warehouseId: subject.warehouseId });
+      .andWhere('m.warehouse_id = :warehouseId', { warehouseId: subject.warehouseId })
+      .andWhere('m.item_id = :itemId', { itemId })
+      .getRawOne<{ balance: string }>();
 
-    // `= NULL` is never true, so the unused side has to be matched with IS NULL.
-    if (subject.itemId) qb.andWhere('m.item_id = :itemId', { itemId: subject.itemId });
-    else qb.andWhere('m.item_id IS NULL');
-    if (subject.brickTypeId) qb.andWhere('m.brick_type_id = :brickTypeId', { brickTypeId: subject.brickTypeId });
-    else qb.andWhere('m.brick_type_id IS NULL');
-
-    const row = await qb.getRawOne<{ balance: string }>();
     return toQuantity(row?.balance ?? 0);
+  }
+
+  /** The item a grade is stocked as, for callers that only name the grade. */
+  private async itemOfGrade(
+    manager: EntityManager,
+    companyId: string,
+    brickTypeId: string | null | undefined,
+  ): Promise<string> {
+    if (!brickTypeId) {
+      throw new BusinessRuleException('STOCK_SUBJECT_INVALID', 'A movement is about one item or one brick grade');
+    }
+    const grade = await manager.findOne(BrickType, { where: { id: brickTypeId, companyId } });
+    if (!grade) throw new BusinessRuleException('BRICK_TYPE_NOT_FOUND', 'That brick grade does not exist');
+    return grade.itemId;
   }
 
   /**
@@ -112,11 +136,12 @@ export class StockService {
     }
 
     const subject = await this.resolveSubject(manager, companyId, input);
+    const resolved: StockSubject = { warehouseId: input.warehouseId, itemId: subject.itemId };
 
     if (direction === 'out' && !input.allowNegative) {
-      await this.lockSubject(manager, companyId, input);
+      await this.lockSubject(manager, companyId, resolved);
 
-      const balance = await this.balanceOf(manager, companyId, input);
+      const balance = await this.balanceOf(manager, companyId, resolved);
       if (new Decimal(balance).lessThan(amount)) {
         // ADR-026 — refuse rather than let a balance drift below zero, which is
         // what leakage looks like in the data.
@@ -133,8 +158,8 @@ export class StockService {
       updatedBy: userId,
       siteId: warehouse.siteId,
       warehouseId: warehouse.id,
-      itemId: input.itemId ?? null,
-      brickTypeId: input.brickTypeId ?? null,
+      itemId: subject.itemId,
+      brickTypeId: subject.brickTypeId,
       movementType: input.movementType,
       quantityIn: direction === 'in' ? toQuantity(amount) : '0.000',
       quantityOut: direction === 'out' ? toQuantity(amount) : '0.000',
@@ -237,30 +262,48 @@ export class StockService {
       throw new BusinessRuleException('STOCK_REQUIRES_TRANSACTION', 'Stock must be recorded inside a transaction');
     }
 
-    const key = `stock:${companyId}:${subject.warehouseId}:${subject.itemId ?? subject.brickTypeId ?? ''}`;
+    // Keyed on the item, which is what the balance is keyed on. Keying on the
+    // grade instead would let a sale and a sorting entry for the same pile run
+    // side by side and both pass a check against the same balance.
+    const key = `stock:${companyId}:${subject.warehouseId}:${subject.itemId ?? ''}`;
     await manager.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [key]);
   }
 
-  /** Confirms the item or grade belongs to this company, and names it for messages. */
+  /**
+   * Confirms the item and grade belong to this company and resolves the one
+   * subject the movement is about.
+   *
+   * A caller may name the item, the grade, or both. Naming both and having
+   * them disagree is refused rather than resolved in someone's favour: one of
+   * the two is a bug, and guessing which would move the wrong pile.
+   */
   private async resolveSubject(
     manager: EntityManager,
     companyId: string,
     subject: StockSubject,
-  ): Promise<{ label: string }> {
-    if (Boolean(subject.itemId) === Boolean(subject.brickTypeId)) {
+  ): Promise<{ itemId: string; brickTypeId: string | null; label: string }> {
+    if (!subject.itemId && !subject.brickTypeId) {
       throw new BusinessRuleException('STOCK_SUBJECT_INVALID', 'A movement is about one item or one brick grade');
     }
 
-    if (subject.itemId) {
-      const item = await manager.findOne(Item, { where: { id: subject.itemId, companyId } });
-      if (!item) throw new BusinessRuleException('ITEM_NOT_FOUND', 'That item does not exist');
-      if (!item.isActive) throw new BusinessRuleException('ITEM_INACTIVE', `${item.name} is no longer in use`);
-      return { label: item.name };
+    let grade: BrickType | null = null;
+    if (subject.brickTypeId) {
+      grade = await manager.findOne(BrickType, { where: { id: subject.brickTypeId, companyId } });
+      if (!grade) throw new BusinessRuleException('BRICK_TYPE_NOT_FOUND', 'That brick grade does not exist');
+      if (!grade.isActive) {
+        throw new BusinessRuleException('BRICK_TYPE_INACTIVE', `${grade.grade} is no longer in use`);
+      }
     }
 
-    const grade = await manager.findOne(BrickType, { where: { id: subject.brickTypeId!, companyId } });
-    if (!grade) throw new BusinessRuleException('BRICK_TYPE_NOT_FOUND', 'That brick grade does not exist');
-    if (!grade.isActive) throw new BusinessRuleException('BRICK_TYPE_INACTIVE', `${grade.grade} is no longer in use`);
-    return { label: grade.grade };
+    const itemId = subject.itemId ?? grade!.itemId;
+    if (grade && subject.itemId && grade.itemId !== subject.itemId) {
+      throw new BusinessRuleException('STOCK_SUBJECT_MISMATCH', `${grade.grade} is not stocked as that item`);
+    }
+
+    const item = await manager.findOne(Item, { where: { id: itemId, companyId } });
+    if (!item) throw new BusinessRuleException('ITEM_NOT_FOUND', 'That item does not exist');
+    if (!item.isActive) throw new BusinessRuleException('ITEM_INACTIVE', `${item.name} is no longer in use`);
+
+    return { itemId, brickTypeId: grade?.id ?? null, label: grade ? grade.grade : item.name };
   }
 }

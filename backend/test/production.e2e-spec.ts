@@ -14,6 +14,7 @@ import { Party } from '../src/modules/parties/entities/party.entity';
 import { PartyService } from '../src/modules/parties/party.service';
 import { StockService } from '../src/stock/stock.service';
 import { ProductionConsumption } from '../src/modules/production/entities/production-consumption.entity';
+import { makeBrickGrade } from './helpers/brick-grade';
 import { createTenantFixture, type TenantFixture } from './helpers/tenant-fixture';
 
 jest.setTimeout(60000);
@@ -77,10 +78,10 @@ describe('Production (e2e)', () => {
         'voucher_sequences',
         'voucher_types',
         'ledger_groups',
+        'brick_types',
         'items',
         'units',
         'warehouses',
-        'brick_types',
         'sites',
       ],
       mobilePrefix: '910000011',
@@ -156,15 +157,9 @@ describe('Production (e2e)', () => {
           .create({ companyId: fx.companyB.id, name: 'Coal', category: 'raw_material', unitId: unitKgB.id }),
       );
 
-    classOne = await ds
-      .getRepository(BrickType)
-      .save(ds.getRepository(BrickType).create({ companyId: fx.companyA.id, grade: 'Class 1' }));
-    classTwo = await ds
-      .getRepository(BrickType)
-      .save(ds.getRepository(BrickType).create({ companyId: fx.companyA.id, grade: 'Class 2' }));
-    gradeB = await ds
-      .getRepository(BrickType)
-      .save(ds.getRepository(BrickType).create({ companyId: fx.companyB.id, grade: 'Grade B1' }));
+    classOne = await makeBrickGrade(ds, { companyId: fx.companyA.id, grade: 'Class 1' });
+    classTwo = await makeBrickGrade(ds, { companyId: fx.companyA.id, grade: 'Class 2' });
+    gradeB = await makeBrickGrade(ds, { companyId: fx.companyB.id, grade: 'Grade B1' });
 
     // Opening stock so the firing/making tests have raw material to draw down.
     // StockService refuses dates in the future, so the opening is dated well
@@ -330,6 +325,33 @@ describe('Production (e2e)', () => {
       });
       expect(Number(afterOne) - Number(beforeOne)).toBe(7000);
       expect(Number(afterTwo) - Number(beforeTwo)).toBe(2500);
+    });
+
+    it('sorts into the pile a sale takes out of — one yard, not two (ADR-051)', async () => {
+      // The bug this closes: production stocked a grade and sales deducted an
+      // item, so a kiln could fire 7,000 bricks and still be told the yard was
+      // empty. Asking by the grade and by its item has to give one number.
+      const stock = fx.app.get(StockService);
+      const byGrade = await stock.currentBalance(fx.companyA.id, {
+        warehouseId: warehouseA.id,
+        brickTypeId: classOne.id,
+      });
+      const byItem = await stock.currentBalance(fx.companyA.id, {
+        warehouseId: warehouseA.id,
+        itemId: classOne.itemId,
+      });
+      expect(byItem).toBe(byGrade);
+      expect(Number(byItem)).toBeGreaterThan(0);
+
+      // And the ledger row says both: the item it is stocked as, and the grade
+      // it was sorted into.
+      const row = await fx.dataSource.query<{ item_id: string; brick_type_id: string }[]>(
+        `SELECT "item_id", "brick_type_id" FROM "stock_movements"
+         WHERE "company_id" = $1 AND "brick_type_id" = $2 AND "movement_type" = 'production'
+         ORDER BY "created_at" DESC LIMIT 1`,
+        [fx.companyA.id, classOne.id],
+      );
+      expect(row[0]!.item_id).toBe(classOne.itemId);
     });
 
     it('refuses sorting a second time (batch already sorted)', async () => {

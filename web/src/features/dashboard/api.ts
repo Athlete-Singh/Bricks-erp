@@ -110,11 +110,11 @@ export interface CostMeta {
   rowCount: number;
   benchmark: string;
   /**
-   * Cost is per brick type; the realised price is not. An invoice line names
-   * an item and a warehouse, never a grade, so the price is the kiln-month's
-   * blended realisation and the screen has to say so.
+   * Which level the realised price describes. Per grade since ADR-051 tied a
+   * grade to the item it sells as; the screen reads the label from here rather
+   * than hardcoding the claim.
    */
-  realisationLevel: 'kiln-month';
+  realisationLevel: 'brick-type' | 'kiln-month';
 }
 
 export const fetchCostPerThousand = (params: CostPerThousandQueryDto, signal?: AbortSignal) =>

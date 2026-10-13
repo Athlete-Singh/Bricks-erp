@@ -12,6 +12,7 @@ import { LabourGroup } from '../src/modules/labour/entities/labour-group.entity'
 import { Party } from '../src/modules/parties/entities/party.entity';
 import { PartyService } from '../src/modules/parties/party.service';
 import { StockService } from '../src/stock/stock.service';
+import { makeBrickGrade } from './helpers/brick-grade';
 import { createTenantFixture, type TenantFixture } from './helpers/tenant-fixture';
 
 jest.setTimeout(90000);
@@ -81,8 +82,8 @@ describe('Dashboard & costing (e2e)', () => {
         'vouchers',
         'voucher_sequences',
         'idempotency_keys',
-        'items',
         'brick_types',
+        'items',
         'warehouses',
         'units',
         'parties',
@@ -137,17 +138,16 @@ describe('Dashboard & costing (e2e)', () => {
           .getRepository(Item)
           .create({ companyId: fx.companyA.id, name: 'Coal', category: 'raw_material', unitId: unitKg.id }),
       );
-    bricksItem = await ds
-      .getRepository(Item)
-      .save(
-        ds
-          .getRepository(Item)
-          .create({ companyId: fx.companyA.id, name: 'Class 1 Brick', category: 'other', unitId: unitK.id }),
-      );
-
-    classOne = await ds
-      .getRepository(BrickType)
-      .save(ds.getRepository(BrickType).create({ companyId: fx.companyA.id, grade: 'Class 1' }));
+    // The grade and the item it sells as are one pile now (ADR-051), so the
+    // invoice below takes out exactly what sorting put in — there is no second
+    // "brick item" to create, and creating one would be the old bug.
+    classOne = await makeBrickGrade(ds, {
+      companyId: fx.companyA.id,
+      grade: 'Class 1',
+      itemName: 'Class 1 Brick',
+      unitId: unitK.id,
+    });
+    bricksItem = await ds.getRepository(Item).findOneByOrFail({ id: classOne.itemId });
 
     const partyService = fx.app.get(PartyService);
     customer = await partyService.create(fx.companyA.id, SYSTEM_USER, {
@@ -333,10 +333,11 @@ describe('Dashboard & costing (e2e)', () => {
 
       expect(meta.production.firedMtd).toBe('9800.000');
       expect(meta.production.sortedMtd).toBe('9500.000');
-      // Brick-type stock = 9,500 sorted into Finished Yard this month; the
-      // test fixture's "bricks" item is tracked on the item side, kept apart
-      // because kg of coal and pieces of brick cannot be added together.
-      expect(meta.stock.bricksProduced).toBe('9500.000');
+      // One pile, one number (ADR-051): 50,000 opening + 9,500 sorted in,
+      // less 4,000 invoiced and 3,000 on the challan. Before the grade was
+      // tied to its item this read 9,500 — production's own half — while the
+      // sales half drained a second balance nobody reconciled against it.
+      expect(meta.stock.bricksProduced).toBe('52500.000');
       expect(meta.sold.mtd).toBe('35840.00');
       expect(meta.dispatched.mtd).toBe('3000.000');
       expect(meta.receivables).toBe('35840.00');
@@ -463,10 +464,10 @@ describe('Dashboard & costing (e2e)', () => {
       expect(Number(row.sellingPricePerThousand)).toBeCloseTo(8000, 2);
       expect(Number(row.grossMarginPercent)).toBeCloseTo(46.71, 1);
 
-      // The price is the kiln-month's, not the grade's — an invoice line names
-      // an item and a warehouse, never a brick grade, so the screen has to say
-      // which of the two it is showing.
-      expect(res.body.meta.realisationLevel).toBe('kiln-month');
+      // Per grade now: the invoice names the item, and the item is the grade
+      // (ADR-051). The screen labels its column from this rather than
+      // hardcoding a claim about what the price describes.
+      expect(res.body.meta.realisationLevel).toBe('brick-type');
     });
 
     it('leaves the price unknown rather than zero when the month sold nothing', async () => {

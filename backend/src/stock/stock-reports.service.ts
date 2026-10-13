@@ -73,7 +73,7 @@ interface RegisterRaw {
   movementType: StockMovementType;
   warehouseId: string;
   warehouseName: string;
-  itemId: string | null;
+  itemId: string;
   itemName: string | null;
   brickTypeId: string | null;
   brickGrade: string | null;
@@ -91,7 +91,7 @@ interface CurrentStockRaw {
   siteName: string;
   warehouseId: string;
   warehouseName: string;
-  itemId: string | null;
+  itemId: string;
   itemName: string | null;
   unitName: string | null;
   brickTypeId: string | null;
@@ -124,7 +124,10 @@ export class StockReportsService {
       .innerJoin('warehouses', 'w', 'w.id = m.warehouse_id')
       .leftJoin('items', 'i', 'i.id = m.item_id')
       .leftJoin('units', 'u', 'u.id = i.unit_id')
-      .leftJoin('brick_types', 'b', 'b.id = m.brick_type_id')
+      // Joined on the item, not on the movement's own grade column: a sale
+      // names the item only, and joining its own column would split one pile
+      // into a "graded" half and an "ungraded" half (ADR-051).
+      .leftJoin('brick_types', 'b', 'b.item_id = m.item_id AND b.deleted_at IS NULL')
       .select('m.site_id', 'siteId')
       .addSelect('s.name', 'siteName')
       .addSelect('m.warehouse_id', 'warehouseId')
@@ -132,7 +135,7 @@ export class StockReportsService {
       .addSelect('m.item_id', 'itemId')
       .addSelect('i.name', 'itemName')
       .addSelect('u.abbreviation', 'unitName')
-      .addSelect('m.brick_type_id', 'brickTypeId')
+      .addSelect('b.id', 'brickTypeId')
       .addSelect('b.grade', 'brickGrade')
       .addSelect('m.movement_type', 'movementType')
       .addSelect('SUM(m.quantity_in)', 'totalIn')
@@ -149,7 +152,7 @@ export class StockReportsService {
       .addGroupBy('m.item_id')
       .addGroupBy('i.name')
       .addGroupBy('u.abbreviation')
-      .addGroupBy('m.brick_type_id')
+      .addGroupBy('b.id')
       .addGroupBy('b.grade')
       .addGroupBy('m.movement_type');
 
@@ -159,8 +162,9 @@ export class StockReportsService {
     }
     if (query.siteId) qb.andWhere('m.site_id = :siteId', { siteId: query.siteId });
     if (query.warehouseId) qb.andWhere('m.warehouse_id = :warehouseId', { warehouseId: query.warehouseId });
-    if (query.subject === 'item') qb.andWhere('m.item_id IS NOT NULL');
-    if (query.subject === 'brick') qb.andWhere('m.brick_type_id IS NOT NULL');
+    // "Brick" means the item is a grade's item; "item" means it is not.
+    if (query.subject === 'item') qb.andWhere('b.id IS NULL');
+    if (query.subject === 'brick') qb.andWhere('b.id IS NOT NULL');
 
     const raw = await qb.getRawMany<CurrentStockRaw>();
     return this.foldIntoRows(raw, asOf, from, query.includeZero);
@@ -171,8 +175,8 @@ export class StockReportsService {
     const byKey = new Map<string, CurrentStockRow>();
 
     for (const r of raw) {
-      const subjectType: 'item' | 'brick' = r.itemId ? 'item' : 'brick';
-      const subjectId = (r.itemId ?? r.brickTypeId)!;
+      const subjectType: 'item' | 'brick' = r.brickTypeId ? 'brick' : 'item';
+      const subjectId = r.itemId;
       const key = `${r.warehouseId}:${subjectId}`;
 
       const row =
@@ -184,7 +188,7 @@ export class StockReportsService {
           warehouseName: r.warehouseName,
           subjectType,
           subjectId,
-          subjectName: r.itemName ?? r.brickGrade ?? 'Unknown',
+          subjectName: r.brickGrade ?? r.itemName ?? 'Unknown',
           unit: r.unitName,
           opening: '0.000',
           purchased: '0.000',
@@ -277,7 +281,7 @@ export class StockReportsService {
       .createQueryBuilder('m')
       .innerJoin('warehouses', 'w', 'w.id = m.warehouse_id')
       .leftJoin('items', 'i', 'i.id = m.item_id')
-      .leftJoin('brick_types', 'b', 'b.id = m.brick_type_id')
+      .leftJoin('brick_types', 'b', 'b.item_id = m.item_id AND b.deleted_at IS NULL')
       .select('m.id', 'id')
       .addSelect('m.movement_date', 'movementDate')
       .addSelect('m.movement_type', 'movementType')
@@ -285,7 +289,7 @@ export class StockReportsService {
       .addSelect('w.name', 'warehouseName')
       .addSelect('m.item_id', 'itemId')
       .addSelect('i.name', 'itemName')
-      .addSelect('m.brick_type_id', 'brickTypeId')
+      .addSelect('b.id', 'brickTypeId')
       .addSelect('b.grade', 'brickGrade')
       .addSelect('m.quantity_in', 'quantityIn')
       .addSelect('m.quantity_out', 'quantityOut')
@@ -301,7 +305,9 @@ export class StockReportsService {
 
     if (query.warehouseId) qb.andWhere('m.warehouse_id = :warehouseId', { warehouseId: query.warehouseId });
     if (query.itemId) qb.andWhere('m.item_id = :itemId', { itemId: query.itemId });
-    if (query.brickTypeId) qb.andWhere('m.brick_type_id = :brickTypeId', { brickTypeId: query.brickTypeId });
+    // Asking for a grade means asking for its pile — including the rows that
+    // took bricks out on an invoice, which name the item and not the grade.
+    if (query.brickTypeId) qb.andWhere('b.id = :brickTypeId', { brickTypeId: query.brickTypeId });
     if (query.movementType) qb.andWhere('m.movement_type = :movementType', { movementType: query.movementType });
     if (query.from) qb.andWhere('m.movement_date >= :from', { from: query.from });
     if (query.to) qb.andWhere('m.movement_date <= :to', { to: query.to });
@@ -340,9 +346,9 @@ export class StockReportsService {
       movementType: r.movementType,
       warehouseId: r.warehouseId,
       warehouseName: r.warehouseName,
-      subjectType: r.itemId ? 'item' : 'brick',
-      subjectId: (r.itemId ?? r.brickTypeId)!,
-      subjectName: r.itemName ?? r.brickGrade ?? 'Unknown',
+      subjectType: r.brickTypeId ? 'brick' : 'item',
+      subjectId: r.itemId,
+      subjectName: r.brickGrade ?? r.itemName ?? 'Unknown',
       quantityIn: toQuantity(r.quantityIn ?? 0),
       quantityOut: toQuantity(r.quantityOut ?? 0),
       runningBalance,
@@ -366,10 +372,15 @@ export class StockReportsService {
         createdAt: oldestOnPage.createdAt,
       });
 
-    if (query.itemId) before.andWhere('m.item_id = :itemId', { itemId: query.itemId });
-    else before.andWhere('m.item_id IS NULL');
-    if (query.brickTypeId) before.andWhere('m.brick_type_id = :brickTypeId', { brickTypeId: query.brickTypeId });
-    else before.andWhere('m.brick_type_id IS NULL');
+    // One subject, one balance: the item. A grade filter resolves to its item
+    // so the carried balance matches the rows on the page.
+    if (query.itemId) {
+      before.andWhere('m.item_id = :itemId', { itemId: query.itemId });
+    } else {
+      before.andWhere('m.item_id = (SELECT b2.item_id FROM brick_types b2 WHERE b2.id = :brickTypeId)', {
+        brickTypeId: query.brickTypeId,
+      });
+    }
 
     const opening = await before.getRawOne<{ balance: string }>();
     let balance = new Decimal(opening?.balance ?? 0);

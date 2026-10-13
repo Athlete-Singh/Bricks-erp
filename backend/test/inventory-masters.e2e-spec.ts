@@ -18,7 +18,7 @@ describe('Inventory masters (e2e)', () => {
       prefix: 'Inventory Test',
       domain: 'inventory.test',
       // Children first: items reference units, warehouses reference sites.
-      tables: ['items', 'warehouses', 'brick_types', 'units', 'tax_hsn_rates', 'sites'],
+      tables: ['brick_types', 'items', 'warehouses', 'units', 'tax_hsn_rates', 'sites'],
       mobilePrefix: '910000005',
     });
 
@@ -74,8 +74,13 @@ describe('Inventory masters (e2e)', () => {
     });
 
     it('refuses a second brick grade with the same name', async () => {
-      await api('post', '/brick-types', fx.tokenA).send({ grade: 'Jhama' }).expect(201);
-      const res = await api('post', '/brick-types', fx.tokenA).send({ grade: 'jhama' });
+      // Each id is resolved before the request is built: supertest closes the
+      // server it listened on, so a request created around another one finds
+      // the address gone.
+      const first = await itemForGrade(fx.tokenA, 'Jhama brick');
+      const second = await itemForGrade(fx.tokenA, 'Jhama brick two');
+      await api('post', '/brick-types', fx.tokenA).send({ grade: 'Jhama', itemId: first }).expect(201);
+      const res = await api('post', '/brick-types', fx.tokenA).send({ grade: 'jhama', itemId: second });
       expect(res.status).toBe(409);
     });
 
@@ -84,21 +89,59 @@ describe('Inventory masters (e2e)', () => {
     });
   });
 
+  /** A grade needs the item it is sold as (ADR-051), so every test makes one. */
+  let unitSeq = 0;
+  const itemForGrade = async (token: string, name: string): Promise<string> => {
+    // The abbreviation is unique per company, so it is counted rather than
+    // derived from the name — two grades can share a prefix.
+    unitSeq += 1;
+    const unit = await api('post', '/units', token)
+      .send({ name: `${name} unit`, abbreviation: `u${unitSeq}` })
+      .expect(201);
+    const unitId = unit.body.data.id as string;
+    const item = await api('post', '/items', token).send({ name, category: 'other', unitId }).expect(201);
+    return item.body.data.id as string;
+  };
+
   describe('brick types', () => {
     it('creates a brick grade', async () => {
+      const itemId = await itemForGrade(fx.tokenA, 'A1 brick');
       const res = await api('post', '/brick-types', fx.tokenA)
-        .send({ grade: 'A1', description: 'Premium grade' })
+        .send({ grade: 'A1', itemId, description: 'Premium grade' })
         .expect(201);
       expect(res.body.data.grade).toBe('A1');
+      expect(res.body.data.itemId).toBe(itemId);
+    });
+
+    it('refuses a grade with no item to be sold as', async () => {
+      // Without it the yard would have a pile nobody can invoice (ADR-051).
+      await api('post', '/brick-types', fx.tokenA).send({ grade: 'Orphan' }).expect(400);
+    });
+
+    it('refuses two grades sharing one item', async () => {
+      const itemId = await itemForGrade(fx.tokenA, 'Shared brick');
+      await api('post', '/brick-types', fx.tokenA).send({ grade: 'First', itemId }).expect(201);
+      const res = await api('post', '/brick-types', fx.tokenA).send({ grade: 'Second', itemId });
+      expect(res.status).toBe(422);
+      expect(res.body.error.code).toBe('BRICK_TYPE_ITEM_TAKEN');
+    });
+
+    it('refuses a grade pointed at another company item', async () => {
+      const foreign = await itemForGrade(fx.tokenB, 'Company B brick');
+      const res = await api('post', '/brick-types', fx.tokenA).send({ grade: 'Borrowed', itemId: foreign });
+      expect(res.status).toBe(422);
+      expect(res.body.error.code).toBe('ITEM_NOT_FOUND');
     });
 
     it('accepts a grade with no description', async () => {
-      const res = await api('post', '/brick-types', fx.tokenA).send({ grade: 'B2' }).expect(201);
+      const itemId = await itemForGrade(fx.tokenA, 'B2 brick');
+      const res = await api('post', '/brick-types', fx.tokenA).send({ grade: 'B2', itemId }).expect(201);
       expect(res.body.data.description).toBeNull();
     });
 
     it('rejects an empty grade', async () => {
-      await api('post', '/brick-types', fx.tokenA).send({ grade: '' }).expect(400);
+      const itemId = await itemForGrade(fx.tokenA, 'Empty grade brick');
+      await api('post', '/brick-types', fx.tokenA).send({ grade: '', itemId }).expect(400);
     });
   });
 
@@ -154,7 +197,15 @@ describe('Inventory masters (e2e)', () => {
 
       expect((await api('get', '/brick-types', fx.tokenB).expect(200)).body.data).toHaveLength(0);
       expect((await api('get', '/warehouses', fx.tokenB).expect(200)).body.data).toHaveLength(0);
-      expect((await api('get', '/items', fx.tokenB).expect(200)).body.data).toHaveLength(0);
+
+      // B owns one item of its own (the cross-tenant grade test made it), so
+      // the claim here is that none of A's items are visible, not that B is
+      // empty.
+      const itemNames = ((await api('get', '/items', fx.tokenB).expect(200)).body.data as { name: string }[]).map(
+        (i) => i.name,
+      );
+      expect(itemNames).not.toContain('A1 brick');
+      expect(itemNames).not.toContain('Shared brick');
     });
 
     it('refuses to update another company unit', async () => {
@@ -166,7 +217,10 @@ describe('Inventory masters (e2e)', () => {
     });
 
     it('refuses to update another company brick type', async () => {
-      const created = await api('post', '/brick-types', fx.tokenA).send({ grade: 'Protected' }).expect(201);
+      const protectedItem = await itemForGrade(fx.tokenA, 'Protected brick');
+      const created = await api('post', '/brick-types', fx.tokenA)
+        .send({ grade: 'Protected', itemId: protectedItem })
+        .expect(201);
       await api('patch', `/brick-types/${created.body.data.id}`, fx.tokenB).send({ grade: 'X' }).expect(404);
     });
 

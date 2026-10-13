@@ -100,6 +100,11 @@ function UnitDialog({ open, unit, onClose }: { open: boolean; unit?: Unit | null
 
 // ── Brick Types ──────────────────────────────────────────────────────────────
 
+/** The item's own name, for a grade that already has one. */
+function itemName(items: Item[] | undefined, id: string): string {
+  return items?.find((i) => i.id === id)?.name ?? 'an item';
+}
+
 function BrickTypeDialog({
   open,
   brickType,
@@ -112,7 +117,16 @@ function BrickTypeDialog({
   const create = useCreateBrickType();
   const update = useUpdateBrickType();
   const [grade, setGrade] = useState(brickType?.grade ?? '');
+  const [itemId, setItemId] = useState(brickType?.itemId ?? '');
   const [description, setDescription] = useState(brickType?.description ?? '');
+
+  // Items already standing for another grade are not offered: one pile, one
+  // name (ADR-051). On edit the grade keeps the item it has — moving it would
+  // split the yard's history across two piles.
+  const { data: itemPage } = useItems({ page: 1, limit: 100 });
+  const { data: gradePage } = useBrickTypes({ page: 1, limit: 100 });
+  const takenItemIds = new Set((gradePage?.items ?? []).map((g) => g.itemId));
+  const freeItems = (itemPage?.items ?? []).filter((i) => !takenItemIds.has(i.id));
 
   const mut = brickType ? update : create;
   const isPending = mut.isPending;
@@ -121,6 +135,7 @@ function BrickTypeDialog({
   const close = () => {
     mut.reset();
     setGrade('');
+    setItemId('');
     setDescription('');
     onClose();
   };
@@ -130,7 +145,7 @@ function BrickTypeDialog({
     if (brickType) {
       update.mutate({ id: brickType.id, dto: { grade, description: description || null } }, { onSuccess: close });
     } else {
-      create.mutate({ grade, description: description || null }, { onSuccess: close });
+      create.mutate({ grade, itemId, description: description || null }, { onSuccess: close });
     }
   };
 
@@ -145,6 +160,34 @@ function BrickTypeDialog({
           placeholder="Class 1"
           onChange={(e) => setGrade(e.target.value)}
         />
+        {brickType ? (
+          <p className="text-xs text-muted-foreground">
+            Sold as <span className="font-medium text-foreground">{itemName(itemPage?.items, brickType.itemId)}</span>.
+            A grade keeps the item it was created with — moving it would split this grade&rsquo;s stock history across
+            two piles.
+          </p>
+        ) : (
+          <>
+            <Select
+              id="brick-item"
+              label="Sold as *"
+              value={itemId}
+              required
+              onChange={(e) => setItemId(e.target.value)}
+            >
+              <option value="">Choose the item this grade is sold as</option>
+              {freeItems.map((i) => (
+                <option key={i.id} value={i.id}>
+                  {i.name}
+                </option>
+              ))}
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              What the kiln sorts into this grade is what it invoices out. Picking the item here is what keeps the yard
+              one number instead of two that never agree.
+            </p>
+          </>
+        )}
         <Input
           id="brick-desc"
           label="Description"

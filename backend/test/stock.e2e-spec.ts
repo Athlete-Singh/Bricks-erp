@@ -9,6 +9,7 @@ import { Unit } from '../src/modules/inventory/entities/unit.entity';
 import { Item } from '../src/modules/inventory/entities/item.entity';
 import { BrickType } from '../src/modules/inventory/entities/brick-type.entity';
 import { StockService } from '../src/stock/stock.service';
+import { makeBrickGrade } from './helpers/brick-grade';
 import { createTenantFixture, type TenantFixture } from './helpers/tenant-fixture';
 
 jest.setTimeout(40000);
@@ -40,7 +41,7 @@ describe('Stock (e2e)', () => {
     fx = await createTenantFixture({
       prefix: 'Stock Test',
       domain: 'stock.test',
-      tables: ['stock_movements', 'items', 'warehouses', 'brick_types', 'units', 'sites'],
+      tables: ['stock_movements', 'brick_types', 'items', 'warehouses', 'units', 'sites'],
       mobilePrefix: '910000006',
     });
 
@@ -71,8 +72,7 @@ describe('Stock (e2e)', () => {
     coal = await item('Coal');
     diesel = await item('Diesel', false);
 
-    const grade = (name: string) =>
-      ds.getRepository(BrickType).save(ds.getRepository(BrickType).create({ companyId: fx.companyA.id, grade: name }));
+    const grade = (name: string) => makeBrickGrade(ds, { companyId: fx.companyA.id, grade: name });
     classOne = await grade('Class 1');
     gradeB = await grade('Jhama');
   });
@@ -106,7 +106,11 @@ describe('Stock (e2e)', () => {
       }).expect(201);
 
       expect(res.body.data.quantityIn).toBe('40000.000');
-      expect(res.body.data.itemId).toBeNull();
+      // The grade names its own item on the row (ADR-051): the balance is
+      // keyed on the item, so an opening that left it null would be stock a
+      // sale could never find.
+      expect(res.body.data.itemId).toBe(classOne.itemId);
+      expect(res.body.data.brickTypeId).toBe(classOne.id);
     });
 
     it('refuses a second opening row for the same thing in the same place', async () => {
@@ -131,15 +135,19 @@ describe('Stock (e2e)', () => {
   });
 
   describe('what the API refuses', () => {
-    it('refuses a movement naming both an item and a grade', async () => {
+    it('refuses a movement whose item and grade are not the same pile', async () => {
+      // Naming both is fine when they agree — a grade *is* an item (ADR-051).
+      // Disagreeing means one of the two is wrong, and guessing which would
+      // move the wrong pile.
       const res = await opening(fx.tokenA, {
         warehouseId: warehouseA.id,
         itemId: coal.id,
         brickTypeId: classOne.id,
         quantity: '5',
         movementDate: '2026-04-01',
-      }).expect(400);
-      expect(res.body.error.details).toBeDefined();
+      });
+      expect(res.status).toBe(422);
+      expect(res.body.error.code).toBe('STOCK_SUBJECT_MISMATCH');
     });
 
     it('refuses a movement naming neither', async () => {
@@ -270,7 +278,7 @@ describe('Stock (e2e)', () => {
       const USER_ID = '00000000-0000-4000-8000-0000000000aa';
       const grade = await fx.dataSource
         .getRepository(BrickType)
-        .save(fx.dataSource.getRepository(BrickType).create({ companyId: fx.companyA.id, grade: 'Race Test' }));
+        .save(await makeBrickGrade(fx.dataSource, { companyId: fx.companyA.id, grade: 'Race Test' }));
 
       await stock.openingStock(fx.companyA.id, USER_ID, {
         warehouseId: warehouseA.id,

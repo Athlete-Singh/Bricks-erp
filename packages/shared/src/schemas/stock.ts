@@ -23,14 +23,11 @@ const quantity = z
 function oneSubject<T extends z.ZodRawShape>(schema: z.ZodObject<T>) {
   return schema.superRefine((value, ctx) => {
     const v = value as { itemId?: string | null; brickTypeId?: string | null };
-    const hasItem = Boolean(v.itemId);
-    const hasGrade = Boolean(v.brickTypeId);
-    if (hasItem === hasGrade) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['itemId'],
-        message: hasItem ? 'Choose either an item or a brick grade, not both' : 'Choose an item or a brick grade',
-      });
+    // A grade is stocked as its own item (ADR-051), so naming the grade is
+    // enough and naming both is allowed — the service refuses them if they
+    // disagree. Naming neither is still a movement about nothing.
+    if (!v.itemId && !v.brickTypeId) {
+      ctx.addIssue({ code: 'custom', path: ['itemId'], message: 'Choose an item or a brick grade' });
     }
   });
 }

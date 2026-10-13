@@ -56,7 +56,7 @@
 
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| PRD-01 | Brick types / grades master (configurable, e.g. Class 1/2/3) | CP1 | P3 | ✅ | ✅ | — | ✅ | ✅ |  |
+| PRD-01 | Brick types / grades master (configurable, e.g. Class 1/2/3) | CP1 | P3 | ✅ | ✅ | — | ✅ | ✅ | Each grade names the item it is stocked and sold as (ADR-051) |
 | PRD-02 | Production batch per kiln + chamber + date | CP1 | P5 | ✅ | ✅ | — | ✅ | ✅ | |
 | PRD-03 | Stage entries: brick making (green bricks, labour group) → drying → firing (chamber, fuel) → sorting (fired, broken/rejected, good by grade) | CP1 | P5 | ✅ | ✅ | — | ✅ | ✅ | |
 | PRD-04 | Fuel/raw material consumption (coal, soil) reduces raw stock | CP1 | P5 | ✅ | ✅ | — | ✅ | ✅ | |
@@ -84,7 +84,7 @@
 | INV-01 | Items master: raw materials (soil, coal, sand, diesel), consumables, machinery/electrical/repair items; units; HSN | CP1 | P3 | ✅ | ✅ | — | ✅ | ✅ |  |
 | INV-02 | Warehouses / stock locations per kiln | CP1 | P3 | ✅ | ✅ | — | ✅ | ✅ |  |
 | INV-03 | Opening stock entry | CP1 | P4 | ✅ | ✅ | — | ✅ | ✅ |  |
-| INV-04 | Stock movement ledger via a single `StockService` (every in/out linked to its source document) | CP1 | P4 | ✅ | ✅ | — | ✅ | ✅ |  |
+| INV-04 | Stock movement ledger via a single `StockService` (every in/out linked to its source document) | CP1 | P4 | ✅ | ✅ | — | ✅ | ✅ | One balance per item per warehouse; a grade's movements carry its item (ADR-051) |
 | INV-05 | Automatic updates from GRN, production, dispatch and wastage (wired in P5/P7/P9) | CP1 | P4 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | INV-06 | Manual stock adjustment with reason (restricted role) | CP1 | P4 | ✅ | ✅ | — | ✅ | ✅ |  |
 | INV-07 | Stock reports: current stock by kiln/grade/item, movement register, Opening + Production + Purchase − Sales − Wastage = Closing | CP1 | P4 | ✅ | ✅ | — | ✅ | ✅ |  |
@@ -204,7 +204,7 @@
 | CSH-01 | Opening/closing cash; cash receipts/payments; bank deposit, withdrawal and transfer (contra); bank charges; cheque no. / UPI ref on vouchers | CP1 | P10 | ✅ | ✅ | — | ✅ | ✅ |  |
 | DSH-01 | Owner dashboard answering the "Key Management Questions": production today/month/year, stock, sold/dispatched, receivables, payables, labour payable, coal/diesel used, **expenses, estimated profit**, cost per 1,000, gross margin | CP1 | P11 | ✅ | ✅ | — | ✅ | ✅ | P11.1 + P11.2 complete |
 | DSH-02 | Monthly charts: production, sales, collection, expenses, fuel | CP1 | P11 | ✅ | ✅ | — | ✅ | ✅ | P11.1 + P11.2 complete; 12-month SVG series on the dashboard |
-| CST-01 | Cost per 1,000 bricks by kiln, month **and brick type** (labour, coal, soil, electricity, loading, repairs, other) vs selling price → gross margin. Shown against the ₹4,100 benchmark from the Proposal §4 / Spec §22 | CP1 | P11 | ✅ | ✅ | — | ✅ | ✅ | ADR-049 pro-rate by fired share within kiln-month; price and margin are kiln-month, not per grade (ADR-050) |
+| CST-01 | Cost per 1,000 bricks by kiln, month **and brick type** (labour, coal, soil, electricity, loading, repairs, other) vs selling price → gross margin. Shown against the ₹4,100 benchmark from the Proposal §4 / Spec §22 | CP1 | P11 | ✅ | ✅ | — | ✅ | ✅ | ADR-049 pro-rate by fired share within kiln-month; price and margin read per grade since ADR-051 tied a grade to its item |
 | RPT-01 | Excel/PDF export for the main reports | CP1 | P11 | ✅ | ✅ | — | ✅ | ✅ | CSV export (ADR-048) on cost per 1,000, sales register and labour registers |
 | RPT-02 | Daily operations report: one page per day — production, dispatch, sales, collection, expenses, coal used, labour present | CP1 | P11 | ✅ | ✅ | — | ✅ | ✅ | `/reports/daily` + web daily page; coal is reported as quantity issued *and* as cost |
 | RPT-03 | Sales register by customer / brick type / period, with quantity, rate per 1,000, discount, GST and total | CP1 | P11 | ✅ | ✅ | — | ✅ | ✅ | `/reports/sales-register` + web page with customer / item / kiln filters and CSV export |

@@ -45,10 +45,10 @@ describe('SYN-02 delta pull (e2e)', () => {
       domain: 'delta.test',
       tables: [
         'labour_wage_rates',
+        'brick_types',
         'items',
         'units',
         'warehouses',
-        'brick_types',
         'parties',
         'ledgers',
         'voucher_sequences',
@@ -89,6 +89,30 @@ describe('SYN-02 delta pull (e2e)', () => {
     data: Partial<T>,
   ): Promise<T> {
     return repo.save(repo.create(data));
+  }
+
+  /** A grade needs the item it is sold as (ADR-051); this makes one per call. */
+  let gradeItemSeq = 0;
+  async function itemForGrade(): Promise<string> {
+    gradeItemSeq += 1;
+    const units = fx.dataSource.getRepository(Unit);
+    const unit = await units.save(
+      units.create({
+        companyId: fx.companyA.id,
+        name: `Delta unit ${gradeItemSeq}`,
+        abbreviation: `du${gradeItemSeq}`,
+      }),
+    );
+    const items = fx.dataSource.getRepository(Item);
+    const item = await items.save(
+      items.create({
+        companyId: fx.companyA.id,
+        name: `Delta grade item ${gradeItemSeq}`,
+        category: 'other',
+        unitId: unit.id,
+      }),
+    );
+    return item.id;
   }
 
   // Pause so an "updated after now" test has an inequality to pivot on; some
@@ -217,7 +241,11 @@ describe('SYN-02 delta pull (e2e)', () => {
     const sinceAt = new Date().toISOString();
     await sleep(10);
 
-    const bt = await createMaster(btRepo, { companyId: fx.companyA.id, grade: 'Delta Grade' });
+    const bt = await createMaster(btRepo, {
+      companyId: fx.companyA.id,
+      grade: 'Delta Grade',
+      itemId: await itemForGrade(),
+    });
     const wh = await createMaster(whRepo, { companyId: fx.companyA.id, siteId: site.id, name: 'Delta Yard' });
     await btRepo.softRemove(bt);
     await whRepo.softRemove(wh);
@@ -262,7 +290,11 @@ describe('SYN-02 delta pull (e2e)', () => {
 
   it('without since, the normal list omits soft-deleted rows (as before)', async () => {
     const btRepo = fx.dataSource.getRepository(BrickType);
-    const bt = await createMaster(btRepo, { companyId: fx.companyA.id, grade: 'Visible Grade' });
+    const bt = await createMaster(btRepo, {
+      companyId: fx.companyA.id,
+      grade: 'Visible Grade',
+      itemId: await itemForGrade(),
+    });
     await btRepo.softRemove(bt);
     const res = await authGet('/api/v1/inventory/brick-types', fx.tokenA, { limit: '100' }).expect(200);
     expect((res.body.data as Array<{ id: string }>).find((r) => r.id === bt.id)).toBeUndefined();
@@ -316,7 +348,11 @@ describe('SYN-02 delta pull (e2e)', () => {
       const btRepo = fx.dataSource.getRepository(BrickType);
       const sinceAt = new Date().toISOString();
       await sleep(10);
-      const made = await createMaster(btRepo, { companyId: fx.companyA.id, grade: 'Watermark Grade' });
+      const made = await createMaster(btRepo, {
+        companyId: fx.companyA.id,
+        grade: 'Watermark Grade',
+        itemId: await itemForGrade(),
+      });
 
       const first = await authGet('/api/v1/inventory/brick-types', fx.tokenA, {
         since: sinceAt,
@@ -346,7 +382,9 @@ describe('SYN-02 delta pull (e2e)', () => {
 
       const grades: BrickType[] = [];
       for (const n of [1, 2, 3, 4, 5, 6]) {
-        grades.push(await createMaster(btRepo, { companyId: fx.companyA.id, grade: `Order ${n}` }));
+        grades.push(
+          await createMaster(btRepo, { companyId: fx.companyA.id, grade: `Order ${n}`, itemId: await itemForGrade() }),
+        );
         await sleep(2);
       }
       // The oldest row becomes the newest change — created_at order and

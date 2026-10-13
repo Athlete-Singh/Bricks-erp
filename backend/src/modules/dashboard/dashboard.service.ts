@@ -197,13 +197,19 @@ export class DashboardService {
       `
       WITH balances AS (
         SELECT
-          COALESCE(m."brick_type_id", m."item_id") AS subject_id,
-          m."brick_type_id" IS NOT NULL AS is_brick,
+          m."item_id" AS subject_id,
+          -- A pile is bricks when its item is some grade's item (ADR-051).
+          -- Reading the movement's own grade column instead would file a sale
+          -- of bricks under "other items", because an invoice names the item.
+          EXISTS (
+            SELECT 1 FROM "brick_types" bt
+            WHERE bt."item_id" = m."item_id" AND bt."deleted_at" IS NULL
+          ) AS is_brick,
           SUM(m."quantity_in") - SUM(m."quantity_out") AS balance
         FROM "stock_movements" m
         JOIN "warehouses" w ON w."id" = m."warehouse_id"
         WHERE m."company_id" = $1 AND m."movement_date" <= $2 AND m."deleted_at" IS NULL${sf}
-        GROUP BY COALESCE(m."brick_type_id", m."item_id"), (m."brick_type_id" IS NOT NULL)
+        GROUP BY m."item_id"
       )
       SELECT
         COALESCE(SUM(CASE WHEN is_brick AND balance > 0 THEN balance END), 0)::text AS bricks_qty,
@@ -663,56 +669,46 @@ export class DashboardService {
     );
 
     /**
-     * The other half of CST-01: cost alone does not say whether a grade pays
-     * for itself. Realisation is read at **kiln-month**, not per grade — a
-     * sales invoice line names an item and a warehouse, never a brick grade
-     * (ADR-050), so a per-grade price would be invented. Revenue comes off the
-     * SALES_BRICKS ledger, which is where every invoice and every credit note
-     * posts, so returns and rate corrections are already netted out.
+     * The other half of CST-01: what the grade actually fetched. Now readable
+     * per grade — a grade is stocked and sold as one item (ADR-051), so the
+     * invoice line's item names the grade without anyone guessing.
      */
-    const revenueRows = await this.em.query<{ site_id: string; ym: string; revenue: string }[]>(
+    const revenueRows = await this.em.query<
+      { site_id: string; ym: string; brick_type_id: string; revenue: string; quantity: string }[]
+    >(
       `
-      SELECT v."site_id", to_char(v."voucher_date", 'YYYY-MM') AS ym,
-        (COALESCE(SUM(vl."credit"), 0) - COALESCE(SUM(vl."debit"), 0))::text AS revenue
-      FROM "ledgers" l
-      JOIN "voucher_lines" vl ON vl."ledger_id" = l."id" AND vl."deleted_at" IS NULL
-      JOIN "vouchers" v ON v."id" = vl."voucher_id" AND v."deleted_at" IS NULL
-      WHERE l."company_id" = $1 AND l."deleted_at" IS NULL AND l."code" = 'SALES_BRICKS'
-        AND v."site_id" IS NOT NULL
-        AND v."voucher_date" BETWEEN $2 AND $3${costSite}
-      GROUP BY v."site_id", to_char(v."voucher_date", 'YYYY-MM')
-      `,
-      costParams,
-    );
-
-    /** The quantity those rupees were earned on, netted the same way. */
-    const soldQtyRows = await this.em.query<{ site_id: string; ym: string; quantity: string }[]>(
-      `
-      SELECT si."site_id", to_char(si."invoice_date", 'YYYY-MM') AS ym,
+      SELECT si."site_id", to_char(si."invoice_date", 'YYYY-MM') AS ym, bt."id" AS brick_type_id,
+        COALESCE(SUM(sil."taxable_amount"), 0)::text AS revenue,
         COALESCE(SUM(sil."quantity"), 0)::text AS quantity
       FROM "sales_invoice_lines" sil
       JOIN "sales_invoices" si ON si."id" = sil."sales_invoice_id"
         AND si."deleted_at" IS NULL AND si."status" <> 'cancelled'
+      JOIN "brick_types" bt ON bt."item_id" = sil."item_id" AND bt."deleted_at" IS NULL
       WHERE sil."company_id" = $1 AND sil."deleted_at" IS NULL
         AND si."invoice_date" BETWEEN $2 AND $3${saleSite}
-      GROUP BY si."site_id", to_char(si."invoice_date", 'YYYY-MM')
+      GROUP BY si."site_id", to_char(si."invoice_date", 'YYYY-MM'), bt."id"
       `,
       saleParams,
     );
 
     /**
-     * Only a credit note that carried a quantity took bricks back (ADR-040);
-     * a value-only note is a rate correction and must not reduce the count.
+     * Returns come off the realised price. A value-only credit note carries no
+     * quantity (ADR-040) — it is a rate correction, so it reduces the money
+     * without pretending bricks came back.
      */
-    const returnedQtyRows = await this.em.query<{ site_id: string; ym: string; quantity: string }[]>(
+    const returnRows = await this.em.query<
+      { site_id: string; ym: string; brick_type_id: string; revenue: string; quantity: string }[]
+    >(
       `
-      SELECT cn."site_id", to_char(cn."note_date", 'YYYY-MM') AS ym,
+      SELECT cn."site_id", to_char(cn."note_date", 'YYYY-MM') AS ym, bt."id" AS brick_type_id,
+        COALESCE(SUM(cnl."taxable_amount"), 0)::text AS revenue,
         COALESCE(SUM(cnl."quantity"), 0)::text AS quantity
       FROM "credit_note_lines" cnl
       JOIN "credit_notes" cn ON cn."id" = cnl."credit_note_id" AND cn."deleted_at" IS NULL
-      WHERE cnl."company_id" = $1 AND cnl."deleted_at" IS NULL AND cnl."quantity" IS NOT NULL
+      JOIN "brick_types" bt ON bt."item_id" = cnl."item_id" AND bt."deleted_at" IS NULL
+      WHERE cnl."company_id" = $1 AND cnl."deleted_at" IS NULL
         AND cn."note_date" BETWEEN $2 AND $3${noteSite}
-      GROUP BY cn."site_id", to_char(cn."note_date", 'YYYY-MM')
+      GROUP BY cn."site_id", to_char(cn."note_date", 'YYYY-MM'), bt."id"
       `,
       noteParams,
     );
@@ -721,18 +717,20 @@ export class DashboardService {
     const realisationAt = (key: string) =>
       realisation.get(key) ?? { revenue: new Decimal(0), quantity: new Decimal(0) };
     for (const r of revenueRows) {
-      const k = `${r.site_id}|${r.ym}`;
-      realisation.set(k, { ...realisationAt(k), revenue: new Decimal(r.revenue) });
-    }
-    for (const r of soldQtyRows) {
-      const k = `${r.site_id}|${r.ym}`;
+      const k = `${r.site_id}|${r.ym}|${r.brick_type_id}`;
       const cur = realisationAt(k);
-      realisation.set(k, { ...cur, quantity: cur.quantity.plus(r.quantity) });
+      realisation.set(k, {
+        revenue: cur.revenue.plus(r.revenue),
+        quantity: cur.quantity.plus(r.quantity),
+      });
     }
-    for (const r of returnedQtyRows) {
-      const k = `${r.site_id}|${r.ym}`;
+    for (const r of returnRows) {
+      const k = `${r.site_id}|${r.ym}|${r.brick_type_id}`;
       const cur = realisationAt(k);
-      realisation.set(k, { ...cur, quantity: cur.quantity.minus(r.quantity) });
+      realisation.set(k, {
+        revenue: cur.revenue.minus(r.revenue),
+        quantity: cur.quantity.minus(r.quantity),
+      });
     }
 
     // Site-month totals of fired bricks — used both for pro-rating and for the
@@ -782,7 +780,7 @@ export class DashboardService {
        * Nothing sold in the kiln-month leaves this null — bricks that sat in
        * the yard have no realised price, and a zero would read as "given away".
        */
-      const realised = realisation.get(sharedKey);
+      const realised = realisation.get(`${r.site_id}|${r.ym}|${r.brick_type_id}`);
       const soldBricks = realised ? bricks(realised.quantity) : '0.000';
       const sellingPricePerThousand =
         realised && realised.quantity.greaterThan(0)
@@ -835,10 +833,11 @@ export class DashboardService {
         rowCount: items.length,
         benchmark: COST_PER_THOUSAND_BENCHMARK,
         /**
-         * Says out loud which figures on a row are per grade and which are not,
-         * so a screen can label them rather than letting the reader assume.
+         * Every figure on a row is now that grade's own, the price included
+         * (ADR-051 gave the sale a grade). Kept on the response because the
+         * screen labels the column from it rather than hardcoding a claim.
          */
-        realisationLevel: 'kiln-month' as const,
+        realisationLevel: 'brick-type' as const,
       },
     };
   }

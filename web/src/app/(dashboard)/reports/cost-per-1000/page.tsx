@@ -63,7 +63,7 @@ export default function CostPerThousandPage() {
         'Total cost',
         'Cost per 1,000',
         'Sold bricks',
-        'Realised per 1,000 (kiln-month)',
+        'Realised per 1,000',
         'Gross margin %',
         'vs benchmark',
       ],
@@ -124,7 +124,7 @@ export default function CostPerThousandPage() {
       header: 'Realised / 1,000',
       render: (r) =>
         r.sellingPricePerThousand === null ? (
-          <span className="text-muted-foreground" title="Nothing was invoiced from this kiln in this month">
+          <span className="text-muted-foreground" title="None of this grade was invoiced in this month">
             —
           </span>
         ) : (
@@ -217,9 +217,9 @@ export default function CostPerThousandPage() {
 
       <p className="text-sm text-muted-foreground">
         Each row is one kiln-month × brick type. Buckets are allocated by fired share within the kiln-month (ADR-049); a
-        chamber fires every grade together, so the share is the only honest allocation key. The realised price is the
-        kiln-month&rsquo;s, not the grade&rsquo;s — an invoice names an item and a warehouse, never a grade — so the
-        margin compares this grade&rsquo;s cost against what the kiln earned that month.
+        chamber fires every grade together, so the share is the only honest allocation key. The realised price is this
+        grade&rsquo;s own: a grade is stocked and invoiced as one item (ADR-051), so what it fetched is read off the
+        sales it appeared on, net of returns.
       </p>
 
       <DataTable<CostRow>

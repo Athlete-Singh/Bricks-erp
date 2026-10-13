@@ -29,6 +29,12 @@ export type UpdateUnitInput = z.input<typeof updateUnitSchema>;
 
 export const createBrickTypeSchema = z.object({
   grade: z.string().min(1, 'Grade name is required'),
+  /**
+   * The item this grade is stocked and sold as (ADR-051). Required, and never
+   * changed afterwards — moving a grade to a different item would split its
+   * stock history across two piles, so `updateBrickTypeSchema` does not take it.
+   */
+  itemId: z.string().uuid('Invalid item ID'),
   description: blankToNull(z.string()),
 });
 export type CreateBrickTypeDto = z.infer<typeof createBrickTypeSchema>;

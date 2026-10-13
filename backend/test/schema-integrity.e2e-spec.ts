@@ -93,12 +93,23 @@ describe('Schema integrity (e2e)', () => {
   });
 
   describe('the stock ledger (P4)', () => {
-    it.each(['uq_stock_movements_opening_item', 'uq_stock_movements_opening_grade', 'idx_stock_movements_balance'])(
+    // The opening row is one per subject per warehouse, and the subject is the
+    // item — a grade's opening is its item's opening (ADR-051), so the old
+    // per-grade index would refuse a legitimate second grade.
+    it.each(['uq_stock_movements_opening_item', 'idx_stock_movements_balance', 'uq_brick_types_item'])(
       'enforces %s',
       (name) => {
         expect(indexes.has(name)).toBe(true);
       },
     );
+
+    it('requires every movement to name the item it is about', async () => {
+      const rows = await dataSource.query<{ is_nullable: string }[]>(
+        `SELECT is_nullable FROM information_schema.columns
+         WHERE table_name = 'stock_movements' AND column_name = 'item_id'`,
+      );
+      expect(rows[0]!.is_nullable).toBe('NO');
+    });
 
     it.each([
       ['fk_stock_movements_warehouse_id', 'a movement happens in a real warehouse'],
@@ -392,7 +403,6 @@ describe('Schema integrity (e2e)', () => {
         ),
       ).rejects.toThrow();
     });
-
   });
 
   describe('financial statements (P10.1b)', () => {
@@ -435,9 +445,9 @@ describe('Schema integrity (e2e)', () => {
     const TENANT_TABLES = [
       'parties',
       'units',
+      'brick_types',
       'items',
       'warehouses',
-      'brick_types',
       'transport_drivers',
       'transport_vehicles',
       'tax_hsn_rates',
@@ -534,7 +544,9 @@ describe('Schema integrity (e2e)', () => {
       'chk_parties_opening_non_negative',
       'chk_companies_gst_scheme',
       // ADR-023/024/026 — the stock ledger's own rules, in the database.
-      'chk_stock_movements_one_subject',
+      // `chk_stock_movements_one_subject` is gone on purpose: a grade is
+      // stocked as an item (ADR-051), so the two columns stopped being
+      // alternatives and `item_id` is NOT NULL instead.
       'chk_stock_movements_one_side',
       'chk_stock_movements_not_negative',
       'chk_stock_movements_type',

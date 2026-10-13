@@ -98,6 +98,8 @@ export const updateUnit = (id: string, dto: UpdateUnitInput) => apiClient.patch<
 export interface BrickType {
   id: string;
   grade: string;
+  /** The item this grade is stocked and sold as (ADR-051). */
+  itemId: string;
   description: string | null;
   isActive: boolean;
 }
