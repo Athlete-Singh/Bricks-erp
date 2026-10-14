@@ -327,7 +327,7 @@ The P track is never blocked by the M track.
 | **S** (SaaS) | S1.1 | Backend: tenant fields, platform permissions + role, guard change, onboarding + suspend endpoints | ✅ |
 | **S** (SaaS) | S1.2 | Web: `/admin` surface, tenant list, onboarding wizard, suspend/reactivate | ✅ |
 | **S** (SaaS) | S2.1 | Backend: `support_sessions`, permissions resolved from the session, audit marking | ✅ |
-| **S** (SaaS) | S2.2 | Web: open/close a session in `/admin`, support markers in the owner's audit log | ⬜ |
+| **S** (SaaS) | S2.2 | Web: open/close a session in `/admin`, support markers in the owner's audit log | ✅ |
 | **S** (SaaS) | S3.1 | Tenant detail page + support session history | ⬜ |
 | **S** (SaaS) | S3.2 | Per-tenant *require my approval* setting | ⬜ |
 | **S** (SaaS) | S4 | Billing and plans | ⏭️ deferred |
