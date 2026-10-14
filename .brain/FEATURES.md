@@ -13,7 +13,7 @@
 |---|---|---|---|---|---|---|
 | CP1 MVP | 101 | 85 | 6 | 1 | 9 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
-| S — SaaS platform | 11 | 5 | 1 | 0 | 4 | 1 |
+| S — SaaS platform | 11 | 5 | 3 | 0 | 2 | 1 |
 
 **CP1 done: 84 %** (85 of 101 features ✅)
 
@@ -209,8 +209,8 @@ reasoning in `.brain/modules/saas-platform.md`, decision in ADR-052.
 | PLT-04 | Tenant list: metadata only — counts and dates, never money and never the client's own parties | S | S1.2 | ✅ | ✅ | — | ✅ | ✅ |  |
 | PLT-05 | Onboarding: company + **first financial year** + owner user, in one transaction | S | S1.2 | ✅ | ✅ | — | ✅ | ✅ |  |
 | PLT-06 | Suspend / reactivate a tenant; sign-in refused with a message naming who to contact | S | S1.2 | ✅ | ✅ | ⬜ | ✅ | 🟨 | Mobile still to come (M1) |
-| PLT-07 | Support sessions: reason required, two hours, closes itself, business permissions scoped to one tenant | S | S2.1 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
-| PLT-08 | Audit rows marked `platform_support`; the owner sees that support looked, and why | S | S2.2 | ⬜ | ⬜ | — | ⬜ | ⬜ | Announced after, not approved before — a kiln owner is not reliably reachable |
+| PLT-07 | Support sessions: reason required, two hours, closes itself, business permissions scoped to one tenant | S | S2.1 | ✅ | ⬜ | — | ✅ | 🟨 | Backend shipped in S2.1. The `/admin` open/close UI is S2.2 |
+| PLT-08 | Audit rows marked `platform_support`; the owner sees that support looked, and why | S | S2.2 | ✅ | ⬜ | — | ✅ | 🟨 | Backend (actor_kind + support_session_id) shipped in S2.1. The owner's audit screen UI tag is S2.2 |
 | PLT-09 | Tenant detail: users and roles, counts, last activity, support session history | S | S3.1 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | PLT-10 | Per-tenant setting: *require my approval before support access* | S | S3.2 | ⬜ | ⬜ | — | ⬜ | ⬜ | For a client who asks for it |
 | PLT-11 | Billing: plans, trial expiry, payment status, automatic suspension | S | S4 | ⏭️ | ⏭️ | — | ⏭️ | ⏭️ | Deferred until invoicing by hand hurts |

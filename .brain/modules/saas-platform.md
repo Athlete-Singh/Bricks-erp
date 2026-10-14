@@ -148,13 +148,46 @@ leaves a record when the normal path is left.
 
 ### S2 — support sessions
 
-- `support_sessions` table: tenant, platform user, reason, opened, expires,
-  closed.
-- Business permissions resolved from the active session rather than from a
-  role.
-- `actor_kind` and `support_session_id` on audit rows.
-- The owner's audit screen marks support's entries, and lists the sessions
-  themselves.
+#### S2.1 (backend) — shipped 2026-10-14
+
+- Migration `1795000000000-SupportSessions` adds the table (CHECKs on reason
+  length and the `closed_at ⇔ closed_by` pair; partial unique on the open
+  session per `(platform_user, company)`) and widens `audit_logs` with
+  `actor_kind` + `support_session_id`, paired by a CHECK so the trail cannot
+  carry one without the other.
+- `POST /platform/support-sessions` opens a session (`platform.support.request`
+  required, two hours by default) and hands the client back both the session
+  DTO and a switched auth bundle: a JWT with `companyId=tenantId`,
+  `roleCode='platform_support'`, the owner's `permissions`, and a new
+  `supportSessionId` claim. Its access TTL is the shorter of the configured
+  one and the session's remaining window.
+- `POST /platform/support-sessions/:id/close` closes early (opener only,
+  idempotent). `GET /platform/support-sessions` lists the admin's own
+  history; `GET /platform/support-sessions/for-tenant/:id` lists all admins'
+  work on one tenant (`platform.tenants.view`).
+- `SupportSessionInterceptor` (not a guard — guards cannot read `req.user`;
+  JwtAuthGuard populates it) runs globally after authentication, closes an
+  expired session on the spot (writes `closed_by='expiry'` + a `system`
+  audit row), and refuses with 401 for closed / expired / drifted sessions
+  so an abandoned tab cannot keep acting on a tenant.
+- `common/audit/audit-context.ts` wraps every request in an
+  `AsyncLocalStorage<AuditContext>` set by `AuditContextInterceptor` from
+  `req.user.supportSessionId`. `AuditService.record` reads the store and
+  stamps the row — so every existing audit call site under a support
+  session is tagged `platform_support` without a code change. An explicit
+  field on the event still wins (used by `support-session.service.ts` when
+  it writes its own CREATE row before the context takes effect, and by the
+  interceptor's expiry close for the `system` kind).
+
+#### S2.2 (web) — pending
+
+- Open-session dialog in the tenant list and the detail page.
+- The admin's current open sessions on the admin header, with a one-click
+  switch into the tenant and a visible countdown.
+- Owner's audit screen: a `platform_support` badge on the rows that carry
+  it, with the reason shown on hover and a filter for support's entries.
+- Local-storage separation of the platform-admin tokens from the switched
+  support tokens, so the admin can hop between the two.
 
 ### S3 — tenant detail and history
 

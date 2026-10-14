@@ -62,3 +62,36 @@ export const suspendTenantSchema = z.object({
   reason: z.string().min(3, 'Say why — it goes on the audit trail').max(500).optional(),
 });
 export type SuspendTenantDto = z.infer<typeof suspendTenantSchema>;
+
+/**
+ * Support sessions (S2) — how a platform admin acquires one tenant's business
+ * permissions, two hours, auto-closed, every audit row marked. The reason is
+ * mandatory and goes on the trail: making somebody type one is most of what
+ * stops casual looking (ADR-052).
+ */
+export const SUPPORT_SESSION_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
+
+export const AUDIT_ACTOR_KINDS = ['user', 'platform_support', 'system'] as const;
+export type AuditActorKind = (typeof AUDIT_ACTOR_KINDS)[number];
+
+export const SUPPORT_SESSION_CLOSE_KINDS = ['manual', 'expiry'] as const;
+export type SupportSessionCloseKind = (typeof SUPPORT_SESSION_CLOSE_KINDS)[number];
+
+export const createSupportSessionSchema = z.object({
+  tenantId: z.string().uuid(),
+  reason: z.string().min(3, 'A reason is required — it goes on the audit trail').max(500),
+});
+export type CreateSupportSessionDto = z.infer<typeof createSupportSessionSchema>;
+
+export interface SupportSessionDto {
+  id: string;
+  tenantId: string;
+  tenantName: string;
+  platformUserId: string;
+  platformUserName: string;
+  reason: string;
+  openedAt: string;
+  expiresAt: string;
+  closedAt: string | null;
+  closedBy: SupportSessionCloseKind | null;
+}

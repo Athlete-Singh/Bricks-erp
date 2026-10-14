@@ -16,6 +16,12 @@ export interface JwtPayload {
   roleCode: string;
   permissions: string[];
   isSuperAdmin: boolean;
+  /**
+   * S2.1 — present when the holder is a platform admin acting inside a
+   * support session. The session id lives in the token so every request
+   * carries it to the audit trail without a separate lookup.
+   */
+  supportSessionId?: string | null;
 }
 
 export interface RequestWithUser extends Request {

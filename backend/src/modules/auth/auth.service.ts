@@ -97,6 +97,85 @@ export class AuthService {
     return this.buildSession(user, dto.companyId);
   }
 
+  /**
+   * S2.1 — issue tokens for a support session: the platform admin acts as
+   * owner on one tenant for the session's remaining window. `permissions`
+   * are the Owner role's; `roleCode` reads `platform_support` so an owner's
+   * audit screen can tell what support's requests look like; the new
+   * `supportSessionId` claim travels through every request so the audit
+   * interceptor stamps the row.
+   */
+  async issueSupportTokens(
+    platformUserId: string,
+    tenantId: string,
+    supportSessionId: string,
+    expiresAt: Date,
+  ): Promise<AuthResponseDto> {
+    const user = await this.requireActiveUser(platformUserId);
+    const company = await this.companyRepository.findOneBy({ id: tenantId });
+    if (!company || !company.isActive) {
+      throw new BadRequestException('Tenant is inactive or not found');
+    }
+    if (company.status === 'suspended') {
+      throw new UnauthorizedException(SUSPENDED_TENANT_SIGN_IN_MESSAGE);
+    }
+    const ownerRole = await this.roles.requireByCode('owner');
+    const permissions = await this.roles.permissionCodesFor(ownerRole.id);
+
+    const sites = await this.siteRepository.find({ where: { companyId: tenantId } });
+
+    const payload: JwtPayload = {
+      sub: user.id,
+      email: user.email,
+      mobile: user.mobile,
+      name: user.name,
+      companyId: tenantId,
+      roleCode: 'platform_support',
+      permissions,
+      isSuperAdmin: user.isSuperAdmin,
+      supportSessionId,
+    };
+
+    const accessTtl = this.configService.get('JWT_ACCESS_TTL', { infer: true });
+    const supportTtlSeconds = Math.max(60, Math.floor((expiresAt.getTime() - Date.now()) / 1000));
+    const accessExpiresIn = this.chooseExpiresIn(accessTtl, supportTtlSeconds);
+
+    const accessToken = await this.jwtService.signAsync(payload, {
+      secret: this.configService.get('JWT_ACCESS_SECRET', { infer: true }),
+      expiresIn: accessExpiresIn,
+    });
+
+    // No refresh token: a support session is explicitly short-lived — if it
+    // runs out, the admin opens a new one rather than silently renewing.
+    return {
+      accessToken,
+      refreshToken: '',
+      user: {
+        id: user.id,
+        email: user.email,
+        mobile: user.mobile,
+        name: user.name,
+        roleCode: 'platform_support',
+        permissions,
+        isSuperAdmin: user.isSuperAdmin,
+      },
+      company: {
+        id: company.id,
+        name: company.name,
+        gstin: company.gstin,
+        stateCode: company.stateCode,
+        gstScheme: company.gstScheme,
+      },
+      sites: sites.map((s) => ({ id: s.id, name: s.name, code: s.code, type: s.type })),
+    };
+  }
+
+  /** The shorter of the configured access TTL and the session's remaining window. */
+  private chooseExpiresIn(configuredTtl: string, supportTtlSeconds: number): ExpiresIn {
+    const configuredSeconds = Math.floor(parseDurationToMs(configuredTtl) / 1000);
+    return Math.min(configuredSeconds, supportTtlSeconds);
+  }
+
   async refresh(dto: RefreshTokenDto): Promise<TokenPair> {
     const claims = await this.verifyRefreshToken(dto.refreshToken);
     const user = await this.requireActiveUser(claims.sub);

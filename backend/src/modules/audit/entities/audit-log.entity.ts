@@ -1,4 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn } from 'typeorm';
+import type { AuditActorKind } from '@brics/shared';
 
 @Entity('audit_logs')
 export class AuditLog {
@@ -31,6 +32,13 @@ export class AuditLog {
 
   @Column({ name: 'user_agent', type: 'varchar', length: 255, nullable: true })
   userAgent: string | null;
+
+  /** S2.1 — what kind of actor wrote the row. `platform_support` ⇔ support_session_id. */
+  @Column({ name: 'actor_kind', type: 'varchar', length: 20, default: 'user' })
+  actorKind: AuditActorKind;
+
+  @Column({ name: 'support_session_id', type: 'uuid', nullable: true })
+  supportSessionId: string | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;

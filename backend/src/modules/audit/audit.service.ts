@@ -1,8 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, EntityManager, LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
-import type { AuditAction, AuditLogQueryDto } from '@brics/shared';
+import type { AuditAction, AuditActorKind, AuditLogQueryDto } from '@brics/shared';
 import type { Paginated } from '../../common/interceptors/response-envelope.interceptor';
+import { currentAuditContext } from '../../common/audit/audit-context';
 import { AuditLog } from './entities/audit-log.entity';
 
 export interface AuditEvent {
@@ -15,6 +16,9 @@ export interface AuditEvent {
   after?: Record<string, unknown> | null;
   ipAddress?: string | null;
   userAgent?: string | null;
+  /** S2.1 — explicit override. Omitted means "read from the request's audit context". */
+  actorKind?: AuditActorKind;
+  supportSessionId?: string | null;
 }
 
 /**
@@ -32,6 +36,9 @@ export class AuditService {
 
   async record(event: AuditEvent, manager?: EntityManager): Promise<void> {
     const repo = manager ? manager.getRepository(AuditLog) : this.auditRepo;
+    const ctx = currentAuditContext();
+    const actorKind: AuditActorKind = event.actorKind ?? ctx.actorKind;
+    const supportSessionId = event.supportSessionId !== undefined ? event.supportSessionId : ctx.supportSessionId;
     try {
       await repo.save(
         repo.create({
@@ -44,6 +51,12 @@ export class AuditService {
           afterState: event.after ?? null,
           ipAddress: event.ipAddress ?? null,
           userAgent: event.userAgent?.slice(0, 255) ?? null,
+          actorKind,
+          // The DB enforces `platform_support ⇔ session_id`: let a mismatch
+          // throw so an incorrectly tagged write cannot land. Clearing the
+          // session id when actorKind is not `platform_support` would hide
+          // the bug; carrying it when it is would ignore an explicit kind.
+          supportSessionId: actorKind === 'platform_support' ? supportSessionId : null,
         }),
       );
     } catch (error) {
