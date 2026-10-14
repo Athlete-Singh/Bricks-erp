@@ -3,7 +3,18 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, Clock, FileText, Flame, HeadphonesIcon, Pause, Play, Shield, Users } from 'lucide-react';
+import {
+  ArrowLeft,
+  Clock,
+  CreditCard,
+  FileText,
+  Flame,
+  HeadphonesIcon,
+  Pause,
+  Play,
+  Shield,
+  Users,
+} from 'lucide-react';
 import { PERMISSIONS } from '@brics/shared';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
@@ -12,6 +23,7 @@ import { PageSpinner, Spinner } from '@/components/ui/spinner';
 import { useSession, messageOf } from '@/features/auth/use-auth';
 import { OpenSupportSessionDialog } from '@/features/platform/components/open-support-session-dialog';
 import { SuspendTenantDialog } from '@/features/platform/components/suspend-tenant-dialog';
+import { TenantBillingTab } from '@/features/platform/components/tenant-billing-tab';
 import { TenantKilnsList } from '@/features/platform/components/tenant-kilns-list';
 import { TenantStatusBadge } from '@/features/platform/components/tenant-status-badge';
 import { TenantSupportHistory } from '@/features/platform/components/tenant-support-history';
@@ -19,7 +31,7 @@ import { TenantUsersList } from '@/features/platform/components/tenant-users-lis
 import { useReactivateTenant, useTenant, useUpdateTenantSettings } from '@/features/platform/hooks';
 import { cn } from '@/lib/cn';
 
-type DetailTab = 'users' | 'kilns' | 'support';
+type DetailTab = 'users' | 'kilns' | 'support' | 'billing';
 
 /**
  * Tenant detail page (PLT-09 / S3.1)
@@ -245,12 +257,27 @@ export default function AdminTenantDetailPage() {
           <HeadphonesIcon className="h-4 w-4" aria-hidden />
           Support history
         </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('billing')}
+          className={cn(
+            'inline-flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors',
+            activeTab === 'billing'
+              ? 'border-brand-600 text-brand-700 dark:border-brand-400 dark:text-brand-300'
+              : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
+          )}
+        >
+          <CreditCard className="h-4 w-4" aria-hidden />
+          Billing & Subscription
+        </button>
       </div>
 
       {/* Tab Contents */}
       {activeTab === 'users' && <TenantUsersList users={tenant.users} />}
       {activeTab === 'kilns' && <TenantKilnsList kilns={tenant.kilns} />}
       {activeTab === 'support' && <TenantSupportHistory tenantId={tenant.id} />}
+      {activeTab === 'billing' && <TenantBillingTab tenantId={tenant.id} />}
 
       {/* Operational Modals */}
       <SuspendTenantDialog tenant={tenant} open={suspendOpen} onClose={() => setSuspendOpen(false)} />

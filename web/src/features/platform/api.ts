@@ -1,12 +1,19 @@
 import type {
   AuthResponseDto,
+  CreatePlatformInvoiceDto,
   CreateSupportSessionDto,
   CreateTenantDto,
+  ExpiryCheckResultDto,
+  PlatformInvoiceDto,
+  PlatformPlan,
+  RecordPlatformPaymentDto,
   SupportSessionDto,
   SuspendTenantDto,
+  TenantBillingInfoDto,
   TenantDetailDto,
   TenantSummaryDto,
   UpdateTenantSettingsDto,
+  UpdateTenantSubscriptionDto,
 } from '@brics/shared';
 import { apiClient } from '@/lib/api-client';
 import { restorePlatformTokens } from '@/lib/support-token-store';
@@ -73,4 +80,30 @@ export function fetchMySupportSessions(tenantId?: string, signal?: AbortSignal) 
 export function fetchTenantSupportSessions(tenantId: string, signal?: AbortSignal) {
   const platformToken = restorePlatformTokens()?.accessToken;
   return apiClient.get<SupportSessionDto[]>(`/platform/support-sessions/for-tenant/${tenantId}`, signal, platformToken);
+}
+
+// ── Platform Billing (S4 / PLT-11) ──────────────────────────────────────────
+
+export function fetchPlatformPlans(signal?: AbortSignal) {
+  return apiClient.get<PlatformPlan[]>('/platform/plans', signal);
+}
+
+export function fetchTenantBilling(tenantId: string, signal?: AbortSignal) {
+  return apiClient.get<TenantBillingInfoDto>(`/platform/tenants/${tenantId}/billing`, signal);
+}
+
+export function updateTenantSubscription(tenantId: string, dto: UpdateTenantSubscriptionDto) {
+  return apiClient.patch<TenantBillingInfoDto>(`/platform/tenants/${tenantId}/subscription`, dto);
+}
+
+export function createPlatformInvoice(tenantId: string, dto: CreatePlatformInvoiceDto) {
+  return apiClient.post<PlatformInvoiceDto>(`/platform/tenants/${tenantId}/invoices`, dto);
+}
+
+export function recordPlatformPayment(invoiceId: string, dto: RecordPlatformPaymentDto) {
+  return apiClient.post<PlatformInvoiceDto>(`/platform/invoices/${invoiceId}/record-payment`, dto);
+}
+
+export function runBillingExpiryCheck() {
+  return apiClient.post<ExpiryCheckResultDto>('/platform/billing/check-expiry');
 }

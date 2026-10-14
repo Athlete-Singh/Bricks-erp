@@ -1,5 +1,5 @@
 import { Column, Entity } from 'typeorm';
-import type { GstScheme, TenantStatus } from '@brics/shared';
+import type { BillingCycle, GstScheme, SubscriptionStatus, TenantStatus } from '@brics/shared';
 import { BaseEntity } from '../../../common/entities/base.entity';
 
 @Entity('companies')
@@ -50,4 +50,14 @@ export class Company extends BaseEntity {
 
   @Column({ name: 'support_access_code', type: 'varchar', length: 32, nullable: true })
   supportAccessCode: string | null;
+
+  /** S4 — billing, plans, subscription status and grace period (PLT-11). */
+  @Column({ name: 'subscription_status', type: 'varchar', length: 32, default: 'trial' })
+  subscriptionStatus: SubscriptionStatus;
+
+  @Column({ name: 'billing_cycle', type: 'varchar', length: 32, default: 'monthly' })
+  billingCycle: BillingCycle;
+
+  @Column({ name: 'grace_period_days', type: 'integer', default: 7 })
+  gracePeriodDays: number;
 }

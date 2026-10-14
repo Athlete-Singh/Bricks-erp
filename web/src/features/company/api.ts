@@ -4,6 +4,7 @@ import type {
   GrantSupportAccessDto,
   GstScheme,
   SiteType,
+  TenantBillingInfoDto,
   UpdateCompanyDto,
 } from '@brics/shared';
 import { apiClient } from '@/lib/api-client';
@@ -93,4 +94,10 @@ export function createFinancialYear(dto: CreateFinancialYearDto) {
 
 export function activateFinancialYear(id: string) {
   return apiClient.patch<FinancialYear>(`/financial-years/${id}/activate`);
+}
+
+// ── tenant billing (S4 / PLT-11) ────────────────────────────────────────────
+
+export function fetchCurrentTenantBilling(signal?: AbortSignal) {
+  return apiClient.get<TenantBillingInfoDto>('/companies/current/billing', signal);
 }

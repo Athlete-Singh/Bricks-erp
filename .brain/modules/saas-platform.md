@@ -228,10 +228,38 @@ leaves a record when the normal path is left.
   - `SupportAccessSettings` on `/settings/company`: Allows tenant owners to toggle `requireSupportApproval`, view active support access windows, grant temporary access windows (1h, 2h, 4h, 8h, 24h) with clear display and copying of the generated 6-digit approval code, or revoke access immediately.
 - 7 new tests across web dialog, tenant detail, and company support access settings (web tests 211 → 218). All backend unit and e2e tests passing.
 
-### S4 — billing (deferred)
+### S4 — billing (shipped 2026-10-14)
 
-Plans, trial expiry, payment status, automatic suspension. Only worth building
-when there are enough tenants that invoicing by hand hurts.
+Plans, trial expiry, payment status, platform invoices, and automatic suspension (PLT-11).
+
+- Migration `1797000000000-PlatformBilling`:
+  - `companies.subscription_status` (`varchar(32) NOT NULL DEFAULT 'trial'`, CHECK IN {'trial', 'active', 'past_due', 'canceled'}, indexed)
+  - `companies.billing_cycle` (`varchar(32) NOT NULL DEFAULT 'monthly'`, CHECK IN {'monthly', 'yearly', 'custom'})
+  - `companies.grace_period_days` (`integer NOT NULL DEFAULT 7`, CHECK >= 0)
+  - Table `platform_invoices`: tracks platform invoices billed to tenants (`invoice_number` unique, `amount`, `tax_amount`, `total_amount` as `NUMERIC(18,2)`, `status` CHECK IN {'pending', 'paid', 'overdue', 'void'}, `plan_name`, `billing_cycle`, `period_start`, `period_end`, `due_date`, `paid_at`, `payment_method`, `payment_ref`, `notes`). Indexed on `company_id`, `invoice_number`, `status`, `due_date`.
+- Canonical plans in `@brics/shared`:
+  - `Starter` (₹2,999/mo, ₹29,990/yr, 1 kiln, 5 users)
+  - `Growth` (₹5,999/mo, ₹59,990/yr, 3 kilns, 15 users)
+  - `Enterprise` (₹11,999/mo, ₹119,990/yr, unlimited kilns/users)
+- Backend:
+  - `PlatformBillingService` (`backend/src/modules/platform/platform-billing.service.ts`):
+    - `getPlans()`
+    - `getTenantBilling(tenantId)`
+    - `updateTenantSubscription(tenantId, actorId, dto)`
+    - `createInvoice(tenantId, actorId, dto)` with exact Decimal arithmetic and 18% GST calculation
+    - `recordPayment(invoiceId, actorId, dto)`: records payment, marks invoice paid, activates subscription and reactivates suspended company
+    - `checkExpiryAndSuspension(actorId)`: automatically evaluates trials beyond grace period and invoices overdue beyond grace period, suspending tenants under full audit log trail
+  - `PlatformBillingController` (`/platform/plans`, `/platform/tenants/:id/billing`, `/platform/tenants/:id/subscription`, `/platform/tenants/:id/invoices`, `/platform/invoices/:id/record-payment`, `/platform/billing/check-expiry`)
+  - `CompanyController`: `GET /companies/current/billing` for tenant owner self-service overview
+  - Test suites: unit (`platform-billing.service.spec.ts`, 9 passed) and e2e (`platform-billing.e2e-spec.ts`, 7 passed; `schema-integrity.e2e-spec.ts`, 254 passed).
+- Web Platform Admin UI (`/admin/tenants/[id]`):
+  - "Billing & Subscription" tab (`TenantBillingTab`)
+  - `EditSubscriptionDialog`: edit plan tier, billing cycle, status, trial end date, grace period days
+  - `CreateInvoiceDialog`: create invoice with 18% GST calculator, start/end dates, due date
+  - `RecordPaymentDialog`: record payment method, UTR / transaction ref, payment date, notes
+  - Invoices table with status badges and payment reconciliation
+- Web Tenant Owner UI (`/settings/company`):
+  - `TenantSubscriptionCard`: displays current plan, status badge, renewal/trial countdown, plan features, invoices list with status badges and payment details.
 
 ## What this does not change
 

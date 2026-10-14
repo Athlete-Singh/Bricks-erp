@@ -2,10 +2,13 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
+  CreatePlatformInvoiceDto,
   CreateSupportSessionDto,
   CreateTenantDto,
+  RecordPlatformPaymentDto,
   SuspendTenantDto,
   UpdateTenantSettingsDto,
+  UpdateTenantSubscriptionDto,
 } from '@brics/shared';
 import { useSession } from '@/features/auth/use-auth';
 import * as api from './api';
@@ -16,6 +19,8 @@ export const platformKeys = {
   supportSessions: ['platform', 'support-sessions'] as const,
   mySupportSessions: (tenantId?: string) => ['platform', 'support-sessions', 'mine', tenantId ?? 'all'] as const,
   tenantSupportSessions: (tenantId: string) => ['platform', 'support-sessions', 'tenant', tenantId] as const,
+  plans: ['platform', 'plans'] as const,
+  tenantBilling: (id: string) => ['platform', 'tenant', id, 'billing'] as const,
 };
 
 export function useTenants() {
@@ -140,4 +145,69 @@ export function useActiveSupportSessionForMe() {
     activeSession,
     session: activeSession,
   };
+}
+
+// ── Platform Billing (S4 / PLT-11) ──────────────────────────────────────────
+
+export function usePlatformPlans() {
+  return useQuery({
+    queryKey: platformKeys.plans,
+    queryFn: ({ signal }) => api.fetchPlatformPlans(signal),
+  });
+}
+
+export function useTenantBilling(id: string | undefined) {
+  return useQuery({
+    queryKey: id ? platformKeys.tenantBilling(id) : ['platform', 'tenant', 'none', 'billing'],
+    queryFn: ({ signal }) => api.fetchTenantBilling(id as string, signal),
+    enabled: Boolean(id),
+  });
+}
+
+export function useUpdateTenantSubscription() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, dto }: { id: string; dto: UpdateTenantSubscriptionDto }) =>
+      api.updateTenantSubscription(id, dto),
+    onSuccess: (_data, { id }) => {
+      void queryClient.invalidateQueries({ queryKey: platformKeys.tenantBilling(id) });
+      void queryClient.invalidateQueries({ queryKey: platformKeys.tenant(id) });
+      void queryClient.invalidateQueries({ queryKey: platformKeys.tenants });
+    },
+  });
+}
+
+export function useCreatePlatformInvoice() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ tenantId, dto }: { tenantId: string; dto: CreatePlatformInvoiceDto }) =>
+      api.createPlatformInvoice(tenantId, dto),
+    onSuccess: (_data, { tenantId }) => {
+      void queryClient.invalidateQueries({ queryKey: platformKeys.tenantBilling(tenantId) });
+      void queryClient.invalidateQueries({ queryKey: platformKeys.tenant(tenantId) });
+    },
+  });
+}
+
+export function useRecordPlatformPayment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { invoiceId: string; tenantId: string; dto: RecordPlatformPaymentDto }) =>
+      api.recordPlatformPayment(vars.invoiceId, vars.dto),
+    onSuccess: (_data, { tenantId }) => {
+      void queryClient.invalidateQueries({ queryKey: platformKeys.tenantBilling(tenantId) });
+      void queryClient.invalidateQueries({ queryKey: platformKeys.tenant(tenantId) });
+      void queryClient.invalidateQueries({ queryKey: platformKeys.tenants });
+    },
+  });
+}
+
+export function useRunBillingExpiryCheck() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.runBillingExpiryCheck(),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: platformKeys.tenants });
+    },
+  });
 }

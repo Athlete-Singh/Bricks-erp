@@ -13,7 +13,7 @@
 | ----------------- | ----- | --- | --- | --- | --- | --- |
 | CP1 MVP           | 101   | 85  | 6   | 1   | 9   | 0   |
 | CP2 Advanced      | 10    | 0   | 0   | 0   | 0   | 10  |
-| S — SaaS platform | 11    | 9   | 1   | 0   | 0   | 1   |
+| S — SaaS platform | 11    | 10  | 1   | 0   | 0   | 0   |
 
 ### Progress per app (CP1)
 
@@ -96,6 +96,7 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 | PUT    | `/companies/:id`                                  | ADM-01               | ✅      | ✅  | —      |
 | POST   | `/companies/current/grant-support-access`         | PLT-10               | ✅      | ✅  | —      |
 | POST   | `/companies/current/revoke-support-access`        | PLT-10               | ✅      | ✅  | —      |
+| GET    | `/companies/current/billing`                      | PLT-11               | ✅      | ✅  | —      |
 | GET    | `/sites`                                          | ADM-03               | ✅      | ✅  | ⬜     |
 | POST   | `/sites`                                          | ADM-03               | ✅      | ✅  | —      |
 | GET    | `/financial-years`                                | ADM-04               | ✅      | ✅  | —      |
@@ -262,6 +263,12 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 | POST   | `/platform/support-sessions/:id/close`            | PLT-07               | ✅      | ✅  | —      |
 | GET    | `/platform/support-sessions`                      | PLT-07               | ✅      | ✅  | —      |
 | GET    | `/platform/support-sessions/for-tenant/:tenantId` | PLT-07               | ✅      | ✅  | —      |
+| GET    | `/platform/plans`                                 | PLT-11               | ✅      | ✅  | —      |
+| GET    | `/platform/tenants/:id/billing`                   | PLT-11               | ✅      | ✅  | —      |
+| PATCH  | `/platform/tenants/:id/subscription`              | PLT-11               | ✅      | ✅  | —      |
+| POST   | `/platform/tenants/:id/invoices`                  | PLT-11               | ✅      | ✅  | —      |
+| POST   | `/platform/invoices/:id/record-payment`           | PLT-11               | ✅      | ✅  | —      |
+| POST   | `/platform/billing/check-expiry`                  | PLT-11               | ✅      | ✅  | —      |
 
 ## Implemented so far (CP1)
 
@@ -548,7 +555,7 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 | PLT-08 | Audit rows marked `platform_support`; the owner sees that support looked, and why                                                        | S   | S2.2  | ✅      | ✅  | —      | ✅    | ✅     |
 | PLT-09 | Tenant detail: users and roles, counts, last activity, support session history                                                           | S   | S3.1  | ✅      | ✅  | —      | ✅    | ✅     |
 | PLT-10 | Per-tenant setting: _require my approval before support access_                                                                          | S   | S3.2  | ✅      | ✅  | —      | ✅    | ✅     |
-| PLT-11 | Billing: plans, trial expiry, payment status, automatic suspension                                                                       | S   | S4    | ⏭️      | ⏭️  | —      | ⏭️    | ⏭️     |
+| PLT-11 | Billing: plans, trial expiry, payment status, automatic suspension                                                                       | S   | S4    | ✅      | ✅  | —      | ✅    | ✅     |
 
 ### Basics from the Functional Spec needed to run the business (CP1, basic depth)
 

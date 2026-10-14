@@ -8,11 +8,17 @@ import { CompanyService } from './company.service';
 import { Company } from './entities/company.entity';
 import { FinancialYear } from './entities/financial-year.entity';
 import { Site } from './entities/site.entity';
+import { PlatformInvoice } from '../platform/entities/platform-invoice.entity';
 import { FinancialYearController } from './financial-year.controller';
 import { SiteController } from './site.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Company, Site, FinancialYear]), AuthModule, AuditModule, AccountingModule],
+  imports: [
+    TypeOrmModule.forFeature([Company, Site, FinancialYear, PlatformInvoice]),
+    AuthModule,
+    AuditModule,
+    AccountingModule,
+  ],
   controllers: [CompanyController, SiteController, FinancialYearController],
   providers: [CompanyService],
   exports: [CompanyService],

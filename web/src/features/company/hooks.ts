@@ -15,6 +15,7 @@ import * as api from './api';
 export const companyKeys = {
   mine: ['company', 'mine'] as const,
   current: ['company', 'current'] as const,
+  currentBilling: ['company', 'current', 'billing'] as const,
   sites: ['company', 'sites'] as const,
   financialYears: ['company', 'financial-years'] as const,
 };
@@ -120,5 +121,14 @@ export function useActivateFinancialYear() {
     // The backend deactivates the others in the same transaction, so refetch
     // the list rather than patching one row in the cache.
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: companyKeys.financialYears }),
+  });
+}
+
+// ── tenant billing (S4 / PLT-11) ────────────────────────────────────────────
+
+export function useCurrentTenantBilling() {
+  return useQuery({
+    queryKey: companyKeys.currentBilling,
+    queryFn: ({ signal }) => api.fetchCurrentTenantBilling(signal),
   });
 }

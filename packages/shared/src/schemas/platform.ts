@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { TENANT_STATUSES } from '../constants/domain';
+import { TENANT_STATUSES, TenantStatus } from '../constants/domain';
 
 export const tenantStatusEnum = z.enum(TENANT_STATUSES);
 
@@ -152,4 +152,134 @@ export interface SupportSessionDto {
   expiresAt: string;
   closedAt: string | null;
   closedBy: SupportSessionCloseKind | null;
+}
+
+// ── Billing & Plans (S4 / PLT-11) ──────────────────────────────────────────
+
+export const SUBSCRIPTION_STATUSES = ['trial', 'active', 'past_due', 'canceled'] as const;
+export type SubscriptionStatus = (typeof SUBSCRIPTION_STATUSES)[number];
+
+export const BILLING_CYCLES = ['monthly', 'yearly', 'custom'] as const;
+export type BillingCycle = (typeof BILLING_CYCLES)[number];
+
+export const INVOICE_STATUSES = ['pending', 'paid', 'overdue', 'void'] as const;
+export type InvoiceStatus = (typeof INVOICE_STATUSES)[number];
+
+export const PAYMENT_METHODS = ['upi', 'bank_transfer', 'card', 'cash', 'manual'] as const;
+export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+
+export interface PlatformPlan {
+  code: string;
+  name: string;
+  description: string;
+  priceMonthly: string;
+  priceYearly: string;
+  maxKilns: number | null;
+  maxUsers: number | null;
+  features: string[];
+}
+
+export const PLATFORM_PLANS: PlatformPlan[] = [
+  {
+    code: 'starter',
+    name: 'Starter',
+    description: 'Essential brick kiln operations for single-site businesses',
+    priceMonthly: '2999.00',
+    priceYearly: '29990.00',
+    maxKilns: 1,
+    maxUsers: 5,
+    features: ['1 Production Kiln', 'Up to 5 Users', 'GST & Accounting', 'Standard Support'],
+  },
+  {
+    code: 'growth',
+    name: 'Growth',
+    description: 'Multi-site operations with advance monitoring and dispatch',
+    priceMonthly: '5999.00',
+    priceYearly: '59990.00',
+    maxKilns: 3,
+    maxUsers: 15,
+    features: ['Up to 3 Kilns', 'Up to 15 Users', 'Leakage & Trip Tracking', 'Priority Support'],
+  },
+  {
+    code: 'enterprise',
+    name: 'Enterprise',
+    description: 'Unlimited scale across all chimneys and depots',
+    priceMonthly: '11999.00',
+    priceYearly: '119990.00',
+    maxKilns: null,
+    maxUsers: null,
+    features: ['Unlimited Kilns', 'Unlimited Users', 'Dedicated Support', 'Custom Audit Export'],
+  },
+];
+
+export interface PlatformInvoiceDto {
+  id: string;
+  companyId: string;
+  invoiceNumber: string;
+  amount: string;
+  taxAmount: string;
+  totalAmount: string;
+  status: InvoiceStatus;
+  planName: string;
+  billingCycle: BillingCycle;
+  periodStart: string;
+  periodEnd: string;
+  dueDate: string;
+  paidAt: string | null;
+  paymentMethod: PaymentMethod | null;
+  paymentRef: string | null;
+  notes: string | null;
+  createdAt: string;
+}
+
+export interface TenantBillingInfoDto {
+  tenantId: string;
+  tenantName: string;
+  planName: string;
+  status: TenantStatus;
+  subscriptionStatus: SubscriptionStatus;
+  billingCycle: BillingCycle;
+  trialEndsAt: string | null;
+  gracePeriodDays: number;
+  currentPlan: PlatformPlan | null;
+  invoices: PlatformInvoiceDto[];
+}
+
+export const updateTenantSubscriptionSchema = z.object({
+  planName: z.string().min(1).max(64).optional(),
+  billingCycle: z.enum(BILLING_CYCLES).optional(),
+  subscriptionStatus: z.enum(SUBSCRIPTION_STATUSES).optional(),
+  trialEndsAt: z.string().min(10).nullable().optional(),
+  gracePeriodDays: z.number().int().min(0).max(90).optional(),
+});
+export type UpdateTenantSubscriptionDto = z.infer<typeof updateTenantSubscriptionSchema>;
+
+export const createPlatformInvoiceSchema = z.object({
+  planName: z.string().min(1).max(64),
+  billingCycle: z.enum(BILLING_CYCLES).default('monthly'),
+  amount: z.string().regex(/^\d+(\.\d{1,2})?$/, 'Must be a valid decimal amount'),
+  taxAmount: z
+    .string()
+    .regex(/^\d+(\.\d{1,2})?$/, 'Must be a valid decimal amount')
+    .default('0.00'),
+  periodStart: z.string().min(10),
+  periodEnd: z.string().min(10),
+  dueDate: z.string().min(10, 'dueDate is required'),
+  notes: z.string().max(500).optional(),
+});
+export type CreatePlatformInvoiceDto = z.infer<typeof createPlatformInvoiceSchema>;
+
+export const recordPlatformPaymentSchema = z.object({
+  paymentMethod: z.enum(PAYMENT_METHODS),
+  paymentRef: z.string().min(1, 'Payment reference or UTR is required').max(64),
+  paidAt: z.string().min(10).optional(),
+  notes: z.string().max(500).optional(),
+});
+export type RecordPlatformPaymentDto = z.infer<typeof recordPlatformPaymentSchema>;
+
+export interface ExpiryCheckResultDto {
+  checkedTenants: number;
+  suspendedTrials: Array<{ tenantId: string; name: string; trialEndsAt: string }>;
+  overdueInvoices: Array<{ invoiceId: string; invoiceNumber: string; tenantId: string }>;
+  suspendedForOverdue: Array<{ tenantId: string; name: string; invoiceNumber: string }>;
 }

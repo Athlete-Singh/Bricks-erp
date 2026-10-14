@@ -76,10 +76,15 @@ describe('Schema integrity (e2e)', () => {
     });
   });
 
-  describe('SaaS platform and support guarantees (S1-S3)', () => {
+  describe('SaaS platform and support guarantees (S1-S4)', () => {
     it.each([
       ['idx_companies_status', 'tenant status index exists'],
       ['idx_companies_support_approval', 'support approval setting index exists'],
+      ['idx_companies_subscription_status', 'subscription status index exists'],
+      ['idx_platform_invoices_company_id', 'platform invoices company index exists'],
+      ['uq_platform_invoices_number', 'platform invoice number is unique'],
+      ['idx_platform_invoices_status', 'platform invoices status index exists'],
+      ['idx_platform_invoices_due_date', 'platform invoices due date index exists'],
       ['uq_support_sessions_open', 'at most one open support session per platform user and tenant'],
       ['idx_audit_logs_support_session', 'audit logs indexed by support session'],
     ])('enforces %s — %s', (name) => {
@@ -509,6 +514,8 @@ describe('Schema integrity (e2e)', () => {
       'expenses',
       // Financial statements (P10.1b)
       'closing_stock_rates',
+      // SaaS Platform Billing (S4)
+      'platform_invoices',
     ];
 
     it.each(TENANT_TABLES)('%s has an index on company_id', async (table) => {

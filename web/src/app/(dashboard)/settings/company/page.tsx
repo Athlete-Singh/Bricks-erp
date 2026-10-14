@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useSession } from '@/features/auth/use-auth';
 import { CompanyForm } from '@/features/company/components/company-form';
 import { SupportAccessSettings } from '@/features/company/components/support-access-settings';
+import { TenantSubscriptionCard } from '@/features/company/components/tenant-subscription-card';
 import { useCurrentCompany } from '@/features/company/hooks';
 import { messageOf } from '@/features/auth/use-auth';
 
@@ -42,6 +43,7 @@ export default function CompanySettingsPage() {
       {!canEdit && <Alert variant="info">You can view these details but not change them.</Alert>}
       <CompanyForm company={company} canEdit={canEdit} />
       <SupportAccessSettings company={company} canEdit={canEdit} />
+      <TenantSubscriptionCard />
     </div>
   );
 }

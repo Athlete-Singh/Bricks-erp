@@ -1,12 +1,20 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
-import type { CreateCompanyDto, CreateFinancialYearDto, CreateSiteDto, UpdateCompanyDto } from '@brics/shared';
+import {
+  PLATFORM_PLANS,
+  type CreateCompanyDto,
+  type CreateFinancialYearDto,
+  type CreateSiteDto,
+  type TenantBillingInfoDto,
+  type UpdateCompanyDto,
+} from '@brics/shared';
 import { AuditService } from '../audit/audit.service';
 import { ChartOfAccountsService } from '../../accounting/chart-of-accounts.service';
 import { MembershipService } from '../auth/membership.service';
 import { applySince, deltaWatermark } from '../../common/sync/delta-pull';
 import { RolesService } from '../auth/roles.service';
+import { PlatformInvoice } from '../platform/entities/platform-invoice.entity';
 import { Company } from './entities/company.entity';
 import { FinancialYear } from './entities/financial-year.entity';
 import { Site } from './entities/site.entity';
@@ -22,6 +30,7 @@ export class CompanyService {
     @InjectRepository(Company) private companyRepo: Repository<Company>,
     @InjectRepository(Site) private siteRepo: Repository<Site>,
     @InjectRepository(FinancialYear) private fyRepo: Repository<FinancialYear>,
+    @InjectRepository(PlatformInvoice) private invoiceRepo: Repository<PlatformInvoice>,
     private membership: MembershipService,
     private roles: RolesService,
     private audit: AuditService,
@@ -351,5 +360,48 @@ export class CompanyService {
 
     fy.isActive = true;
     return fy;
+  }
+
+  /**
+   * S4 — Tenant self-service billing overview (PLT-11).
+   */
+  async getCurrentBilling(companyId: string): Promise<TenantBillingInfoDto> {
+    const company = await this.requireCompany(companyId);
+    const invoices = await this.invoiceRepo.find({
+      where: { companyId },
+      order: { createdAt: 'DESC' },
+    });
+    const currentPlan = PLATFORM_PLANS.find((p) => p.code === company.planName) || null;
+
+    return {
+      tenantId: company.id,
+      tenantName: company.name,
+      planName: company.planName || 'starter',
+      status: company.status,
+      subscriptionStatus: company.subscriptionStatus || 'trial',
+      billingCycle: company.billingCycle || 'monthly',
+      trialEndsAt: company.trialEndsAt,
+      gracePeriodDays: company.gracePeriodDays ?? 7,
+      currentPlan,
+      invoices: invoices.map((inv) => ({
+        id: inv.id,
+        companyId: inv.companyId,
+        invoiceNumber: inv.invoiceNumber,
+        amount: inv.amount,
+        taxAmount: inv.taxAmount,
+        totalAmount: inv.totalAmount,
+        status: inv.status,
+        planName: inv.planName,
+        billingCycle: inv.billingCycle,
+        periodStart: inv.periodStart.toISOString(),
+        periodEnd: inv.periodEnd.toISOString(),
+        dueDate: inv.dueDate,
+        paidAt: inv.paidAt ? inv.paidAt.toISOString() : null,
+        paymentMethod: inv.paymentMethod,
+        paymentRef: inv.paymentRef,
+        notes: inv.notes,
+        createdAt: inv.createdAt.toISOString(),
+      })),
+    };
   }
 }

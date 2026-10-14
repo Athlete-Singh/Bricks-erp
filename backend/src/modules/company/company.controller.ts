@@ -41,6 +41,13 @@ export class CompanyController {
     return this.companyService.findCompanyForUser(userId, companyId, isSuperAdmin);
   }
 
+  @Get('current/billing')
+  @RequirePermissions(PERMISSIONS.COMPANY_VIEW)
+  @ApiOperation({ summary: 'Get current tenant billing and subscription invoices' })
+  async getCurrentBilling(@CurrentCompany() companyId: string) {
+    return this.companyService.getCurrentBilling(companyId);
+  }
+
   @Get(':id')
   @RequirePermissions(PERMISSIONS.COMPANY_VIEW)
   @ApiOperation({ summary: 'Get a company the user belongs to' })

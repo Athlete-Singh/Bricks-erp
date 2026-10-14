@@ -66,6 +66,7 @@ Add the row when you **plan** an endpoint (BE ⬜), and update it the moment any
 | PUT | /companies/:id | Update a company the caller belongs to | company.manage | ADM-01 | P1 | ✅ | ✅ | — |
 | POST | /companies/current/grant-support-access | PLT-10 — grant temporary support access window + generate 6-digit access code | company.manage | PLT-10 | S3.2 | ✅ | ✅ | — |
 | POST | /companies/current/revoke-support-access | PLT-10 — revoke temporary support access immediately | company.manage | PLT-10 | S3.2 | ✅ | ✅ | — |
+| GET | /companies/current/billing | PLT-11 — tenant self-service subscription plan, limits, and platform invoices | company.view | PLT-11 | S4 | ✅ | ✅ | — |
 | GET | /sites | Kilns/sites the caller can access (kiln switcher) | bearer | ADM-03 | P1 | ✅ | ✅ | ⬜ |
 | POST | /sites | Create a kiln/site in the JWT tenant | company.manage | ADM-03 | P1 | ✅ | ✅ | — |
 | GET | /financial-years | Financial years of the JWT tenant | company.view | ADM-04 | P1 | ✅ | ✅ | — |
@@ -232,6 +233,12 @@ Add the row when you **plan** an endpoint (BE ⬜), and update it the moment any
 | POST | /platform/support-sessions/:id/close | PLT-07 — close early (opener only) | platform.support.request | PLT-07 | S2.1 | ✅ | ✅ | — |
 | GET | /platform/support-sessions | PLT-07 — the signed-in admin's own session history (filter `?tenantId=`) | platform.support.request | PLT-07 | S2.1 | ✅ | ✅ | — |
 | GET | /platform/support-sessions/for-tenant/:tenantId | PLT-07 — session history for one tenant | platform.tenants.view | PLT-07 | S2.1 | ✅ | ✅ | — |
+| GET | /platform/plans | PLT-11 — list canonical platform plans and limits | platform.tenants.view | PLT-11 | S4 | ✅ | ✅ | — |
+| GET | /platform/tenants/:id/billing | PLT-11 — get tenant subscription profile and platform invoices | platform.tenants.view | PLT-11 | S4 | ✅ | ✅ | — |
+| PATCH | /platform/tenants/:id/subscription | PLT-11 — update tenant subscription plan, cycle, trial, grace period or status | platform.tenants.manage | PLT-11 | S4 | ✅ | ✅ | — |
+| POST | /platform/tenants/:id/invoices | PLT-11 — create platform subscription invoice for a tenant | platform.tenants.manage | PLT-11 | S4 | ✅ | ✅ | — |
+| POST | /platform/invoices/:id/record-payment | PLT-11 — record payment for platform invoice and activate tenant | platform.tenants.manage | PLT-11 | S4 | ✅ | ✅ | — |
+| POST | /platform/billing/check-expiry | PLT-11 — evaluate trial expiry and overdue invoices, applying auto-suspension | platform.tenants.manage | PLT-11 | S4 | ✅ | ✅ | — |
 ## Notes
 - **Tenancy:** no endpoint accepts a `company_id` from the client. Anything below a company reads it from the JWT; `/companies/:id` asserts membership. Proved by `backend/test/tenancy.e2e-spec.ts`.
 - **Envelope:** handlers return payloads raw; `ResponseEnvelopeInterceptor` adds `{ data }`, or `{ data, meta }` when a service returns `Paginated`.
