@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import { Pause, Play, Plus } from 'lucide-react';
+import { HeadphonesIcon, Pause, Play, Plus } from 'lucide-react';
 import { PERMISSIONS, type TenantSummaryDto } from '@brics/shared';
 import { DataTable, type Column } from '@/components/shared/data-table';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { useSession } from '@/features/auth/use-auth';
 import { OnboardTenantDialog } from '@/features/platform/components/onboard-tenant-dialog';
+import { OpenSupportSessionDialog } from '@/features/platform/components/open-support-session-dialog';
 import { SuspendTenantDialog } from '@/features/platform/components/suspend-tenant-dialog';
 import { TenantStatusBadge } from '@/features/platform/components/tenant-status-badge';
 import { useReactivateTenant, useTenants } from '@/features/platform/hooks';
@@ -23,8 +24,10 @@ export default function AdminTenantsPage() {
   const [query, setQuery] = useState('');
   const [onboardOpen, setOnboardOpen] = useState(false);
   const [toSuspend, setToSuspend] = useState<TenantSummaryDto | null>(null);
+  const [toSupport, setToSupport] = useState<TenantSummaryDto | null>(null);
 
   const canManage = can(PERMISSIONS.PLATFORM_TENANTS_MANAGE);
+  const canSupport = can(PERMISSIONS.PLATFORM_SUPPORT_REQUEST);
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -61,26 +64,43 @@ export default function AdminTenantsPage() {
       key: 'actions',
       header: '',
       className: 'text-right',
-      render: (t) =>
-        canManage ? (
-          t.status === 'suspended' ? (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => reactivate.mutate(t.id)}
-              disabled={reactivate.isPending}
-              aria-label={`Reactivate ${t.name}`}
-            >
-              <Play className="h-3 w-3" aria-hidden />
-              Reactivate
-            </Button>
-          ) : (
-            <Button size="sm" variant="outline" onClick={() => setToSuspend(t)} aria-label={`Suspend ${t.name}`}>
-              <Pause className="h-3 w-3" aria-hidden />
-              Suspend
-            </Button>
-          )
-        ) : null,
+      render: (t) => {
+        if (!canManage && !canSupport) return null;
+        return (
+          <div className="flex items-center justify-end gap-2">
+            {canSupport && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setToSupport(t)}
+                disabled={t.status === 'suspended'}
+                aria-label={`Open support for ${t.name}`}
+              >
+                <HeadphonesIcon className="h-3 w-3" aria-hidden />
+                Open support
+              </Button>
+            )}
+            {canManage &&
+              (t.status === 'suspended' ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => reactivate.mutate(t.id)}
+                  disabled={reactivate.isPending}
+                  aria-label={`Reactivate ${t.name}`}
+                >
+                  <Play className="h-3 w-3" aria-hidden />
+                  Reactivate
+                </Button>
+              ) : (
+                <Button size="sm" variant="outline" onClick={() => setToSuspend(t)} aria-label={`Suspend ${t.name}`}>
+                  <Pause className="h-3 w-3" aria-hidden />
+                  Suspend
+                </Button>
+              ))}
+          </div>
+        );
+      },
     },
   ];
 
@@ -125,6 +145,7 @@ export default function AdminTenantsPage() {
 
       <OnboardTenantDialog open={onboardOpen} onClose={() => setOnboardOpen(false)} />
       <SuspendTenantDialog tenant={toSuspend} open={toSuspend !== null} onClose={() => setToSuspend(null)} />
+      <OpenSupportSessionDialog tenant={toSupport} open={toSupport !== null} onClose={() => setToSupport(null)} />
     </div>
   );
 }

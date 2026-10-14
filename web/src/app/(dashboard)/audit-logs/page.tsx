@@ -32,6 +32,7 @@ const EMPTY_FILTERS: AuditFilters = { page: 1, limit: 25 };
 export default function AuditLogsPage() {
   const { can } = useSession();
   const [filters, setFilters] = useState<AuditFilters>(EMPTY_FILTERS);
+  const [onlySupport, setOnlySupport] = useState(false);
   const { data, isLoading, isFetching, isError, error } = useAuditLogs(filters);
   const { data: users } = useUsers();
 
@@ -59,7 +60,37 @@ export default function AuditLogsPage() {
       header: 'When',
       render: (row) => new Date(row.createdAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' }),
     },
-    { key: 'who', header: 'Who', render: (row) => nameOf(row.userId) },
+    {
+      key: 'who',
+      header: 'Who',
+      render: (row) => {
+        if (row.actorKind === 'platform_support') {
+          const reason =
+            row.afterState && typeof row.afterState.reason === 'string' && row.afterState.reason.trim()
+              ? row.afterState.reason.trim()
+              : null;
+          const title = row.supportSessionId
+            ? reason
+              ? `Support session: ${row.supportSessionId} (${reason})`
+              : `Support session: ${row.supportSessionId}`
+            : reason
+              ? `Support: ${reason}`
+              : 'Support';
+
+          return (
+            <Badge variant="warning" title={title}>
+              Support
+            </Badge>
+          );
+        }
+
+        if (row.actorKind === 'system') {
+          return <Badge variant="muted">System</Badge>;
+        }
+
+        return nameOf(row.userId);
+      },
+    },
     {
       key: 'action',
       header: 'Action',
@@ -80,9 +111,14 @@ export default function AuditLogsPage() {
     },
   ];
 
-  const hasFilters = Object.entries(filters).some(
-    ([key, value]) => !['page', 'limit'].includes(key) && value !== undefined && value !== '',
-  );
+  const hasFilters =
+    onlySupport ||
+    Object.entries(filters).some(
+      ([key, value]) => !['page', 'limit'].includes(key) && value !== undefined && value !== '',
+    );
+
+  const rows = data?.items ?? [];
+  const displayedRows = onlySupport ? rows.filter((row) => row.actorKind === 'platform_support') : rows;
 
   return (
     <div className="flex flex-col gap-5">
@@ -141,20 +177,37 @@ export default function AuditLogsPage() {
         />
       </div>
 
-      {hasFilters && (
-        <div>
-          <Button size="sm" variant="ghost" onClick={() => setFilters(EMPTY_FILTERS)}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
+          <input
+            type="checkbox"
+            checked={onlySupport}
+            onChange={(e) => setOnlySupport(e.target.checked)}
+            className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+          />
+          Show only support entries
+        </label>
+
+        {hasFilters && (
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              setFilters(EMPTY_FILTERS);
+              setOnlySupport(false);
+            }}
+          >
             Clear filters
           </Button>
-        </div>
-      )}
+        )}
+      </div>
 
       {isError && <Alert variant="error">{messageOf(error, 'Could not load the audit log')}</Alert>}
 
       <DataTable
         caption="Audit entries"
         columns={columns}
-        rows={data?.items ?? []}
+        rows={displayedRows}
         rowKey={(row) => row.id}
         isLoading={isLoading}
         empty={

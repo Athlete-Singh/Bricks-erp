@@ -3,14 +3,16 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, Pause, Play } from 'lucide-react';
+import { ArrowLeft, HeadphonesIcon, Pause, Play } from 'lucide-react';
 import { PERMISSIONS } from '@brics/shared';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
 import { PageSpinner } from '@/components/ui/spinner';
 import { useSession, messageOf } from '@/features/auth/use-auth';
+import { OpenSupportSessionDialog } from '@/features/platform/components/open-support-session-dialog';
 import { SuspendTenantDialog } from '@/features/platform/components/suspend-tenant-dialog';
 import { TenantStatusBadge } from '@/features/platform/components/tenant-status-badge';
+import { TenantSupportHistory } from '@/features/platform/components/tenant-support-history';
 import { useReactivateTenant, useTenant } from '@/features/platform/hooks';
 
 /**
@@ -25,8 +27,10 @@ export default function AdminTenantDetailPage() {
   const { data: tenant, isLoading, error } = useTenant(id);
   const reactivate = useReactivateTenant();
   const [suspendOpen, setSuspendOpen] = useState(false);
+  const [openSupport, setOpenSupport] = useState(false);
 
   const canManage = can(PERMISSIONS.PLATFORM_TENANTS_MANAGE);
+  const canSupport = can(PERMISSIONS.PLATFORM_SUPPORT_REQUEST);
 
   if (isLoading) return <PageSpinner label="Loading tenant…" />;
   if (error) return <Alert variant="error">{messageOf(error, 'Could not load the tenant')}</Alert>;
@@ -58,23 +62,37 @@ export default function AdminTenantDetailPage() {
           </div>
           <p className="text-sm text-muted-foreground">Platform view — counts and dates only.</p>
         </div>
-        {canManage &&
-          (tenant.status === 'suspended' ? (
+        <div className="flex items-center gap-2">
+          {canSupport && (
             <Button
               size="sm"
               variant="outline"
-              onClick={() => reactivate.mutate(tenant.id)}
-              disabled={reactivate.isPending}
+              onClick={() => setOpenSupport(true)}
+              disabled={tenant.status === 'suspended'}
+              aria-label={`Open support session for ${tenant.name}`}
             >
-              <Play className="h-3 w-3" aria-hidden />
-              Reactivate
+              <HeadphonesIcon className="h-3 w-3" aria-hidden />
+              Open support session
             </Button>
-          ) : (
-            <Button size="sm" variant="outline" onClick={() => setSuspendOpen(true)}>
-              <Pause className="h-3 w-3" aria-hidden />
-              Suspend
-            </Button>
-          ))}
+          )}
+          {canManage &&
+            (tenant.status === 'suspended' ? (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => reactivate.mutate(tenant.id)}
+                disabled={reactivate.isPending}
+              >
+                <Play className="h-3 w-3" aria-hidden />
+                Reactivate
+              </Button>
+            ) : (
+              <Button size="sm" variant="outline" onClick={() => setSuspendOpen(true)}>
+                <Pause className="h-3 w-3" aria-hidden />
+                Suspend
+              </Button>
+            ))}
+        </div>
       </div>
 
       <dl className="grid gap-x-6 gap-y-3 rounded-lg border border-border bg-surface p-4 sm:grid-cols-2">
@@ -86,11 +104,10 @@ export default function AdminTenantDetailPage() {
         ))}
       </dl>
 
-      <p className="text-xs text-muted-foreground">
-        Users, kiln counts and support session history will appear here after S2 and S3 ship.
-      </p>
+      <TenantSupportHistory tenantId={tenant.id} />
 
       <SuspendTenantDialog tenant={tenant} open={suspendOpen} onClose={() => setSuspendOpen(false)} />
+      <OpenSupportSessionDialog tenant={tenant} open={openSupport} onClose={() => setOpenSupport(false)} />
     </div>
   );
 }

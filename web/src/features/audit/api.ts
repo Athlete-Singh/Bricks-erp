@@ -1,4 +1,4 @@
-import type { AuditAction, AuditLogQueryDto } from '@brics/shared';
+import type { AuditAction, AuditActorKind, AuditLogQueryDto } from '@brics/shared';
 import { apiClient, type PageMeta } from '@/lib/api-client';
 
 export interface AuditEntry {
@@ -12,6 +12,8 @@ export interface AuditEntry {
   afterState: Record<string, unknown> | null;
   ipAddress: string | null;
   userAgent: string | null;
+  actorKind: AuditActorKind;
+  supportSessionId: string | null;
   createdAt: string;
 }
 

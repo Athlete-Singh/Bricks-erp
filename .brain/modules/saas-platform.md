@@ -179,15 +179,14 @@ leaves a record when the normal path is left.
   it writes its own CREATE row before the context takes effect, and by the
   interceptor's expiry close for the `system` kind).
 
-#### S2.2 (web) — pending
+#### S2.2 (web) — shipped 2026-10-14
 
-- Open-session dialog in the tenant list and the detail page.
-- The admin's current open sessions on the admin header, with a one-click
-  switch into the tenant and a visible countdown.
-- Owner's audit screen: a `platform_support` badge on the rows that carry
-  it, with the reason shown on hover and a filter for support's entries.
-- Local-storage separation of the platform-admin tokens from the switched
-  support tokens, so the admin can hop between the two.
+- `OpenSupportSessionDialog` (PLT-07) on the tenant list (`/admin/tenants`) and detail page (`/admin/tenants/[id]`), gated on `platform.support.request`. Mandates a reason (min 3, max 500 chars).
+- `support-token-store.ts` backs up the operator's platform tokens (`access` and `refresh`) into `sessionStorage` (`backupPlatformTokens`), and adopts the scoped support JWT (`roleCode='platform_support'`, `companyId=tenantId`). `restorePlatformSession` decodes the token claims and updates `useAuthStore`'s user state synchronously so the user is not bounced by `AdminShell`.
+- `SupportSessionBanner` mounted globally in `DashboardLayout`: renders only when `roleCode === 'platform_support'`. Shows tenant name, truncated reason, and a live 1-second countdown to `session.expiresAt` (clamped at `00:00:00` / Expired). Provides "Close session" (calls `closeSupportSession`, restores tokens, pushes `/admin/tenants`) and "Return to admin" (restores platform tokens without closing, pushes `/admin/tenants`).
+- `TenantSupportHistory` (PLT-07) embedded on `/admin/tenants/[id]`, displaying opened time, closed time (with green "Active" badge for unclosed sessions), platform opener name, reason (with hover tooltip for full text), and closed-by. Gated on `platform.tenants.view`.
+- Owner's audit log (`/audit-logs`, PLT-08): `AuditEntry` widened with `actorKind` and `supportSessionId`. Displays a yellow `Support` badge on rows written by support, with a tooltip showing the session ID and stated reason. Added client-side filter checkbox: "Show only support entries".
+- 32 new web unit/component tests across banner, token store, dialog, history, and audit log (web tests 171 → 203).
 
 ### S3 — tenant detail and history
 

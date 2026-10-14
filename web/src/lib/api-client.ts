@@ -63,6 +63,7 @@ interface RequestOptions {
   signal?: AbortSignal;
   /** Skip the 401 → refresh → retry dance (used by the refresh call itself). */
   skipAuthRetry?: boolean;
+  token?: string | null;
 }
 
 // ── refresh, single-flight ───────────────────────────────────────────────────
@@ -108,7 +109,7 @@ async function requestEnvelope<T, M = PageMeta>(path: string, options: RequestOp
 
   const headers: Record<string, string> = {};
   if (body !== undefined) headers['Content-Type'] = 'application/json';
-  const token = getAccessToken();
+  const token = options.token !== undefined ? options.token : getAccessToken();
   if (token) headers.Authorization = `Bearer ${token}`;
 
   const res = await fetch(`${API_BASE}${path}`, {
@@ -146,7 +147,7 @@ async function toApiError(res: Response): Promise<ApiError> {
  * the endpoint also returns `meta`.
  */
 export const apiClient = {
-  get: <T>(path: string, signal?: AbortSignal) => rawRequest<T>(path, { signal }),
+  get: <T>(path: string, signal?: AbortSignal, token?: string | null) => rawRequest<T>(path, { signal, token }),
   getPaged: async <T>(path: string, signal?: AbortSignal): Promise<{ items: T[]; meta: PageMeta }> => {
     const envelope = await requestEnvelope<T[]>(path, { signal });
     return {
@@ -162,7 +163,8 @@ export const apiClient = {
     const envelope = await requestEnvelope<T[], M>(path, { signal });
     return { items: envelope.data, meta: envelope.meta as M };
   },
-  post: <T>(path: string, body?: unknown) => rawRequest<T>(path, { method: 'POST', body }),
+  post: <T>(path: string, body?: unknown, token?: string | null) =>
+    rawRequest<T>(path, { method: 'POST', body, token }),
   put: <T>(path: string, body?: unknown) => rawRequest<T>(path, { method: 'PUT', body }),
   patch: <T>(path: string, body?: unknown) => rawRequest<T>(path, { method: 'PATCH', body }),
   delete: <T>(path: string) => rawRequest<T>(path, { method: 'DELETE' }),
