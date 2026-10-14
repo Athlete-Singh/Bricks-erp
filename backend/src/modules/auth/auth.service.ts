@@ -5,7 +5,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
 import { randomUUID } from 'node:crypto';
 import { In, LessThan, Repository } from 'typeorm';
-import type { AuthResponseDto, ChangePasswordDto, LoginDto, RefreshTokenDto, SwitchCompanyDto } from '@brics/shared';
+import {
+  SUSPENDED_TENANT_SIGN_IN_MESSAGE,
+  type AuthResponseDto,
+  type ChangePasswordDto,
+  type LoginDto,
+  type RefreshTokenDto,
+  type SwitchCompanyDto,
+} from '@brics/shared';
 import type { Env } from '../../config/env';
 import { parseDurationToMs } from '../../common/time/duration';
 import { Company } from '../company/entities/company.entity';
@@ -167,6 +174,11 @@ export class AuthService {
     const company = await this.companyRepository.findOneBy({ id: companyId });
     if (!company || !company.isActive) {
       throw new BadRequestException('Assigned company is inactive or not found');
+    }
+    // PLT-06: a suspended tenant's users are refused with a message naming who
+    // to contact, not a generic failure. The same string is used by mobile.
+    if (company.status === 'suspended') {
+      throw new UnauthorizedException(SUSPENDED_TENANT_SIGN_IN_MESSAGE);
     }
 
     const { roleCode, permissions } = await this.resolveAccess(user, companyId);

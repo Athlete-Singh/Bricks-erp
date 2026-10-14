@@ -29,9 +29,9 @@ describe('permission catalogue', () => {
     expect(orphans).toEqual([]);
   });
 
-  it('uses the `<module>.<action>` shape for every code', () => {
+  it('uses the `<module>.<action>` or `<module>.<subject>.<action>` shape for every code', () => {
     for (const code of Object.values(PERMISSIONS)) {
-      expect(code).toMatch(/^[a-z]+\.[a-z_]+$/);
+      expect(code).toMatch(/^[a-z]+(\.[a-z_]+){1,2}$/);
     }
   });
 
@@ -54,7 +54,7 @@ describe('permission catalogue', () => {
 describe('role definitions', () => {
   const catalogueCodes = new Set<string>(PERMISSION_CATALOGUE.map((p) => p.code));
 
-  it('covers all 9 spec roles', () => {
+  it('covers all seeded roles (9 kiln roles + platform_admin)', () => {
     expect(ALL_ROLES_DEFINED).toBe(true);
     expect(ROLE_DEFINITIONS).toHaveLength(ROLES.length);
   });
@@ -72,13 +72,27 @@ describe('role definitions', () => {
     }
   });
 
-  it('gives the Owner and Super Admin every permission', () => {
-    const all = Object.values(PERMISSIONS) as PermissionCode[];
+  it('gives the Owner and Super Admin every kiln permission, and no platform permission (S1.1)', () => {
+    const kiln = (Object.values(PERMISSIONS) as PermissionCode[]).filter((c) => !c.startsWith('platform.'));
     for (const code of ['owner', 'super_admin'] as const) {
       const role = ROLE_DEFINITIONS.find((r) => r.code === code);
       expect(role).toBeDefined();
-      expect([...(role?.permissions ?? [])].sort()).toEqual([...all].sort());
+      expect([...(role?.permissions ?? [])].sort()).toEqual([...kiln].sort());
     }
+  });
+
+  it('gives the Platform Admin only platform permissions — no business access (S1.1)', () => {
+    const admin = ROLE_DEFINITIONS.find((r) => r.code === 'platform_admin');
+    expect(admin).toBeDefined();
+    expect([...(admin?.permissions ?? [])].sort()).toEqual(
+      [
+        PERMISSIONS.PLATFORM_TENANTS_VIEW,
+        PERMISSIONS.PLATFORM_TENANTS_MANAGE,
+        PERMISSIONS.PLATFORM_SUPPORT_REQUEST,
+      ].sort(),
+    );
+    const businessCodes = admin?.permissions.filter((c) => !c.startsWith('platform.')) ?? [];
+    expect(businessCodes).toEqual([]);
   });
 
   it('gives the Accountant authority over taxes — ADR-018 names the CA as the one who sets GST and HSN', () => {

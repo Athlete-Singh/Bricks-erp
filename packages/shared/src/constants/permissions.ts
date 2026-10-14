@@ -32,6 +32,9 @@ export const PERMISSIONS = {
   DISPATCH_VIEW: 'dispatch.view',
   DISPATCH_MANAGE: 'dispatch.manage',
   DISPATCH_ACKNOWLEDGE: 'dispatch.acknowledge',
+  PLATFORM_TENANTS_VIEW: 'platform.tenants.view',
+  PLATFORM_TENANTS_MANAGE: 'platform.tenants.manage',
+  PLATFORM_SUPPORT_REQUEST: 'platform.support.request',
 } as const;
 
 export type PermissionCode = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -200,6 +203,29 @@ export const PERMISSION_CATALOGUE: readonly PermissionDefinition[] = [
     name: 'Acknowledge delivery',
     module: 'dispatch',
     description: 'Record who received the load and when — held by drivers, who may not open the gate',
+  },
+  // ── Platform (S track) ─────────────────────────────────────────────────────
+  // A platform admin's permissions. Deliberately not business permissions — the
+  // S track separates the vendor who runs the service from the kiln who buys
+  // it. Business access only comes via a support session (S2), one tenant at a
+  // time, with the audit log marking the entries as support's.
+  {
+    code: PERMISSIONS.PLATFORM_TENANTS_VIEW,
+    name: 'View tenants',
+    module: 'platform',
+    description: "See the tenant list and each tenant's metadata (counts and dates only, never money)",
+  },
+  {
+    code: PERMISSIONS.PLATFORM_TENANTS_MANAGE,
+    name: 'Manage tenants',
+    module: 'platform',
+    description: 'Onboard a tenant (company + first FY + owner), suspend it, reactivate it',
+  },
+  {
+    code: PERMISSIONS.PLATFORM_SUPPORT_REQUEST,
+    name: 'Open a support session',
+    module: 'platform',
+    description: 'Open a time-boxed support session against one tenant (S2)',
   },
 ] as const;
 
@@ -418,6 +444,16 @@ export const ROLE_DEFINITIONS: readonly RoleDefinition[] = [
     // The acknowledgement is recorded by whoever holds `dispatch.acknowledge`
     // — supervisor, store keeper or manager — not by the driver signing in.
     permissions: [],
+  },
+  {
+    code: 'platform_admin',
+    name: 'Platform Admin',
+    description: 'Runs the SaaS surface. No business permissions — those come only inside a support session (S2).',
+    permissions: [
+      PERMISSIONS.PLATFORM_TENANTS_VIEW,
+      PERMISSIONS.PLATFORM_TENANTS_MANAGE,
+      PERMISSIONS.PLATFORM_SUPPORT_REQUEST,
+    ],
   },
 ] as const;
 

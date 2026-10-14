@@ -88,22 +88,40 @@ leaves a record when the normal path is left.
 
 ### S1 — tenants and the admin panel
 
-- `companies` gains `status` (`trial` | `active` | `suspended`), `plan_name`,
-  `trial_ends_at`, `last_active_at`.
-- Platform permissions and a `platform_admin` role; the `isSuperAdmin` bypass
-  in `RolesGuard` replaced with a platform-permission check.
+#### S1.1 (backend) — shipped 2026-10-14
+
+- Migration `1794000000000-SaasPlatformTenantFields` adds `companies.status`
+  (`trial` | `active` | `suspended`), `plan_name`, `trial_ends_at`,
+  `last_active_at`. Existing rows backfilled to `active`.
+- Permissions `platform.tenants.view`, `platform.tenants.manage`,
+  `platform.support.request`. A tenth role `platform_admin` holds those three
+  and no business permissions at all.
+- `RolesGuard`'s `if (user.isSuperAdmin) return true` is **gone**. Every
+  request is decided by permissions, so a platform operator cannot read a
+  kiln's books by accident.
+- Platform module (`backend/src/modules/platform/`):
+  - `POST /platform/tenants` — one transaction: company → chart of accounts →
+    first financial year → owner user → membership. Both the company and the
+    owner-user creation audit rows are written in the same transaction, so a
+    half-created tenant can never appear in the list.
+  - `POST /platform/tenants/:id/suspend` and `.../reactivate` — status flip
+    with an audit row (idempotent: a no-op writes nothing).
+  - `GET /platform/tenants` and `.../:id` — metadata only.
+- `AuthService.buildSession` refuses a suspended tenant's sign-in with the
+  `SUSPENDED_TENANT_SIGN_IN_MESSAGE` constant from `@brics/shared`; web and
+  mobile both show the same words.
+
+#### S1.2 (web) — pending
+
 - `/admin` — its own surface, its own navigation, no business menu. The
   language is tenants and plans, not sales and stock, because the fastest way
   to make an admin behave like an owner is to show them an owner's screen.
 - Tenant list: metadata only, searchable, newest first.
 - **Onboarding wizard:** company name, GST state, owner's name, mobile, email,
-  password → creates the company (chart of accounts is already seeded by
-  `CompanyService.create`), **its first financial year**, the owner user and
-  the membership, in one transaction. The financial year matters: without an
-  active one, opening stock has no date to default to and the go-live import
-  stops on its first row.
-- Suspend and reactivate. A suspended tenant's users are refused at sign-in
-  with a message that says who to contact — not a generic failure.
+  password → calls `POST /platform/tenants`.
+- Suspend and reactivate buttons on the tenant detail page.
+- The owner's user-admin screen must filter `platform_admin` out of the role
+  picker; `/users/roles` returns it now that the role exists.
 
 ### S2 — support sessions
 

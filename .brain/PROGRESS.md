@@ -248,9 +248,9 @@ correctness" — a step is ✅ only when a test proves a *second tenant is refus
 - **What it is:** the vendor's own surface — creating tenants, suspending them, and supporting them without reading a client's books by default. Not part of CP1; a kiln's own experience does not change.
 - **Read first:** `.brain/modules/saas-platform.md` (design and reasoning) and **ADR-052** in DECISIONS.md. The feature rows are the **PLT-** block in FEATURES.md.
 - **Decided with the owner (2026-10-13):** one instance for all tenants · the admin creates a company and its owner, nothing else without a session · support access is **announced afterwards and expires**, not approved beforehand · **no billing yet**.
-- **Status:** ⬜ not started. **Next step: S1.1.**
-- **The line that must go in S1.1:** `RolesGuard`'s `if (user.isSuperAdmin) return true`. While it stands, a platform admin is an owner with longer arms and every other control is decoration.
-- **The thing easily missed in S1.2:** creating a company must also create its **first financial year**. `CompanyService.create` seeds the chart of accounts but not an FY, and without an active one the go-live import stops on its first row.
+- **Status:** S1.1 ✅ (2026-10-14). **Next step: S1.2** — the `/admin` web surface, tenant list, onboarding wizard, suspend/reactivate screens.
+- **S1.1 delivered:** `companies.status/plan_name/trial_ends_at/last_active_at` columns (migration `1794000000000`), `platform.tenants.view|manage` and `platform.support.request` permissions, a `platform_admin` role with **no** business permissions, `RolesGuard`'s `isSuperAdmin` bypass removed, `POST /platform/tenants` (one-tx onboarding: company + chart + first FY + owner + membership), `POST /platform/tenants/:id/suspend|reactivate`, `GET /platform/tenants[:id]` metadata, and `AuthService` refusing a suspended tenant's sign-in with the `SUSPENDED_TENANT_SIGN_IN_MESSAGE` string (shared, so web and mobile match).
+- **For S1.2 — do not forget:** the `/users/roles` endpoint now returns `platform_admin` too; the Owner's role picker in the web admin should filter it out so kiln admins never see a role they shouldn't be able to assign.
 - **Where the metadata line sits:** counts and dates are the platform's business; money and the client's own parties are not. The test for a new field — would the kiln mind a competitor seeing it?
 
 ## ▶ Resume here: M track — the Flutter app (needs the Flutter SDK)
@@ -322,7 +322,7 @@ The P track is never blocked by the M track.
 | P13 | P13.1 | e2e core flows (Playwright) + security review | ✅ |
 | P13 | P13.2 | deploy (Render/Vercel/Supabase) + backups — **needs the hosting accounts** | ⬜ |
 | P13 | P13.3 | CSV onboarding + user guide ✅ · UAT → **CP1 sign-off** | 🧩 |
-| **S** (SaaS) | S1.1 | Backend: tenant fields, platform permissions + role, guard change, onboarding + suspend endpoints | ⬜ |
+| **S** (SaaS) | S1.1 | Backend: tenant fields, platform permissions + role, guard change, onboarding + suspend endpoints | ✅ |
 | **S** (SaaS) | S1.2 | Web: `/admin` surface, tenant list, onboarding wizard, suspend/reactivate | ⬜ |
 | **S** (SaaS) | S2.1 | Backend: `support_sessions`, permissions resolved from the session, audit marking | ⬜ |
 | **S** (SaaS) | S2.2 | Web: open/close a session in `/admin`, support markers in the owner's audit log | ⬜ |

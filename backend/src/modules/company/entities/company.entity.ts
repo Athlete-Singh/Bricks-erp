@@ -1,5 +1,5 @@
 import { Column, Entity } from 'typeorm';
-import type { GstScheme } from '@brics/shared';
+import type { GstScheme, TenantStatus } from '@brics/shared';
 import { BaseEntity } from '../../../common/entities/base.entity';
 
 @Entity('companies')
@@ -27,4 +27,17 @@ export class Company extends BaseEntity {
 
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
+
+  /** S1.1 — tenant lifecycle; `suspended` is refused at sign-in (PLT-06). */
+  @Column({ type: 'varchar', length: 20, default: 'trial' })
+  status: TenantStatus;
+
+  @Column({ name: 'plan_name', type: 'varchar', length: 80, nullable: true })
+  planName: string | null;
+
+  @Column({ name: 'trial_ends_at', type: 'date', nullable: true })
+  trialEndsAt: string | null;
+
+  @Column({ name: 'last_active_at', type: 'timestamptz', nullable: true })
+  lastActiveAt: Date | null;
 }

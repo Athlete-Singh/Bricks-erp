@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { BadRequestException, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
+import { SUSPENDED_TENANT_SIGN_IN_MESSAGE } from '@brics/shared';
 import { AuthService } from '../auth.service';
 import { MembershipService } from '../membership.service';
 import { RolesService } from '../roles.service';
@@ -87,6 +88,7 @@ describe('AuthService', () => {
       gstin: null,
       stateCode: '09',
       isActive: true,
+      status: 'active',
     });
 
     const module: TestingModule = await Test.createTestingModule({
@@ -126,6 +128,22 @@ describe('AuthService', () => {
       userRepository.findOne.mockResolvedValue(await activeUser({ isActive: false }));
       await expect(service.login({ emailOrMobile: 'owner@kiln.test', password: 'correct-horse' })).rejects.toThrow(
         'User account is inactive',
+      );
+    });
+
+    it('refuses sign-in when the tenant is suspended, with a named-contact message (PLT-06)', async () => {
+      userRepository.findOne.mockResolvedValue(await activeUser());
+      companyRepository.findOneBy.mockResolvedValue({
+        id: COMPANY_ID,
+        name: 'Shri Ram Bricks',
+        gstin: null,
+        stateCode: '09',
+        isActive: true,
+        status: 'suspended',
+      });
+
+      await expect(service.login({ emailOrMobile: 'owner@kiln.test', password: 'correct-horse' })).rejects.toThrow(
+        SUSPENDED_TENANT_SIGN_IN_MESSAGE,
       );
     });
 

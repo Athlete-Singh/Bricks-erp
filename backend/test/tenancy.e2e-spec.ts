@@ -187,7 +187,7 @@ describe('Tenant isolation (e2e)', () => {
   });
 
   describe('RBAC seed (ADM-06)', () => {
-    it('exposes the 9 spec roles', async () => {
+    it('exposes the 9 spec roles plus platform_admin (S1.1)', async () => {
       const res = await asA('get', '/users/roles').expect(200);
       const codes = (res.body.data as Array<{ code: string }>).map((r) => r.code).sort();
 
@@ -197,6 +197,7 @@ describe('Tenant isolation (e2e)', () => {
           'driver',
           'manager',
           'owner',
+          'platform_admin',
           'production_manager',
           'sales_executive',
           'store_keeper',

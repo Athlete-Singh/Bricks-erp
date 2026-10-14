@@ -19,6 +19,22 @@ export type VoucherType = keyof typeof VOUCHER_TYPES;
 export const GST_SCHEMES = ['regular_12_itc', 'composition_6_no_itc'] as const;
 export type GstScheme = (typeof GST_SCHEMES)[number];
 
+/**
+ * Tenant lifecycle (PLT-01). `trial` and `active` behave the same at sign-in;
+ * `suspended` is refused with a message naming who to contact (PLT-06). Billing
+ * (plans, trial expiry → automatic suspension) is deferred to S4.
+ */
+export const TENANT_STATUSES = ['trial', 'active', 'suspended'] as const;
+export type TenantStatus = (typeof TENANT_STATUSES)[number];
+
+/**
+ * Shown to a user whose company is suspended at sign-in. Shared so web and
+ * mobile say the same thing — a kiln owner should see the same words whichever
+ * surface they tried.
+ */
+export const SUSPENDED_TENANT_SIGN_IN_MESSAGE =
+  "This company's access is on hold. Please contact TVAM support to restore it.";
+
 export const PAYMENT_MODES = ['cash', 'bank', 'upi', 'credit'] as const;
 export type PaymentMode = (typeof PAYMENT_MODES)[number];
 
