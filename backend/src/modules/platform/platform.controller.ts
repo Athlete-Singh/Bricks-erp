@@ -34,7 +34,7 @@ export class PlatformController {
 
   @Get(':id')
   @RequirePermissions(PERMISSIONS.PLATFORM_TENANTS_VIEW)
-  @ApiOperation({ summary: 'One tenant — metadata only' })
+  @ApiOperation({ summary: 'One tenant — full metadata, counts, users, and kilns (PLT-09)' })
   async detail(@Param('id', ParseUUIDPipe) id: string) {
     return this.platform.getTenant(id);
   }

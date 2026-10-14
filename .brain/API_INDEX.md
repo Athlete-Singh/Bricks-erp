@@ -221,7 +221,7 @@ Add the row when you **plan** an endpoint (BE ⬜), and update it the moment any
 | POST | /onboarding/preview | ONB-01 — what the file would do; writes nothing | accounts.manage | ONB-01 | P13.3 | ✅ | ✅ | — |
 | POST | /onboarding/commit | ONB-01 — import the file, all rows or none | accounts.manage | ONB-01 | P13.3 | ✅ | ✅ | — |
 | GET | /platform/tenants | PLT-04 — tenant list, metadata only (counts and dates, never money) | platform.tenants.view | PLT-04 | S1.1 | ✅ | ✅ | — |
-| GET | /platform/tenants/:id | PLT-04 — one tenant's metadata | platform.tenants.view | PLT-04 | S1.1 | ✅ | ✅ | — |
+| GET | /platform/tenants/:id | PLT-09 — tenant detail: metadata, counts, user roster, kilns | platform.tenants.view | PLT-09 | S3.1 | ✅ | ✅ | — |
 | POST | /platform/tenants | PLT-05 — onboard a tenant: company + chart + **first FY** + owner, one transaction | platform.tenants.manage | PLT-05 | S1.1 | ✅ | ✅ | — |
 | POST | /platform/tenants/:id/suspend | PLT-06 — suspend a tenant; sign-in refused with the `SUSPENDED_TENANT_SIGN_IN_MESSAGE` string | platform.tenants.manage | PLT-06 | S1.1 | ✅ | ✅ | — |
 | POST | /platform/tenants/:id/reactivate | PLT-06 — reactivate a suspended tenant | platform.tenants.manage | PLT-06 | S1.1 | ✅ | ✅ | — |

@@ -190,12 +190,25 @@ leaves a record when the normal path is left.
 
 ### S3 — tenant detail and history
 
-- One tenant's page: users and their roles, counts, last activity, session
-  history.
-- The admin can create a user for a tenant — inside a session, like any other
-  business action.
-- Optional per-tenant setting: *require my approval before support access*, for
-  a client who asks for it.
+#### S3.1 (tenant detail & privacy boundary) — shipped 2026-10-14
+
+- Shared DTOs (`TenantUserSummaryDto`, `TenantSiteSummaryDto`, `TenantCountsDto`, `TenantDetailDto`) in `@brics/shared/schemas/platform`.
+- Backend `GET /platform/tenants/:id` aggregates:
+  - Document counts: `vouchers` count and `sales_invoices` count.
+  - User roster: joining `user_companies` + `users` + `roles` (name, mobile, email, role code/name, user status, joined date). Note: `User` has `is_active: boolean` and does not extend `TenantBaseEntity`, so soft deletion is on `user_companies.deleted_at`.
+  - Registered production sites / kilns: `sites` (name, code, type, is_active, created_at).
+  - Activity timestamps: `company.last_active_at` stamped by `AuthService.buildSession` on login and company switch, falling back to recent audit log entries.
+- Metadata privacy boundary strictly maintained: counts and timestamps only; never financial amounts, invoice lines, party ledgers, or customer details.
+- Read-only on platform surface: adding/editing users or kilns is a business action performed inside a support session.
+- Web `/admin/tenants/[id]` (PLT-09):
+  - 4 high-level KPI cards: Registered users, Kilns (active / total), Documents (vouchers & invoices), and Last active timestamp.
+  - Metadata definition list including company legal name, code, GSTIN, status, plan, trial expiry, and created date.
+  - Tabbed interface with accessible counts in headers: "Users & roles" (`TenantUsersList`), "Kilns & sites" (`TenantKilnsList`), and "Support history" (`TenantSupportHistory`).
+- 8 new web component/page tests (web tests 203 → 211). Backend platform unit and e2e suites updated and passing.
+
+#### S3.2 (per-tenant approval setting) — pending
+
+- Optional per-tenant setting: *require my approval before support access*, for a client who asks for it.
 
 ### S4 — billing (deferred)
 

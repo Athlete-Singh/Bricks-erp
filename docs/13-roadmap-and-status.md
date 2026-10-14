@@ -13,7 +13,7 @@
 | ----------------- | ----- | --- | --- | --- | --- | --- |
 | CP1 MVP           | 101   | 85  | 6   | 1   | 9   | 0   |
 | CP2 Advanced      | 10    | 0   | 0   | 0   | 0   | 10  |
-| S — SaaS platform | 11    | 7   | 1   | 0   | 2   | 1   |
+| S — SaaS platform | 11    | 8   | 1   | 0   | 1   | 1   |
 
 ### Progress per app (CP1)
 
@@ -251,7 +251,7 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 | POST   | `/onboarding/preview`                             | ONB-01               | ✅      | ✅  | —      |
 | POST   | `/onboarding/commit`                              | ONB-01               | ✅      | ✅  | —      |
 | GET    | `/platform/tenants`                               | PLT-04               | ✅      | ✅  | —      |
-| GET    | `/platform/tenants/:id`                           | PLT-04               | ✅      | ✅  | —      |
+| GET    | `/platform/tenants/:id`                           | PLT-09               | ✅      | ✅  | —      |
 | POST   | `/platform/tenants`                               | PLT-05               | ✅      | ✅  | —      |
 | POST   | `/platform/tenants/:id/suspend`                   | PLT-06               | ✅      | ✅  | —      |
 | POST   | `/platform/tenants/:id/reactivate`                | PLT-06               | ✅      | ✅  | —      |
@@ -543,7 +543,7 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 | PLT-06 | Suspend / reactivate a tenant; sign-in refused with a message naming who to contact                                                      | S   | S1.2  | ✅      | ✅  | ⬜     | ✅    | 🟨     |
 | PLT-07 | Support sessions: reason required, two hours, closes itself, business permissions scoped to one tenant                                   | S   | S2.2  | ✅      | ✅  | —      | ✅    | ✅     |
 | PLT-08 | Audit rows marked `platform_support`; the owner sees that support looked, and why                                                        | S   | S2.2  | ✅      | ✅  | —      | ✅    | ✅     |
-| PLT-09 | Tenant detail: users and roles, counts, last activity, support session history                                                           | S   | S3.1  | ⬜      | ⬜  | —      | ⬜    | ⬜     |
+| PLT-09 | Tenant detail: users and roles, counts, last activity, support session history                                                           | S   | S3.1  | ✅      | ✅  | —      | ✅    | ✅     |
 | PLT-10 | Per-tenant setting: _require my approval before support access_                                                                          | S   | S3.2  | ⬜      | ⬜  | —      | ⬜    | ⬜     |
 | PLT-11 | Billing: plans, trial expiry, payment status, automatic suspension                                                                       | S   | S4    | ⏭️      | ⏭️  | —      | ⏭️    | ⏭️     |
 

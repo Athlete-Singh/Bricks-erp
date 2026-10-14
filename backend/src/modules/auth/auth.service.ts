@@ -260,6 +260,9 @@ export class AuthService {
       throw new UnauthorizedException(SUSPENDED_TENANT_SIGN_IN_MESSAGE);
     }
 
+    // Keep tenant last activity fresh whenever any user signs in or switches company
+    await this.companyRepository.update(company.id, { lastActiveAt: new Date() });
+
     const { roleCode, permissions } = await this.resolveAccess(user, companyId);
     const tokens = await this.issueTokens(user, companyId, roleCode, permissions);
     const sites = await this.sitesFor(user.id, companyId);

@@ -95,6 +95,7 @@ describe('PlatformService', () => {
           provide: getDataSourceToken(),
           useValue: {
             transaction: jest.fn((fn: (manager: EntityManager) => Promise<unknown>) => fn(makeManager())),
+            query: jest.fn(),
           },
         },
       ],
@@ -251,6 +252,123 @@ describe('PlatformService', () => {
           after: expect.objectContaining({ status: 'active' }),
         }),
       );
+    });
+  });
+
+  describe('getTenant (PLT-09)', () => {
+    it('returns full tenant detail with metadata, counts, users and kilns', async () => {
+      const company = {
+        id: 'tenant-1',
+        status: 'active',
+        name: 'Shri Ram Bricks',
+        stateCode: '09',
+        gstin: '09AAAAA0000A1Z5',
+        planName: 'starter',
+        trialEndsAt: null,
+        lastActiveAt: new Date('2026-10-14T10:00:00Z'),
+        createdAt: new Date('2026-01-01T00:00:00Z'),
+      } as Company;
+      companyRepo.findOneBy.mockResolvedValue(company);
+
+      (dataSource.query as jest.Mock)
+        .mockResolvedValueOnce([
+          {
+            id: 'u1',
+            name: 'Ramesh Kumar',
+            email: 'ramesh@kiln.test',
+            mobile: '9876543210',
+            role_code: 'owner',
+            role_name: 'Owner',
+            is_active: true,
+            created_at: new Date('2026-01-01T00:00:00Z'),
+          },
+        ]) // userRows
+        .mockResolvedValueOnce([
+          {
+            id: 's1',
+            name: 'Main Kiln',
+            code: 'K1',
+            type: 'kiln',
+            is_active: true,
+            created_at: new Date('2026-01-02T00:00:00Z'),
+          },
+          {
+            id: 's2',
+            name: 'North Depot',
+            code: 'D1',
+            type: 'depot',
+            is_active: false,
+            created_at: new Date('2026-01-03T00:00:00Z'),
+          },
+        ]) // siteRows
+        .mockResolvedValueOnce([{ count: 42 }]) // vouchers count
+        .mockResolvedValueOnce([{ count: 18 }]); // sales_invoices count
+
+      const result = await service.getTenant('tenant-1');
+
+      expect(result.id).toBe('tenant-1');
+      expect(result.name).toBe('Shri Ram Bricks');
+      expect(result.gstin).toBe('09AAAAA0000A1Z5');
+      expect(result.lastActiveAt).toBe('2026-10-14T10:00:00.000Z');
+      expect(result.counts).toEqual({
+        users: 1,
+        kilns: 2,
+        activeKilns: 1,
+        vouchers: 42,
+        salesInvoices: 18,
+      });
+      expect(result.users).toHaveLength(1);
+      expect(result.users[0]).toEqual({
+        id: 'u1',
+        name: 'Ramesh Kumar',
+        email: 'ramesh@kiln.test',
+        mobile: '9876543210',
+        roleCode: 'owner',
+        roleName: 'Owner',
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00.000Z',
+      });
+      expect(result.kilns).toHaveLength(2);
+      expect(result.kilns[0]).toEqual({
+        id: 's1',
+        name: 'Main Kiln',
+        code: 'K1',
+        type: 'kiln',
+        isActive: true,
+        createdAt: '2026-01-02T00:00:00.000Z',
+      });
+    });
+
+    it('falls back to audit logs for lastActiveAt when company.lastActiveAt is null', async () => {
+      const company = {
+        id: 'tenant-1',
+        status: 'active',
+        name: 'Shri Ram Bricks',
+        stateCode: '09',
+        gstin: null,
+        planName: null,
+        trialEndsAt: null,
+        lastActiveAt: null,
+        createdAt: new Date('2026-01-01T00:00:00Z'),
+      } as Company;
+      companyRepo.findOneBy.mockResolvedValue(company);
+
+      (dataSource.query as jest.Mock)
+        .mockResolvedValueOnce([]) // userRows
+        .mockResolvedValueOnce([]) // siteRows
+        .mockResolvedValueOnce([{ count: 0 }]) // vouchers
+        .mockResolvedValueOnce([{ count: 0 }]) // invoices
+        .mockResolvedValueOnce([{ last_active: '2026-10-13T12:00:00.000Z' }]); // audit_logs
+
+      const result = await service.getTenant('tenant-1');
+      expect(result.lastActiveAt).toBe('2026-10-13T12:00:00.000Z');
+      expect(result.counts.users).toBe(0);
+      expect(result.counts.kilns).toBe(0);
+    });
+
+    it('throws NotFoundException when tenant does not exist', async () => {
+      companyRepo.findOneBy.mockResolvedValue(null);
+      await expect(service.getTenant('unknown-id')).rejects.toThrow(NotFoundException);
     });
   });
 });

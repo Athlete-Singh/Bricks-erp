@@ -4,7 +4,7 @@ import request from 'supertest';
 import type { App } from 'supertest/types';
 import * as bcrypt from 'bcryptjs';
 import { DataSource, type EntityManager } from 'typeorm';
-import { SUSPENDED_TENANT_SIGN_IN_MESSAGE } from '@brics/shared';
+import { SUSPENDED_TENANT_SIGN_IN_MESSAGE, type TenantDetailDto } from '@brics/shared';
 import { AppModule } from '../src/app.module';
 import { setupApp } from '../src/setup-app';
 import { seedRbac } from '../src/database/seeds/seed-rbac';
@@ -184,5 +184,43 @@ describe('Platform (e2e)', () => {
       .expect(200);
     const beta = (list.body.data as Array<{ name: string }>).find((t) => t.name === `${PREFIX} Beta`);
     expect(beta).toBeUndefined();
+  });
+
+  it('returns full tenant detail with counts, assigned users and kilns (PLT-09)', async () => {
+    const list = await request(app.getHttpServer())
+      .get('/api/v1/platform/tenants')
+      .set('Authorization', `Bearer ${platformToken}`)
+      .expect(200);
+    const tenant = (list.body.data as Array<{ id: string; name: string }>).find((t) => t.name === `${PREFIX} Alpha`);
+    expect(tenant).toBeDefined();
+
+    const detailRes = await request(app.getHttpServer())
+      .get(`/api/v1/platform/tenants/${tenant!.id}`)
+      .set('Authorization', `Bearer ${platformToken}`)
+      .expect(200);
+
+    const detail = detailRes.body.data as TenantDetailDto;
+    expect(detail.id).toBe(tenant!.id);
+    expect(detail.name).toBe(`${PREFIX} Alpha`);
+    expect(detail.status).toBe('active');
+    expect(detail.counts).toBeDefined();
+    expect(detail.counts.users).toBeGreaterThanOrEqual(1);
+    expect(detail.counts.vouchers).toBeGreaterThanOrEqual(0);
+    expect(detail.counts.salesInvoices).toBeGreaterThanOrEqual(0);
+
+    expect(Array.isArray(detail.users)).toBe(true);
+    const ownerUser = detail.users.find((u: { mobile: string }) => u.mobile === `${PLATFORM_MOBILE}1`);
+    expect(ownerUser).toBeDefined();
+    expect(ownerUser!.name).toBe('Alpha Owner');
+    expect(ownerUser!.roleCode).toBe('owner');
+    expect(ownerUser!.isActive).toBe(true);
+
+    expect(Array.isArray(detail.kilns)).toBe(true);
+
+    // Random non-existent UUID returns 404
+    await request(app.getHttpServer())
+      .get('/api/v1/platform/tenants/00000000-0000-0000-0000-000000000000')
+      .set('Authorization', `Bearer ${platformToken}`)
+      .expect(404);
   });
 });

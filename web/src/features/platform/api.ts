@@ -4,6 +4,7 @@ import type {
   CreateTenantDto,
   SupportSessionDto,
   SuspendTenantDto,
+  TenantDetailDto,
   TenantSummaryDto,
 } from '@brics/shared';
 import { apiClient } from '@/lib/api-client';
@@ -30,7 +31,7 @@ export function fetchTenants(signal?: AbortSignal) {
 }
 
 export function fetchTenant(id: string, signal?: AbortSignal) {
-  return apiClient.get<TenantSummaryDto>(`/platform/tenants/${id}`, signal);
+  return apiClient.get<TenantDetailDto>(`/platform/tenants/${id}`, signal);
 }
 
 export function createTenant(dto: CreateTenantDto) {

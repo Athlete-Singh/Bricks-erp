@@ -58,6 +58,56 @@ export interface TenantSummaryDto {
   createdAt: string;
 }
 
+/**
+ * Tenant user metadata for the platform admin view (PLT-09 / S3.1).
+ * Carries name, contact, role and status — no password hashes or business secrets.
+ */
+export interface TenantUserSummaryDto {
+  id: string;
+  name: string;
+  email: string | null;
+  mobile: string;
+  roleCode: string;
+  roleName: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+/**
+ * Tenant site / kiln metadata for the platform admin view (PLT-09 / S3.1).
+ */
+export interface TenantSiteSummaryDto {
+  id: string;
+  name: string;
+  code: string;
+  type: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+/**
+ * High-level counts for a tenant — adhering to the metadata boundary:
+ * counts and dates only, never monetary balances.
+ */
+export interface TenantCountsDto {
+  users: number;
+  kilns: number;
+  activeKilns: number;
+  vouchers: number;
+  salesInvoices: number;
+}
+
+/**
+ * Full detail for a single tenant (PLT-09 / S3.1) — combines company metadata,
+ * document counts, assigned users and registered kilns/sites.
+ */
+export interface TenantDetailDto extends TenantSummaryDto {
+  gstin: string | null;
+  counts: TenantCountsDto;
+  users: TenantUserSummaryDto[];
+  kilns: TenantSiteSummaryDto[];
+}
+
 export const suspendTenantSchema = z.object({
   reason: z.string().min(3, 'Say why — it goes on the audit trail').max(500).optional(),
 });
