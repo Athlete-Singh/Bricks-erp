@@ -111,17 +111,40 @@ leaves a record when the normal path is left.
   `SUSPENDED_TENANT_SIGN_IN_MESSAGE` constant from `@brics/shared`; web and
   mobile both show the same words.
 
-#### S1.2 (web) — pending
+#### S1.2 (web) — shipped 2026-10-14
 
-- `/admin` — its own surface, its own navigation, no business menu. The
-  language is tenants and plans, not sales and stock, because the fastest way
-  to make an admin behave like an owner is to show them an owner's screen.
-- Tenant list: metadata only, searchable, newest first.
-- **Onboarding wizard:** company name, GST state, owner's name, mobile, email,
-  password → calls `POST /platform/tenants`.
-- Suspend and reactivate buttons on the tenant detail page.
-- The owner's user-admin screen must filter `platform_admin` out of the role
-  picker; `/users/roles` returns it now that the role exists.
+- `/admin` route group with its own shell — `AdminShell` renders a thin sidebar
+  (`Tenants`, with `Support sessions` greyed as *S2*), no company switcher,
+  no business menu. The AuthGuard inside the shell refuses a signed-in user
+  who does not hold `platform.tenants.view` and routes them to `/dashboard`.
+- `/admin` → `/admin/tenants` (server-side `redirect`).
+- `/admin/tenants` — searchable list, metadata only (name, state, status,
+  plan, created). Row actions: `Suspend` on active/trial, `Reactivate` on
+  suspended; both hidden without `platform.tenants.manage`.
+- `/admin/tenants/[id]` — a thin detail page with the same metadata and the
+  status buttons. Full detail (users, counts, support history) lives at
+  PLT-09/S3.1.
+- `OnboardTenantDialog` wraps `POST /platform/tenants` — company name, GST
+  state, plan name, owner name/mobile/email/password; the FY is left to the
+  server. Field errors from the backend's Zod pipe are mapped onto their
+  inputs; a 409 on the owner's mobile surfaces on the Alert.
+- `SuspendTenantDialog` carries an optional reason that goes on the audit
+  trail — a line of text is most of what stops a casual suspension.
+- `homeRouteFor(permissions)` is the login-time decision: a user with
+  `platform.tenants.view` lands on `/admin`, everyone else on `/dashboard`.
+  `PlatformAdminBounce` wraps the kiln dashboard layout and sends a platform
+  admin to `/admin` even if they reload a kiln route they had bookmarked.
+- `useRoles` filters `platform_admin` out of the picker so an owner never
+  sees a role they cannot usefully assign — the guard would refuse the write
+  anyway, but a role that nobody can usefully assign is clutter.
+
+#### Still ahead
+
+- **Mobile sign-in refusal (M1):** MOB-01 picks up the suspended-tenant
+  message so the kiln sees the same words on every surface.
+- **S2 — support sessions:** the platform admin acquires one tenant's
+  business permissions, two hours, auto-closed, every audit row marked
+  `platform_support`.
 
 ### S2 — support sessions
 

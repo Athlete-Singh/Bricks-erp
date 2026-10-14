@@ -13,7 +13,7 @@
 |---|---|---|---|---|---|---|
 | CP1 MVP | 101 | 85 | 6 | 1 | 9 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
-| S — SaaS platform | 11 | 2 | 3 | 0 | 5 | 1 |
+| S — SaaS platform | 11 | 5 | 1 | 0 | 4 | 1 |
 
 **CP1 done: 84 %** (85 of 101 features ✅)
 
@@ -205,10 +205,10 @@ reasoning in `.brain/modules/saas-platform.md`, decision in ADR-052.
 |---|---|---|---|---|---|---|---|---|---|
 | PLT-01 | Tenant record: `status` (trial/active/suspended), plan name, trial end, last active | S | S1.1 | ✅ | — | — | ✅ | ✅ |  |
 | PLT-02 | Platform permissions and a `platform_admin` role, holding **no** business permissions; the `isSuperAdmin` bypass in `RolesGuard` removed | S | S1.1 | ✅ | — | — | ✅ | ✅ | That one line is what makes the separation meaningless |
-| PLT-03 | `/admin` — its own surface and navigation, no business menu | S | S1.2 | — | ⬜ | — | ⬜ | ⬜ | The fastest way to make an admin behave like an owner is to show them an owner's screen |
-| PLT-04 | Tenant list: metadata only — counts and dates, never money and never the client's own parties | S | S1.2 | ✅ | ⬜ | — | ✅ | 🟨 | Backend list/detail shipped in S1.1 (metadata only). Web UI pending S1.2 |
-| PLT-05 | Onboarding: company + **first financial year** + owner user, in one transaction | S | S1.2 | ✅ | ⬜ | — | ✅ | 🟨 | Backend shipped in S1.1 as `POST /platform/tenants`. Web wizard pending S1.2 |
-| PLT-06 | Suspend / reactivate a tenant; sign-in refused with a message naming who to contact | S | S1.2 | ✅ | ⬜ | ⬜ | ✅ | 🟨 | Backend + sign-in refusal shipped in S1.1. Mobile and web pending |
+| PLT-03 | `/admin` — its own surface and navigation, no business menu | S | S1.2 | — | ✅ | — | ✅ | ✅ | The fastest way to make an admin behave like an owner is to show them an owner's screen |
+| PLT-04 | Tenant list: metadata only — counts and dates, never money and never the client's own parties | S | S1.2 | ✅ | ✅ | — | ✅ | ✅ |  |
+| PLT-05 | Onboarding: company + **first financial year** + owner user, in one transaction | S | S1.2 | ✅ | ✅ | — | ✅ | ✅ |  |
+| PLT-06 | Suspend / reactivate a tenant; sign-in refused with a message naming who to contact | S | S1.2 | ✅ | ✅ | ⬜ | ✅ | 🟨 | Mobile still to come (M1) |
 | PLT-07 | Support sessions: reason required, two hours, closes itself, business permissions scoped to one tenant | S | S2.1 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |
 | PLT-08 | Audit rows marked `platform_support`; the owner sees that support looked, and why | S | S2.2 | ⬜ | ⬜ | — | ⬜ | ⬜ | Announced after, not approved before — a kiln owner is not reliably reachable |
 | PLT-09 | Tenant detail: users and roles, counts, last activity, support session history | S | S3.1 | ⬜ | ⬜ | — | ⬜ | ⬜ |  |

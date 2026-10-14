@@ -20,8 +20,13 @@ export function useRoles() {
   return useQuery({
     queryKey: userKeys.roles,
     queryFn: ({ signal }) => api.fetchRoles(signal),
-    // The 9 roles are seed data: they do not change while the app is open.
+    // The seeded roles do not change while the app is open.
     staleTime: Infinity,
+    // S1.1 added `platform_admin` to the catalogue — it is the SaaS platform's
+    // role, not a kiln role, so a company owner should never see it in the
+    // role picker. The guard would refuse the write anyway, but a role nobody
+    // can usefully assign is clutter.
+    select: (roles) => roles.filter((r) => r.code !== 'platform_admin'),
   });
 }
 

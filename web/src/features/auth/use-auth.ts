@@ -3,12 +3,22 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect } from 'react';
-import type { LoginDto } from '@brics/shared';
+import { PERMISSIONS, type LoginDto } from '@brics/shared';
 import { ApiError } from '@/lib/api-client';
 import { hasPersistedSession, setTokens } from '@/lib/auth-token';
 import { hasPermissions, useAuthStore } from '@/stores/auth-store';
 import { fetchCurrentCompany, fetchSites } from '@/features/company/api';
 import * as authApi from './api';
+
+/**
+ * Where a signed-in user should land. A platform admin's work lives at
+ * `/admin`; everyone else works out of `/dashboard`. The check is on the
+ * permission rather than the role code, so a tenth role tomorrow does not
+ * silently miss the right surface.
+ */
+export function homeRouteFor(permissions: readonly string[] | undefined): '/admin' | '/dashboard' {
+  return permissions?.includes(PERMISSIONS.PLATFORM_TENANTS_VIEW) ? '/admin' : '/dashboard';
+}
 
 /** Current session, plus a permission helper for conditional UI. */
 export function useSession() {
@@ -27,7 +37,7 @@ export function useLogin() {
     onSuccess: (session) => {
       setSession(session);
       queryClient.clear();
-      router.replace('/dashboard');
+      router.replace(homeRouteFor(session.user.permissions));
     },
   });
 }
