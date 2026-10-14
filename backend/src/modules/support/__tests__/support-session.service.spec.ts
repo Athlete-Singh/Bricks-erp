@@ -108,6 +108,78 @@ describe('SupportSessionService (PLT-07)', () => {
       expect(stale.closedBy).toBe('expiry');
       expect(sessionRepo.save).toHaveBeenCalled();
     });
+
+    describe('PLT-10 (S3.2) requireSupportApproval setting', () => {
+      it('refuses when tenant requires approval and neither active window nor valid code is provided', async () => {
+        companyRepo.findOneBy.mockResolvedValue({
+          id: TENANT_ID,
+          requireSupportApproval: true,
+          supportAccessGrantedUntil: null,
+          supportAccessCode: null,
+        } as Company);
+
+        await expect(service.open(ADMIN_ID, TENANT_ID, 'investigating issue')).rejects.toThrow(
+          'SUPPORT_APPROVAL_REQUIRED',
+        );
+        expect(sessionRepo.save).not.toHaveBeenCalled();
+      });
+
+      it('refuses when active window has expired and no code provided', async () => {
+        companyRepo.findOneBy.mockResolvedValue({
+          id: TENANT_ID,
+          requireSupportApproval: true,
+          supportAccessGrantedUntil: new Date(Date.now() - 60_000), // expired 1 min ago
+          supportAccessCode: '123456',
+        } as Company);
+
+        await expect(service.open(ADMIN_ID, TENANT_ID, 'investigating issue')).rejects.toThrow(
+          'SUPPORT_APPROVAL_REQUIRED',
+        );
+        expect(sessionRepo.save).not.toHaveBeenCalled();
+      });
+
+      it('refuses when approvalCode does not match', async () => {
+        companyRepo.findOneBy.mockResolvedValue({
+          id: TENANT_ID,
+          requireSupportApproval: true,
+          supportAccessGrantedUntil: null,
+          supportAccessCode: '654321',
+        } as Company);
+
+        await expect(service.open(ADMIN_ID, TENANT_ID, 'investigating issue', '000000')).rejects.toThrow(
+          'SUPPORT_APPROVAL_REQUIRED',
+        );
+        expect(sessionRepo.save).not.toHaveBeenCalled();
+      });
+
+      it('allows opening session when supportAccessGrantedUntil is in the future', async () => {
+        companyRepo.findOneBy.mockResolvedValue({
+          id: TENANT_ID,
+          requireSupportApproval: true,
+          supportAccessGrantedUntil: new Date(Date.now() + 3600_000), // active for 1h
+          supportAccessCode: '123456',
+        } as Company);
+        sessionRepo.findOne.mockResolvedValue(null);
+
+        const session = await service.open(ADMIN_ID, TENANT_ID, 'investigating with active grant');
+        expect(session.companyId).toBe(TENANT_ID);
+        expect(sessionRepo.save).toHaveBeenCalled();
+      });
+
+      it('allows opening session when approvalCode matches tenant.supportAccessCode', async () => {
+        companyRepo.findOneBy.mockResolvedValue({
+          id: TENANT_ID,
+          requireSupportApproval: true,
+          supportAccessGrantedUntil: null,
+          supportAccessCode: '987654',
+        } as Company);
+        sessionRepo.findOne.mockResolvedValue(null);
+
+        const session = await service.open(ADMIN_ID, TENANT_ID, 'investigating with valid code', '987654');
+        expect(session.companyId).toBe(TENANT_ID);
+        expect(sessionRepo.save).toHaveBeenCalled();
+      });
+    });
   });
 
   describe('close', () => {

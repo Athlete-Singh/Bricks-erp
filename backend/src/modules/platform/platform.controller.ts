@@ -1,11 +1,13 @@
-import { Body, Controller, Get, HttpCode, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   createTenantSchema,
   PERMISSIONS,
   suspendTenantSchema,
+  updateTenantSettingsSchema,
   type CreateTenantDto,
   type SuspendTenantDto,
+  type UpdateTenantSettingsDto,
 } from '@brics/shared';
 import { CurrentUser, RequirePermissions } from '../../common/decorators/auth.decorators';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -72,5 +74,16 @@ export class PlatformController {
   @ApiOperation({ summary: 'Reactivate a tenant' })
   async reactivate(@CurrentUser('sub') actorId: string, @Param('id', ParseUUIDPipe) id: string) {
     return this.platform.reactivateTenant(actorId, id);
+  }
+
+  @Patch(':id/settings')
+  @RequirePermissions(PERMISSIONS.PLATFORM_TENANTS_MANAGE)
+  @ApiOperation({ summary: 'Update tenant platform settings (PLT-10)' })
+  async updateSettings(
+    @CurrentUser('sub') actorId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(updateTenantSettingsSchema)) dto: UpdateTenantSettingsDto,
+  ) {
+    return this.platform.updateTenantSettings(id, actorId, dto);
   }
 }

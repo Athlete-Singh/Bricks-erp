@@ -19,11 +19,13 @@ vi.mock('@/features/auth/use-auth', async () => {
 const fetchTenantMock = vi.fn();
 const fetchTenantSupportSessionsMock = vi.fn();
 const reactivateTenantMock = vi.fn();
+const updateTenantSettingsMock = vi.fn();
 
 vi.mock('../api', () => ({
   fetchTenant: (id: string) => fetchTenantMock(id),
   fetchTenantSupportSessions: (tenantId: string) => fetchTenantSupportSessionsMock(tenantId),
   reactivateTenant: (id: string) => reactivateTenantMock(id),
+  updateTenantSettings: (id: string, dto: unknown) => updateTenantSettingsMock(id, dto),
   suspendTenant: vi.fn(),
   openSupportSession: vi.fn(),
 }));
@@ -37,6 +39,8 @@ const TENANT_DETAIL: TenantDetailDto = {
   planName: 'growth',
   trialEndsAt: null,
   lastActiveAt: '2026-10-14T10:30:00.000Z',
+  requireSupportApproval: false,
+  supportAccessGrantedUntil: null,
   createdAt: '2026-01-15T00:00:00.000Z',
   counts: {
     users: 2,
@@ -164,6 +168,7 @@ describe('AdminTenantDetailPage (PLT-09 / S3.1)', () => {
     // Buttons requiring platform.support.request and platform.tenants.manage should be hidden
     expect(screen.queryByRole('button', { name: /open support session/i })).toBeNull();
     expect(screen.queryByRole('button', { name: /suspend/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /require support approval/i })).toBeNull();
   });
 
   it('renders Open Support and Suspend actions when permissions are held', async () => {
@@ -174,5 +179,25 @@ describe('AdminTenantDetailPage (PLT-09 / S3.1)', () => {
 
     expect(screen.getByRole('button', { name: /open support session/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /suspend/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /require support approval/i })).toBeInTheDocument();
+  });
+
+  it('allows platform admin to toggle support approval requirement', async () => {
+    withPermissions('platform.tenants.view', 'platform.tenants.manage');
+    updateTenantSettingsMock.mockResolvedValue({
+      ...TENANT_DETAIL,
+      requireSupportApproval: true,
+    });
+
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByText('Ganga Brickworks');
+    const toggleBtn = screen.getByRole('button', { name: /require support approval/i });
+    await user.click(toggleBtn);
+
+    expect(updateTenantSettingsMock).toHaveBeenCalledWith('tenant-1', {
+      requireSupportApproval: true,
+    });
   });
 });

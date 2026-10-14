@@ -1,4 +1,10 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
 import { SUPPORT_SESSION_TTL_MS, type SupportSessionDto } from '@brics/shared';
@@ -21,8 +27,11 @@ export class SupportSessionService {
    * schema is the ultimate authority on "one open at a time"; we check first
    * because a 409 at the service layer carries a readable message, and the
    * returning check keeps the endpoint idempotent for a UI that double-clicks.
+   *
+   * PLT-10 (S3.2): If tenant has requireSupportApproval enabled, refuses
+   * unless supportAccessGrantedUntil is in the future or a matching approvalCode is given.
    */
-  async open(platformUserId: string, tenantId: string, reason: string): Promise<SupportSession> {
+  async open(platformUserId: string, tenantId: string, reason: string, approvalCode?: string): Promise<SupportSession> {
     const trimmed = reason.trim();
     if (trimmed.length < 3) {
       throw new BadRequestException('A reason is required — it goes on the audit trail');
@@ -31,6 +40,21 @@ export class SupportSessionService {
     const tenant = await this.companyRepo.findOneBy({ id: tenantId });
     if (!tenant) {
       throw new NotFoundException('Tenant not found');
+    }
+
+    if (tenant.requireSupportApproval) {
+      const hasActiveWindow = Boolean(
+        tenant.supportAccessGrantedUntil && tenant.supportAccessGrantedUntil.getTime() > Date.now(),
+      );
+      const codeMatches = Boolean(
+        approvalCode && tenant.supportAccessCode && approvalCode.trim() === tenant.supportAccessCode.trim(),
+      );
+
+      if (!hasActiveWindow && !codeMatches) {
+        throw new ForbiddenException(
+          'SUPPORT_APPROVAL_REQUIRED: This tenant requires owner approval before platform support access can be granted. Ask the owner to grant access or provide an approval code in Company Settings.',
+        );
+      }
     }
 
     const existing = await this.sessionRepo.findOne({

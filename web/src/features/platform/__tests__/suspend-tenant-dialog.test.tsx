@@ -18,6 +18,8 @@ const TENANT: TenantSummaryDto = {
   planName: null,
   trialEndsAt: null,
   lastActiveAt: null,
+  requireSupportApproval: false,
+  supportAccessGrantedUntil: null,
   createdAt: '2026-10-14T00:00:00.000Z',
 };
 

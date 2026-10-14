@@ -3,12 +3,12 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, Clock, FileText, Flame, HeadphonesIcon, Pause, Play, Users } from 'lucide-react';
+import { ArrowLeft, Clock, FileText, Flame, HeadphonesIcon, Pause, Play, Shield, Users } from 'lucide-react';
 import { PERMISSIONS } from '@brics/shared';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
 import { Card } from '@/components/ui/card';
-import { PageSpinner } from '@/components/ui/spinner';
+import { PageSpinner, Spinner } from '@/components/ui/spinner';
 import { useSession, messageOf } from '@/features/auth/use-auth';
 import { OpenSupportSessionDialog } from '@/features/platform/components/open-support-session-dialog';
 import { SuspendTenantDialog } from '@/features/platform/components/suspend-tenant-dialog';
@@ -16,7 +16,7 @@ import { TenantKilnsList } from '@/features/platform/components/tenant-kilns-lis
 import { TenantStatusBadge } from '@/features/platform/components/tenant-status-badge';
 import { TenantSupportHistory } from '@/features/platform/components/tenant-support-history';
 import { TenantUsersList } from '@/features/platform/components/tenant-users-list';
-import { useReactivateTenant, useTenant } from '@/features/platform/hooks';
+import { useReactivateTenant, useTenant, useUpdateTenantSettings } from '@/features/platform/hooks';
 import { cn } from '@/lib/cn';
 
 type DetailTab = 'users' | 'kilns' | 'support';
@@ -37,6 +37,7 @@ export default function AdminTenantDetailPage() {
   const { can } = useSession();
   const { data: tenant, isLoading, error } = useTenant(id);
   const reactivate = useReactivateTenant();
+  const updateSettings = useUpdateTenantSettings();
   const [suspendOpen, setSuspendOpen] = useState(false);
   const [openSupport, setOpenSupport] = useState(false);
   const [activeTab, setActiveTab] = useState<DetailTab>('users');
@@ -52,6 +53,10 @@ export default function AdminTenantDetailPage() {
     ['State code', tenant.stateCode],
     ['GSTIN', tenant.gstin ?? '—'],
     ['Plan', tenant.planName ?? 'Starter'],
+    [
+      'Support approval',
+      tenant.requireSupportApproval ? 'Required (explicit code/grant)' : 'Default (announce-afterwards)',
+    ],
     ['Trial ends', tenant.trialEndsAt ? new Date(tenant.trialEndsAt).toLocaleDateString() : '—'],
     ['Last active', tenant.lastActiveAt ? new Date(tenant.lastActiveAt).toLocaleString() : 'Never'],
     ['Created', new Date(tenant.createdAt).toLocaleString()],
@@ -89,6 +94,28 @@ export default function AdminTenantDetailPage() {
             >
               <HeadphonesIcon className="h-3.5 w-3.5" aria-hidden />
               Open support session
+            </Button>
+          )}
+          {canManage && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() =>
+                updateSettings.mutate({
+                  id: tenant.id,
+                  dto: { requireSupportApproval: !tenant.requireSupportApproval },
+                })
+              }
+              disabled={updateSettings.isPending}
+            >
+              <Shield className="h-3.5 w-3.5" aria-hidden />
+              {updateSettings.isPending ? (
+                <Spinner className="h-3.5 w-3.5" />
+              ) : tenant.requireSupportApproval ? (
+                'Disable approval requirement'
+              ) : (
+                'Require support approval'
+              )}
             </Button>
           )}
           {canManage &&

@@ -2,7 +2,13 @@ import { BadRequestException, ConflictException, Injectable, NotFoundException }
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
 import { DataSource, EntityManager, Repository } from 'typeorm';
-import type { CreateTenantDto, TenantSummaryDto, TenantStatus, TenantDetailDto } from '@brics/shared';
+import type {
+  CreateTenantDto,
+  TenantSummaryDto,
+  TenantStatus,
+  TenantDetailDto,
+  UpdateTenantSettingsDto,
+} from '@brics/shared';
 import { ChartOfAccountsService } from '../../accounting/chart-of-accounts.service';
 import { AuditService } from '../audit/audit.service';
 import { MembershipService } from '../auth/membership.service';
@@ -319,8 +325,39 @@ export class PlatformService {
       planName: c.planName,
       trialEndsAt: c.trialEndsAt,
       lastActiveAt: c.lastActiveAt ? c.lastActiveAt.toISOString() : null,
+      requireSupportApproval: Boolean(c.requireSupportApproval),
+      supportAccessGrantedUntil: c.supportAccessGrantedUntil ? c.supportAccessGrantedUntil.toISOString() : null,
       createdAt: c.createdAt.toISOString(),
     };
+  }
+
+  /**
+   * PLT-10 (S3.2) — Update tenant platform settings (e.g. requireSupportApproval).
+   */
+  async updateTenantSettings(id: string, actorId: string, dto: UpdateTenantSettingsDto): Promise<TenantSummaryDto> {
+    const company = await this.companyRepo.findOneBy({ id });
+    if (!company) {
+      throw new NotFoundException('Tenant not found');
+    }
+
+    const before = { requireSupportApproval: company.requireSupportApproval };
+    if (dto.requireSupportApproval !== undefined) {
+      company.requireSupportApproval = dto.requireSupportApproval;
+    }
+    company.updatedBy = actorId;
+    const saved = await this.companyRepo.save(company);
+
+    await this.audit.record({
+      companyId: id,
+      userId: actorId,
+      entityName: 'companies',
+      entityId: id,
+      action: 'UPDATE',
+      before,
+      after: { requireSupportApproval: saved.requireSupportApproval },
+    });
+
+    return this.toSummary(saved);
   }
 }
 

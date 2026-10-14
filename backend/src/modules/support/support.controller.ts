@@ -34,7 +34,7 @@ export class SupportSessionController {
     @CurrentUser('sub') userId: string,
     @Body(new ZodValidationPipe(createSupportSessionSchema)) dto: CreateSupportSessionDto,
   ) {
-    const session = await this.sessions.open(userId, dto.tenantId, dto.reason);
+    const session = await this.sessions.open(userId, dto.tenantId, dto.reason, dto.approvalCode);
     const auth = await this.auth.issueSupportTokens(userId, session.companyId, session.id, session.expiresAt);
     return { session: await this.sessions.toDto(session), auth };
   }

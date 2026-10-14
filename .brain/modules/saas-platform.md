@@ -206,9 +206,27 @@ leaves a record when the normal path is left.
   - Tabbed interface with accessible counts in headers: "Users & roles" (`TenantUsersList`), "Kilns & sites" (`TenantKilnsList`), and "Support history" (`TenantSupportHistory`).
 - 8 new web component/page tests (web tests 203 → 211). Backend platform unit and e2e suites updated and passing.
 
-#### S3.2 (per-tenant approval setting) — pending
+#### S3.2 (per-tenant approval setting) — shipped 2026-10-14
 
-- Optional per-tenant setting: *require my approval before support access*, for a client who asks for it.
+- Migration `1796000000000-RequireSupportApproval`:
+  - Added `require_support_approval` (`boolean NOT NULL DEFAULT false`) to `companies`.
+  - Added `support_access_granted_until` (`timestamptz NULL`) and `support_access_code` (`varchar(32) NULL`) to `companies`.
+  - Partial index `idx_companies_support_approval` on `(id) WHERE require_support_approval = true`.
+- Shared schemas (`@brics/shared`):
+  - `TenantSummaryDto` updated with `requireSupportApproval: boolean` and `supportAccessGrantedUntil: string | null`.
+  - `createSupportSessionSchema` accepts optional `approvalCode?: string`.
+  - Added `updateTenantSettingsSchema` / `UpdateTenantSettingsDto`.
+  - Added `grantSupportAccessSchema` (`durationHours: number (1-72)`) / `GrantSupportAccessDto`.
+- Backend endpoints & logic:
+  - `SupportSessionService.open`: If `tenant.requireSupportApproval` is true, requires an active granted access window (`supportAccessGrantedUntil > now()`) OR a matching 6-digit `approvalCode`. If not satisfied, throws `ForbiddenException('SUPPORT_APPROVAL_REQUIRED: ...')`.
+  - `CompanyService.grantSupportAccess`: Tenant Owner generates random 6-digit approval code and sets `supportAccessGrantedUntil` for specified duration (default 4 hours); returns `{ grantedUntil, code }` and records audit log.
+  - `CompanyService.revokeSupportAccess`: Immediately clears granted access window and code.
+  - `PlatformService.updateTenantSettings`: Gated on `platform.tenants.manage` via `PATCH /platform/tenants/:id/settings`, allowing platform administrators to toggle `requireSupportApproval` with an audit record.
+- Web UI & Components:
+  - `OpenSupportSessionDialog`: Dynamically checks `requireSupportApproval` and `supportAccessGrantedUntil`. If approval is required and no active window exists, prompts operator for the 6-digit approval code. If pre-approved, displays an active notice.
+  - `AdminTenantDetailPage` (`/admin/tenants/[id]`): Displays Support Approval status in definition list, and provides a toggle button for platform administrators with `platform.tenants.manage`.
+  - `SupportAccessSettings` on `/settings/company`: Allows tenant owners to toggle `requireSupportApproval`, view active support access windows, grant temporary access windows (1h, 2h, 4h, 8h, 24h) with clear display and copying of the generated 6-digit approval code, or revoke access immediately.
+- 7 new tests across web dialog, tenant detail, and company support access settings (web tests 211 → 218). All backend unit and e2e tests passing.
 
 ### S4 — billing (deferred)
 

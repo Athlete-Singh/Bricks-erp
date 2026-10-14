@@ -1,7 +1,12 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { CreateSupportSessionDto, CreateTenantDto, SuspendTenantDto } from '@brics/shared';
+import type {
+  CreateSupportSessionDto,
+  CreateTenantDto,
+  SuspendTenantDto,
+  UpdateTenantSettingsDto,
+} from '@brics/shared';
 import { useSession } from '@/features/auth/use-auth';
 import * as api from './api';
 
@@ -52,6 +57,17 @@ export function useReactivateTenant() {
   return useMutation({
     mutationFn: (id: string) => api.reactivateTenant(id),
     onSuccess: (_data, id) => {
+      void queryClient.invalidateQueries({ queryKey: platformKeys.tenants });
+      void queryClient.invalidateQueries({ queryKey: platformKeys.tenant(id) });
+    },
+  });
+}
+
+export function useUpdateTenantSettings() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, dto }: { id: string; dto: UpdateTenantSettingsDto }) => api.updateTenantSettings(id, dto),
+    onSuccess: (_data, { id }) => {
       void queryClient.invalidateQueries({ queryKey: platformKeys.tenants });
       void queryClient.invalidateQueries({ queryKey: platformKeys.tenant(id) });
     },

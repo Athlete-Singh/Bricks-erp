@@ -31,6 +31,8 @@ const TENANTS: TenantSummaryDto[] = [
     planName: 'starter',
     trialEndsAt: null,
     lastActiveAt: null,
+    requireSupportApproval: false,
+    supportAccessGrantedUntil: null,
     createdAt: '2026-10-14T00:00:00.000Z',
   },
   {
@@ -41,6 +43,8 @@ const TENANTS: TenantSummaryDto[] = [
     planName: null,
     trialEndsAt: null,
     lastActiveAt: null,
+    requireSupportApproval: true,
+    supportAccessGrantedUntil: null,
     createdAt: '2026-10-10T00:00:00.000Z',
   },
 ];

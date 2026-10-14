@@ -76,6 +76,17 @@ describe('Schema integrity (e2e)', () => {
     });
   });
 
+  describe('SaaS platform and support guarantees (S1-S3)', () => {
+    it.each([
+      ['idx_companies_status', 'tenant status index exists'],
+      ['idx_companies_support_approval', 'support approval setting index exists'],
+      ['uq_support_sessions_open', 'at most one open support session per platform user and tenant'],
+      ['idx_audit_logs_support_session', 'audit logs indexed by support session'],
+    ])('enforces %s — %s', (name) => {
+      expect(indexes.has(name)).toBe(true);
+    });
+  });
+
   describe('master-data business keys (P3)', () => {
     it.each([
       'uq_units_company_name',

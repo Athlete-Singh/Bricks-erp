@@ -55,6 +55,8 @@ export interface TenantSummaryDto {
   planName: string | null;
   trialEndsAt: string | null;
   lastActiveAt: string | null;
+  requireSupportApproval: boolean;
+  supportAccessGrantedUntil: string | null;
   createdAt: string;
 }
 
@@ -130,8 +132,14 @@ export type SupportSessionCloseKind = (typeof SUPPORT_SESSION_CLOSE_KINDS)[numbe
 export const createSupportSessionSchema = z.object({
   tenantId: z.string().uuid(),
   reason: z.string().min(3, 'A reason is required — it goes on the audit trail').max(500),
+  approvalCode: z.string().optional(),
 });
 export type CreateSupportSessionDto = z.infer<typeof createSupportSessionSchema>;
+
+export const updateTenantSettingsSchema = z.object({
+  requireSupportApproval: z.boolean().optional(),
+});
+export type UpdateTenantSettingsDto = z.infer<typeof updateTenantSettingsSchema>;
 
 export interface SupportSessionDto {
   id: string;

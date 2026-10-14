@@ -13,7 +13,7 @@
 |---|---|---|---|---|---|---|
 | CP1 MVP | 101 | 85 | 6 | 1 | 9 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
-| S — SaaS platform | 11 | 8 | 1 | 0 | 1 | 1 |
+| S — SaaS platform | 11 | 9 | 1 | 0 | 0 | 1 |
 
 **CP1 done: 84 %** (85 of 101 features ✅)
 
@@ -212,7 +212,7 @@ reasoning in `.brain/modules/saas-platform.md`, decision in ADR-052.
 | PLT-07 | Support sessions: reason required, two hours, closes itself, business permissions scoped to one tenant | S | S2.2 | ✅ | ✅ | — | ✅ | ✅ | Backend shipped in S2.1. Web switch, banner countdown, history, open dialog shipped in S2.2 |
 | PLT-08 | Audit rows marked `platform_support`; the owner sees that support looked, and why | S | S2.2 | ✅ | ✅ | — | ✅ | ✅ | Backend shipped in S2.1. Audit screen Support badge, reason tooltip, and support filter shipped in S2.2 |
 | PLT-09 | Tenant detail: users and roles, counts, last activity, support session history | S | S3.1 | ✅ | ✅ | — | ✅ | ✅ | User roster, kilns/sites, document counts, last active, support history tab |
-| PLT-10 | Per-tenant setting: *require my approval before support access* | S | S3.2 | ⬜ | ⬜ | — | ⬜ | ⬜ | For a client who asks for it |
+| PLT-10 | Per-tenant setting: *require my approval before support access* | S | S3.2 | ✅ | ✅ | — | ✅ | ✅ | Migration 1796000000000, 6-digit access code, temporary grant window, dialog gate |
 | PLT-11 | Billing: plans, trial expiry, payment status, automatic suspension | S | S4 | ⏭️ | ⏭️ | — | ⏭️ | ⏭️ | Deferred until invoicing by hand hurts |
 
 ### Basics from the Functional Spec needed to run the business (CP1, basic depth)

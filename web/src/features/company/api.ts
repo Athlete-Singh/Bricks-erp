@@ -1,4 +1,11 @@
-import type { CreateFinancialYearDto, CreateSiteDto, GstScheme, SiteType, UpdateCompanyDto } from '@brics/shared';
+import type {
+  CreateFinancialYearDto,
+  CreateSiteDto,
+  GrantSupportAccessDto,
+  GstScheme,
+  SiteType,
+  UpdateCompanyDto,
+} from '@brics/shared';
 import { apiClient } from '@/lib/api-client';
 
 export interface Company {
@@ -11,6 +18,8 @@ export interface Company {
   logoUrl: string | null;
   gstScheme: GstScheme;
   isActive: boolean;
+  requireSupportApproval: boolean;
+  supportAccessGrantedUntil: string | null;
 }
 
 export interface Site {
@@ -46,6 +55,19 @@ export function fetchCurrentCompany(signal?: AbortSignal) {
 
 export function updateCompany(id: string, dto: UpdateCompanyDto) {
   return apiClient.put<Company>(`/companies/${id}`, dto);
+}
+
+export interface GrantSupportAccessResult {
+  grantedUntil: string;
+  code: string;
+}
+
+export function grantSupportAccess(dto: GrantSupportAccessDto) {
+  return apiClient.post<GrantSupportAccessResult>('/companies/current/grant-support-access', dto);
+}
+
+export function revokeSupportAccess() {
+  return apiClient.post<{ revoked: true }>('/companies/current/revoke-support-access');
 }
 
 // ── kilns / sites ────────────────────────────────────────────────────────────

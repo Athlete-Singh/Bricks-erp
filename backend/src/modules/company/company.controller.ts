@@ -3,9 +3,11 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   createCompanySchema,
   updateCompanySchema,
+  grantSupportAccessSchema,
   PERMISSIONS,
   type CreateCompanyDto,
   type UpdateCompanyDto,
+  type GrantSupportAccessDto,
 } from '@brics/shared';
 import { CurrentCompany, CurrentUser, RequirePermissions } from '../../common/decorators/auth.decorators';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -70,5 +72,28 @@ export class CompanyController {
     @Body(new ZodValidationPipe(updateCompanySchema)) dto: UpdateCompanyDto,
   ) {
     return this.companyService.updateCompany(userId, id, dto, isSuperAdmin);
+  }
+
+  @Post('current/grant-support-access')
+  @RequirePermissions(PERMISSIONS.COMPANY_MANAGE)
+  @ApiOperation({ summary: 'Grant temporary support access and generate an access code (PLT-10)' })
+  async grantSupportAccess(
+    @CurrentUser('sub') userId: string,
+    @CurrentCompany() companyId: string,
+    @CurrentUser('isSuperAdmin') isSuperAdmin: boolean,
+    @Body(new ZodValidationPipe(grantSupportAccessSchema)) dto: GrantSupportAccessDto,
+  ) {
+    return this.companyService.grantSupportAccess(userId, companyId, dto.durationHours, isSuperAdmin);
+  }
+
+  @Post('current/revoke-support-access')
+  @RequirePermissions(PERMISSIONS.COMPANY_MANAGE)
+  @ApiOperation({ summary: 'Revoke temporary support access immediately (PLT-10)' })
+  async revokeSupportAccess(
+    @CurrentUser('sub') userId: string,
+    @CurrentCompany() companyId: string,
+    @CurrentUser('isSuperAdmin') isSuperAdmin: boolean,
+  ) {
+    return this.companyService.revokeSupportAccess(userId, companyId, isSuperAdmin);
   }
 }

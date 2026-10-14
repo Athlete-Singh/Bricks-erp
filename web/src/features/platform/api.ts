@@ -6,6 +6,7 @@ import type {
   SuspendTenantDto,
   TenantDetailDto,
   TenantSummaryDto,
+  UpdateTenantSettingsDto,
 } from '@brics/shared';
 import { apiClient } from '@/lib/api-client';
 import { restorePlatformTokens } from '@/lib/support-token-store';
@@ -44,6 +45,10 @@ export function suspendTenant(id: string, dto: SuspendTenantDto) {
 
 export function reactivateTenant(id: string) {
   return apiClient.post<TenantSummaryDto>(`/platform/tenants/${id}/reactivate`);
+}
+
+export function updateTenantSettings(id: string, dto: UpdateTenantSettingsDto) {
+  return apiClient.patch<TenantSummaryDto>(`/platform/tenants/${id}/settings`, dto);
 }
 
 // ── Support sessions (PLT-07) ────────────────────────────────────────────────

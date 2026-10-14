@@ -40,4 +40,14 @@ export class Company extends BaseEntity {
 
   @Column({ name: 'last_active_at', type: 'timestamptz', nullable: true })
   lastActiveAt: Date | null;
+
+  /** S3.2 — per-tenant support approval requirement (PLT-10). */
+  @Column({ name: 'require_support_approval', type: 'boolean', default: false })
+  requireSupportApproval: boolean;
+
+  @Column({ name: 'support_access_granted_until', type: 'timestamptz', nullable: true })
+  supportAccessGrantedUntil: Date | null;
+
+  @Column({ name: 'support_access_code', type: 'varchar', length: 32, nullable: true })
+  supportAccessCode: string | null;
 }

@@ -64,6 +64,8 @@ Add the row when you **plan** an endpoint (BE ⬜), and update it the moment any
 | GET | /companies/:id | A company the caller belongs to | company.view | ADM-01 | P1 | 🧩 | ⬜ | — |
 | POST | /companies | Create a company; creator becomes its Owner | company.manage | ADM-01 | P1 | 🧩 | ⬜ | — |
 | PUT | /companies/:id | Update a company the caller belongs to | company.manage | ADM-01 | P1 | ✅ | ✅ | — |
+| POST | /companies/current/grant-support-access | PLT-10 — grant temporary support access window + generate 6-digit access code | company.manage | PLT-10 | S3.2 | ✅ | ✅ | — |
+| POST | /companies/current/revoke-support-access | PLT-10 — revoke temporary support access immediately | company.manage | PLT-10 | S3.2 | ✅ | ✅ | — |
 | GET | /sites | Kilns/sites the caller can access (kiln switcher) | bearer | ADM-03 | P1 | ✅ | ✅ | ⬜ |
 | POST | /sites | Create a kiln/site in the JWT tenant | company.manage | ADM-03 | P1 | ✅ | ✅ | — |
 | GET | /financial-years | Financial years of the JWT tenant | company.view | ADM-04 | P1 | ✅ | ✅ | — |
@@ -225,6 +227,7 @@ Add the row when you **plan** an endpoint (BE ⬜), and update it the moment any
 | POST | /platform/tenants | PLT-05 — onboard a tenant: company + chart + **first FY** + owner, one transaction | platform.tenants.manage | PLT-05 | S1.1 | ✅ | ✅ | — |
 | POST | /platform/tenants/:id/suspend | PLT-06 — suspend a tenant; sign-in refused with the `SUSPENDED_TENANT_SIGN_IN_MESSAGE` string | platform.tenants.manage | PLT-06 | S1.1 | ✅ | ✅ | — |
 | POST | /platform/tenants/:id/reactivate | PLT-06 — reactivate a suspended tenant | platform.tenants.manage | PLT-06 | S1.1 | ✅ | ✅ | — |
+| PATCH | /platform/tenants/:id/settings | PLT-10 — update tenant platform settings (e.g. requireSupportApproval) | platform.tenants.manage | PLT-10 | S3.2 | ✅ | ✅ | — |
 | POST | /platform/support-sessions | PLT-07 — open a session on one tenant (reason required, 2 h); returns `{ session, auth }` with an owner-scoped switched JWT | platform.support.request | PLT-07 | S2.1 | ✅ | ✅ | — |
 | POST | /platform/support-sessions/:id/close | PLT-07 — close early (opener only) | platform.support.request | PLT-07 | S2.1 | ✅ | ✅ | — |
 | GET | /platform/support-sessions | PLT-07 — the signed-in admin's own session history (filter `?tenantId=`) | platform.support.request | PLT-07 | S2.1 | ✅ | ✅ | — |

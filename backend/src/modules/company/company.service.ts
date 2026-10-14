@@ -117,7 +117,81 @@ export class CompanyService {
       logoUrl: company.logoUrl,
       gstScheme: company.gstScheme,
       isActive: company.isActive,
+      requireSupportApproval: company.requireSupportApproval,
     };
+  }
+
+  /**
+   * PLT-10 (S3.2) — Tenant owner grants temporary support access and generates an approval code.
+   */
+  async grantSupportAccess(
+    userId: string,
+    companyId: string,
+    durationHours = 4,
+    isSuperAdmin = false,
+  ): Promise<{ grantedUntil: string; code: string }> {
+    await this.membership.assertMember(userId, companyId, isSuperAdmin);
+    const company = await this.requireCompany(companyId);
+
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    const grantedUntil = new Date(Date.now() + durationHours * 60 * 60 * 1000);
+
+    const before = {
+      supportAccessGrantedUntil: company.supportAccessGrantedUntil,
+      supportAccessCode: company.supportAccessCode ? '***' : null,
+    };
+    company.supportAccessGrantedUntil = grantedUntil;
+    company.supportAccessCode = code;
+    company.updatedBy = userId;
+    await this.companyRepo.save(company);
+
+    await this.audit.record({
+      companyId,
+      userId,
+      entityName: 'companies',
+      entityId: companyId,
+      action: 'UPDATE',
+      before,
+      after: {
+        supportAccessGrantedUntil: grantedUntil.toISOString(),
+        supportAccessCode: '***',
+        durationHours,
+      },
+    });
+
+    return { grantedUntil: grantedUntil.toISOString(), code };
+  }
+
+  /**
+   * PLT-10 (S3.2) — Tenant owner revokes temporary support access immediately.
+   */
+  async revokeSupportAccess(userId: string, companyId: string, isSuperAdmin = false): Promise<{ revoked: true }> {
+    await this.membership.assertMember(userId, companyId, isSuperAdmin);
+    const company = await this.requireCompany(companyId);
+
+    const before = {
+      supportAccessGrantedUntil: company.supportAccessGrantedUntil,
+      supportAccessCode: company.supportAccessCode ? '***' : null,
+    };
+    company.supportAccessGrantedUntil = null;
+    company.supportAccessCode = null;
+    company.updatedBy = userId;
+    await this.companyRepo.save(company);
+
+    await this.audit.record({
+      companyId,
+      userId,
+      entityName: 'companies',
+      entityId: companyId,
+      action: 'UPDATE',
+      before,
+      after: {
+        supportAccessGrantedUntil: null,
+        supportAccessCode: null,
+      },
+    });
+
+    return { revoked: true };
   }
 
   private async requireCompany(companyId: string): Promise<Company> {

@@ -1,7 +1,13 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { CreateFinancialYearDto, CreateSiteDto, SwitchCompanyDto, UpdateCompanyDto } from '@brics/shared';
+import type {
+  CreateFinancialYearDto,
+  CreateSiteDto,
+  GrantSupportAccessDto,
+  SwitchCompanyDto,
+  UpdateCompanyDto,
+} from '@brics/shared';
 import { useAuthStore } from '@/stores/auth-store';
 import * as authApi from '@/features/auth/api';
 import * as api from './api';
@@ -67,6 +73,26 @@ export function useUpdateCompany() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: companyKeys.current });
       void queryClient.invalidateQueries({ queryKey: companyKeys.mine });
+    },
+  });
+}
+
+export function useGrantSupportAccess() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (dto: GrantSupportAccessDto) => api.grantSupportAccess(dto),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: companyKeys.current });
+    },
+  });
+}
+
+export function useRevokeSupportAccess() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.revokeSupportAccess(),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: companyKeys.current });
     },
   });
 }

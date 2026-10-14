@@ -27,15 +27,17 @@ const TENANT: TenantSummaryDto = {
   planName: 'starter',
   trialEndsAt: null,
   lastActiveAt: null,
+  requireSupportApproval: false,
+  supportAccessGrantedUntil: null,
   createdAt: '2026-10-14T00:00:00.000Z',
 };
 
-function renderDialog(open = true) {
+function renderDialog(open = true, tenant = TENANT) {
   const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
   const onClose = vi.fn();
   const utils = render(
     <QueryClientProvider client={client}>
-      <OpenSupportSessionDialog tenant={TENANT} open={open} onClose={onClose} />
+      <OpenSupportSessionDialog tenant={tenant} open={open} onClose={onClose} />
     </QueryClientProvider>,
   );
   return { ...utils, onClose };
@@ -134,5 +136,74 @@ describe('OpenSupportSessionDialog (PLT-07)', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/already exists for this tenant/i);
     expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it('renders approval code input and warning when requireSupportApproval is enabled without pre-approval', async () => {
+    const approvalTenant: TenantSummaryDto = {
+      ...TENANT,
+      id: 't-approval',
+      requireSupportApproval: true,
+      supportAccessGrantedUntil: null,
+    };
+
+    renderDialog(true, approvalTenant);
+
+    expect(screen.getByText(/this tenant requires explicit support approval/i)).toBeInTheDocument();
+    const codeInput = screen.getByRole('textbox', { name: /approval code/i });
+    expect(codeInput).toBeInTheDocument();
+
+    // Trying to submit without code shows validation error
+    await userEvent.type(screen.getByRole('textbox', { name: /reason/i }), 'Investigating audit gap');
+    await userEvent.click(screen.getByRole('button', { name: /open session/i }));
+
+    expect(await screen.findByText(/approval code is required for this tenant/i)).toBeInTheDocument();
+    expect(openMock).not.toHaveBeenCalled();
+
+    // Typing the approval code permits submission
+    await userEvent.type(codeInput, '654321');
+    openMock.mockResolvedValue({
+      session: { id: 'sess-2', tenantId: 't-approval', expiresAt: '2026-10-14T12:00:00.000Z' },
+      auth: { accessToken: 'token', user: { roleCode: 'platform_support' } },
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: /open session/i }));
+
+    await waitFor(() => {
+      expect(openMock).toHaveBeenCalledWith({
+        tenantId: 't-approval',
+        reason: 'Investigating audit gap',
+        approvalCode: '654321',
+      });
+    });
+  });
+
+  it('shows pre-approval alert and does not require code when supportAccessGrantedUntil is in the future', async () => {
+    const futureDate = new Date(Date.now() + 3 * 3600 * 1000).toISOString();
+    const preApprovedTenant: TenantSummaryDto = {
+      ...TENANT,
+      id: 't-preapproved',
+      requireSupportApproval: true,
+      supportAccessGrantedUntil: futureDate,
+    };
+
+    renderDialog(true, preApprovedTenant);
+
+    expect(screen.getByText(/tenant owner has pre-approved temporary support access until/i)).toBeInTheDocument();
+
+    await userEvent.type(screen.getByRole('textbox', { name: /reason/i }), 'Fixing billing calculation');
+    openMock.mockResolvedValue({
+      session: { id: 'sess-3', tenantId: 't-preapproved', expiresAt: '2026-10-14T12:00:00.000Z' },
+      auth: { accessToken: 'token', user: { roleCode: 'platform_support' } },
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: /open session/i }));
+
+    await waitFor(() => {
+      expect(openMock).toHaveBeenCalledWith({
+        tenantId: 't-preapproved',
+        reason: 'Fixing billing calculation',
+        approvalCode: undefined,
+      });
+    });
   });
 });

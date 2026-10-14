@@ -200,4 +200,66 @@ describe('Platform support sessions (e2e)', () => {
     );
     expect(supportRows.length).toBeGreaterThan(0);
   });
+
+  describe('PLT-10 (S3.2) — per-tenant support approval requirement', () => {
+    it('blocks support access when requireSupportApproval is enabled until owner grants access', async () => {
+      // 1. Platform admin enables requireSupportApproval for tenant
+      await request(app.getHttpServer())
+        .patch(`/api/v1/platform/tenants/${tenantId}/settings`)
+        .set('Authorization', `Bearer ${platformToken}`)
+        .send({ requireSupportApproval: true })
+        .expect(200);
+
+      // 2. Opening session without approval is 403
+      const blockedRes = await request(app.getHttpServer())
+        .post('/api/v1/platform/support-sessions')
+        .set('Authorization', `Bearer ${platformToken}`)
+        .send({ tenantId, reason: 'attempting support without approval' })
+        .expect(403);
+      expect(blockedRes.body.error.message).toContain('SUPPORT_APPROVAL_REQUIRED');
+
+      // 3. Owner grants temporary support access
+      const grantRes = await request(app.getHttpServer())
+        .post('/api/v1/companies/current/grant-support-access')
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({ durationHours: 2 })
+        .expect(201);
+      expect(grantRes.body.data.code).toHaveLength(6);
+      expect(grantRes.body.data.grantedUntil).toBeDefined();
+
+      // 4. Platform admin can now open a support session
+      const openRes = await request(app.getHttpServer())
+        .post('/api/v1/platform/support-sessions')
+        .set('Authorization', `Bearer ${platformToken}`)
+        .send({ tenantId, reason: 'authorized support session' })
+        .expect(201);
+      const newSessionId = openRes.body.data.session.id;
+
+      // Close session
+      await request(app.getHttpServer())
+        .post(`/api/v1/platform/support-sessions/${newSessionId}/close`)
+        .set('Authorization', `Bearer ${platformToken}`)
+        .expect(200);
+
+      // 5. Owner revokes support access
+      await request(app.getHttpServer())
+        .post('/api/v1/companies/current/revoke-support-access')
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .expect(201);
+
+      // 6. Access is blocked again
+      await request(app.getHttpServer())
+        .post('/api/v1/platform/support-sessions')
+        .set('Authorization', `Bearer ${platformToken}`)
+        .send({ tenantId, reason: 'attempting support after revocation' })
+        .expect(403);
+
+      // Reset setting
+      await request(app.getHttpServer())
+        .patch(`/api/v1/platform/tenants/${tenantId}/settings`)
+        .set('Authorization', `Bearer ${platformToken}`)
+        .send({ requireSupportApproval: false })
+        .expect(200);
+    });
+  });
 });

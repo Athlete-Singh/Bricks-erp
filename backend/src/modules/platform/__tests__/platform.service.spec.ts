@@ -371,4 +371,47 @@ describe('PlatformService', () => {
       await expect(service.getTenant('unknown-id')).rejects.toThrow(NotFoundException);
     });
   });
+
+  describe('updateTenantSettings (PLT-10)', () => {
+    it('updates requireSupportApproval and records an audit log', async () => {
+      const company = {
+        id: 'tenant-1',
+        name: 'Shri Ram Bricks',
+        stateCode: '09',
+        status: 'active',
+        planName: null,
+        trialEndsAt: null,
+        lastActiveAt: null,
+        requireSupportApproval: false,
+        supportAccessGrantedUntil: null,
+        createdAt: new Date('2026-01-01T00:00:00Z'),
+      } as Company;
+      companyRepo.findOneBy.mockResolvedValue(company);
+      companyRepo.save.mockImplementation((c) => Promise.resolve(c as Company));
+
+      const updated = await service.updateTenantSettings('tenant-1', ACTOR_ID, {
+        requireSupportApproval: true,
+      });
+
+      expect(updated.requireSupportApproval).toBe(true);
+      expect(company.requireSupportApproval).toBe(true);
+      expect(audit.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          companyId: 'tenant-1',
+          userId: ACTOR_ID,
+          entityName: 'companies',
+          action: 'UPDATE',
+          before: { requireSupportApproval: false },
+          after: { requireSupportApproval: true },
+        }),
+      );
+    });
+
+    it('throws NotFoundException when tenant does not exist', async () => {
+      companyRepo.findOneBy.mockResolvedValue(null);
+      await expect(
+        service.updateTenantSettings('unknown-tenant', ACTOR_ID, { requireSupportApproval: true }),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
 });

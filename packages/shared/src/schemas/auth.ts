@@ -44,12 +44,18 @@ export const createCompanySchema = z.object({
   address: blankToNull(z.string()),
   logoUrl: blankToNull(z.string().url('Must be a valid URL')),
   gstScheme: gstSchemeEnum.default('regular_12_itc'),
+  requireSupportApproval: z.boolean().optional(),
 });
 export type CreateCompanyDto = z.infer<typeof createCompanySchema>;
 
 export const updateCompanySchema = createCompanySchema.partial();
 export type UpdateCompanyDto = z.infer<typeof updateCompanySchema>;
 export type UpdateCompanyInput = z.input<typeof updateCompanySchema>;
+
+export const grantSupportAccessSchema = z.object({
+  durationHours: z.number().int().min(1).max(72).default(4),
+});
+export type GrantSupportAccessDto = z.infer<typeof grantSupportAccessSchema>;
 
 export const siteTypeEnum = z.enum(SITE_TYPES);
 

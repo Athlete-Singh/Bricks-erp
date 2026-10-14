@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSession } from '@/features/auth/use-auth';
 import { CompanyForm } from '@/features/company/components/company-form';
+import { SupportAccessSettings } from '@/features/company/components/support-access-settings';
 import { useCurrentCompany } from '@/features/company/hooks';
 import { messageOf } from '@/features/auth/use-auth';
 
@@ -37,9 +38,10 @@ export default function CompanySettingsPage() {
   const canEdit = can(PERMISSIONS.COMPANY_MANAGE);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-8">
       {!canEdit && <Alert variant="info">You can view these details but not change them.</Alert>}
       <CompanyForm company={company} canEdit={canEdit} />
+      <SupportAccessSettings company={company} canEdit={canEdit} />
     </div>
   );
 }
