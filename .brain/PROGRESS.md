@@ -333,7 +333,7 @@ The P track is never blocked by the M track.
 | **S** (SaaS) | S2.2 | Web: open/close a session in `/admin`, support markers in the owner's audit log | ✅ |
 | **S** (SaaS) | S3.1 | Tenant detail page + support session history | ✅ |
 | **S** (SaaS) | S3.2 | Per-tenant *require my approval* setting | ✅ |
-| **S** (SaaS) | S4 | Billing and plans | ⏭️ deferred |
+| **S** (SaaS) | S4 | Billing and plans | ✅ |
 
 ### M track — Flutter supervisor app (later, wherever Flutter is installed)
 
