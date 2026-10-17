@@ -20,6 +20,7 @@
     "migration:run": "pnpm typeorm migration:run",
     "migration:revert": "pnpm typeorm migration:revert",
     "seed": "ts-node src/database/seeds/run-seed.ts",
+    "seed:platform-admin": "ts-node src/database/seeds/run-platform-admin-seed.ts",
     "migration:run:prod": "ENV_FILE=.env.production pnpm typeorm migration:run",
     "seed:prod": "ENV_FILE=.env.production ts-node src/database/seeds/run-seed.ts",
     "db:setup:prod": "pnpm migration:run:prod && pnpm seed:prod"
