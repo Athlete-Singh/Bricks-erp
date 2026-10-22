@@ -1,4 +1,4 @@
-package com.brics.brics_mobile
+package com.bricks.user
 
 import io.flutter.embedding.android.FlutterActivity
 

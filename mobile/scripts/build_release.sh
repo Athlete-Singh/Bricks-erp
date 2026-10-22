@@ -1,19 +1,16 @@
 #!/usr/bin/env bash
 # Builds the supervisor app for release (MOB-05 Android, MOB-06 iOS).
 #
-#   API_BASE_URL=https://<api-host>/api/v1 scripts/build_release.sh android|ios
+#   scripts/build_release.sh android|ios
 #
-# A release build has no fallback server address, so this refuses to run
-# without one. Android signing comes from android/key.properties (see README);
+# The live API is the owner's choice (OPEN_QUESTIONS #22, 2026-10-22); set
+# API_BASE_URL to build against another server. It must be https://. Android signing comes from android/key.properties (see README);
 # iOS signing needs the client's Apple developer account and is done in Xcode.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 target="${1:-}"
-if [[ -z "${API_BASE_URL:-}" ]]; then
-  echo "API_BASE_URL is required, e.g. https://brics-api.example.com/api/v1" >&2
-  exit 1
-fi
+API_BASE_URL="${API_BASE_URL:-https://bhatta-erp-backend.vercel.app/api/v1}"
 if [[ "$API_BASE_URL" != https://* ]]; then
   echo "API_BASE_URL must be https:// for a release build" >&2
   exit 1

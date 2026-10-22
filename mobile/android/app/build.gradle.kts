@@ -15,7 +15,7 @@ plugins {
 }
 
 android {
-    namespace = "com.brics.brics_mobile"
+    namespace = "com.bricks.user"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -25,9 +25,9 @@ android {
     }
 
     defaultConfig {
-        // Placeholder until OPEN_QUESTIONS #12 names the publishing account; it is
-        // fixed for good at the first store upload.
-        applicationId = "com.brics.brics_mobile"
+        // Owner's choice (OPEN_QUESTIONS #12, 2026-10-22). Fixed for good at the
+        // first store upload — never change it after.
+        applicationId = "com.bricks.user"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

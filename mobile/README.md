@@ -35,12 +35,14 @@ Visual rules: `../docs/05-design-system.md` → Mobile, ADR-054.
 
 ## Release builds
 ```bash
-API_BASE_URL=https://<api-host>/api/v1 scripts/build_release.sh android   # per-ABI APKs (~20 MB) + an .aab for Play
-API_BASE_URL=https://<api-host>/api/v1 scripts/build_release.sh ios       # .ipa — needs signing in Xcode
+scripts/build_release.sh android   # signed per-ABI APKs (~21 MB) + app-release.aab for Play
+scripts/build_release.sh ios       # .ipa — needs signing in Xcode (Apple account, OQ #23)
 ```
-The script refuses to build without an `https://` API address; a release build has no fallback server.
+Release builds talk to `https://bhatta-erp-backend.vercel.app/api/v1` (OQ #22); set `API_BASE_URL` to override (https only).
 
-**Android signing.** Create a keystore once and keep it — and its passwords — somewhere the owner controls (OPEN_QUESTIONS #22):
+**Android signing.** The upload keystore exists: `~/brics-keys/brics-upload.jks` on the owner's Mac, with its passwords in
+`~/brics-keys/key.properties.backup`. **Back that folder up** — without it the app can never be updated on the Play Store.
+On another machine, copy the folder and recreate `android/key.properties` from the backup. To create one from scratch:
 ```bash
 keytool -genkey -v -keystore ~/brics-upload.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
 ```
@@ -53,8 +55,7 @@ keyPassword=…
 ```
 Without it the release build is signed with the debug key — fine for installing on a test phone, refused by the Play Store.
 
-**Package id.** `com.brics.brics_mobile` / `com.brics.bricsMobile` are placeholders (OPEN_QUESTIONS #12). They are fixed for
-good at the first store upload — settle the publishing account first.
+**Package id.** `com.bricks.user` on Android and iOS (OPEN_QUESTIONS #12). Fixed for good at the first store upload.
 
 **iOS.** Builds unsigned here (`flutter build ios --release --no-codesign`). TestFlight / App Store need the client's
 Apple developer account (OPEN_QUESTIONS #23; the $99/yr fee is the client's, SOW §3).

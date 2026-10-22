@@ -1,6 +1,6 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** **M track (Flutter app) M0–M6 ✅ 2026-10-22** — store release ⚠️ on OQ #12/#22/#23. P13.3 — go-live import and user guide ✅ done; UAT remains. P13.1 ✅. P13.2: both apps deployed on Vercel against the development database; **backups (ADM-09) still open** · P11 ✅ done and **audited** — dashboard + CST + three register reports with CSV exports, with the audit's three defects and three gaps fixed → **next: P13** (e2e + security, deploy + backups, onboarding + guide + UAT → CP1 sign-off)
+**Client Phase:** CP1 (MVP) · **Current step:** **M track (Flutter app) M0–M6 ✅ 2026-10-22**, redesigned (ADR-054); signed Android release ✅ (`com.bricks.user`); iOS store release ⚠️ on OQ #23 (Apple account). P13.3 — go-live import and user guide ✅ done; UAT remains. P13.1 ✅. P13.2: both apps deployed on Vercel against the development database; **backups (ADM-09) still open** · P11 ✅ done and **audited** — dashboard + CST + three register reports with CSV exports, with the audit's three defects and three gaps fixed → **next: P13** (e2e + security, deploy + backups, onboarding + guide + UAT → CP1 sign-off)
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
@@ -268,8 +268,8 @@ correctness" — a step is ✅ only when a test proves a *second tenant is refus
 - **Not verified here:** a run against a live API — this machine has no Postgres/docker and no backend `.env`. The fake backend in
   `mobile/test/helpers/fake_api.dart` follows the real envelope, error contract and `IdempotencyService` replay; the first run on a
   phone against the dev API is the next check (see `docs/modules/mobile-app.md` → How to test).
-- **Blockers (owner):** OQ #12 package id · OQ #22 production API address + Android keystore custody · OQ #23 Apple developer account.
-  Until then MOB-05/06 are ⚠️: the builds work, nothing can be published.
+- **Release (2026-10-22):** package id `com.bricks.user` (OQ #12 closed); release API `https://bhatta-erp-backend.vercel.app/api/v1` (OQ #22 closed — note it runs on the development database). Upload keystore at `~/brics-keys/` on the owner's Mac — **back it up**. `scripts/build_release.sh android` → signed per-ABI APKs + `app-release.aab` (verified signer CN=BRICS). Redesign: ADR-054.
+- **Blockers (owner):** OQ #23 Apple developer account — iOS signing / TestFlight (MOB-06 ⚠️). Play Store listing, screenshots and the upload itself are the owner's store actions.
 - **Found while building (backend, not changed):** none blocking. Attendance duplicates are enforced only by the DB unique indexes
   (`uq_labour_attendance_*` → 409 `DUPLICATE_VALUE`), not by the service; the app warns before a second roll, which is enough for CP1.
 - **Next step (exact):** first run on a phone against the dev API (needs the backend running somewhere reachable), then P13.2 —
@@ -351,7 +351,7 @@ backend and web first. Whoever builds this track edits only the **Mob** columns 
 | M3 | Attendance offline (LAB-02) | P6.1 | ✅ |
 | M4 | GRN offline (PUR-02) | P7.1 | ✅ |
 | M5 | Dispatch + delivery acknowledgement (DSP-04) | P9.1 | ✅ |
-| M6 | Offline hardening (MOB-04), Android APK (MOB-05), **iOS build (MOB-06)** | all of the above | ✅ (store release ⚠️ — OQ #12/#22/#23) |
+| M6 | Offline hardening (MOB-04), Android APK (MOB-05), **iOS build (MOB-06)** | all of the above | ✅ (iOS store release ⚠️ — OQ #23) |
 
 > **Why M2–M5 must wait for `SYN-01`:** the app queues entries offline and resends them when the network returns. Without
 > `Idempotency-Key` on the create endpoints, every retry creates a **duplicate** production entry, GRN or dispatch. That is

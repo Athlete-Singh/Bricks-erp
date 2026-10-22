@@ -10,7 +10,7 @@
 | MOB-02 | Drift outbox + caches, SyncService, SyncStatusBadge, Sync screen | M1 | ✅ |
 | MOB-03 | Production (PRD-06), attendance (LAB-02), GRN (PUR-02), dispatch + delivery (DSP-04) | M2–M5 | ✅ |
 | MOB-04 | A full working day offline, no duplicates, conflict handling (test: `test/sync/full_day_offline_test.dart`) | M6 | ✅ |
-| MOB-05 | Android release APK — builds (`scripts/build_release.sh android`); signing key + API URL pending | M6 | 🟨 |
+| MOB-05 | Android release — signed APKs + .aab as `com.bricks.user` (`scripts/build_release.sh android`) | M6 | ✅ |
 | MOB-06 | iOS release build — builds unsigned; TestFlight needs the client's Apple account | M6 | ⚠️ |
 
 ## Architecture (ADR-053)
