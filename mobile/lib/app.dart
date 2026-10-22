@@ -1,5 +1,6 @@
 import 'package:brics_mobile/core/l10n/l10n.dart';
 import 'package:brics_mobile/core/router/app_router.dart';
+import 'package:brics_mobile/core/theme/app_motion.dart';
 import 'package:brics_mobile/core/theme/app_theme.dart';
 import 'package:brics_mobile/features/sync/presentation/sync_controller.dart';
 import 'package:flutter/material.dart';
@@ -42,6 +43,10 @@ class _BricsAppState extends ConsumerState<BricsApp> {
       ],
       supportedLocales: AppLocalizations.supportedLocales,
       debugShowCheckedModeBanner: false,
+      builder: (context, child) => MotionScope(
+        enabled: !ref.watch(reduceMotionProvider),
+        child: child ?? const SizedBox.shrink(),
+      ),
     );
   }
 }

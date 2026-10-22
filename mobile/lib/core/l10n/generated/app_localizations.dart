@@ -1327,6 +1327,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This copy of the app was built without a server address. Ask for a correctly built app.'**
   String get loginNoServer;
+
+  /// No description provided for @loginWelcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back'**
+  String get loginWelcome;
+
+  /// No description provided for @loginWelcomeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to record today\'s work at the kiln.'**
+  String get loginWelcomeHint;
+
+  /// No description provided for @loginTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Kiln to customer, on one phone'**
+  String get loginTagline;
+
+  /// No description provided for @homeGoodMorning.
+  ///
+  /// In en, this message translates to:
+  /// **'Good morning'**
+  String get homeGoodMorning;
+
+  /// No description provided for @homeGoodAfternoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Good afternoon'**
+  String get homeGoodAfternoon;
+
+  /// No description provided for @homeGoodEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Good evening'**
+  String get homeGoodEvening;
+
+  /// No description provided for @homeOnThisPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'On this phone'**
+  String get homeOnThisPhone;
+
+  /// No description provided for @homeStatWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting'**
+  String get homeStatWaiting;
+
+  /// No description provided for @homeStatSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get homeStatSent;
+
+  /// No description provided for @homeStatAttention.
+  ///
+  /// In en, this message translates to:
+  /// **'Need attention'**
+  String get homeStatAttention;
+
+  /// No description provided for @homeYourWork.
+  ///
+  /// In en, this message translates to:
+  /// **'Your work'**
+  String get homeYourWork;
+
+  /// No description provided for @homeLastSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Last synced {time}'**
+  String homeLastSynced(String time);
+
+  /// No description provided for @homeNotSyncedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not synced yet — entries are safe on this phone'**
+  String get homeNotSyncedYet;
+
+  /// No description provided for @kilnPickerSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected'**
+  String get kilnPickerSelected;
+
+  /// No description provided for @productionStagesDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of 4 stages'**
+  String productionStagesDone(int done);
+
+  /// No description provided for @productionGreenCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{bricks} green'**
+  String productionGreenCount(String bricks);
+
+  /// No description provided for @productionFiredCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{bricks} fired'**
+  String productionFiredCount(String bricks);
+
+  /// No description provided for @productionMakingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Green bricks moulded by the gang'**
+  String get productionMakingHint;
+
+  /// No description provided for @productionDryingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Bricks dried in the yard'**
+  String get productionDryingHint;
+
+  /// No description provided for @productionFiringHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Bricks fired in the chamber'**
+  String get productionFiringHint;
+
+  /// No description provided for @productionSortingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Good bricks into the yard by grade'**
+  String get productionSortingHint;
+
+  /// No description provided for @formWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'When'**
+  String get formWhen;
+
+  /// No description provided for @formCount.
+  ///
+  /// In en, this message translates to:
+  /// **'How many'**
+  String get formCount;
+
+  /// No description provided for @formMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Anything else'**
+  String get formMore;
+
+  /// No description provided for @productionWhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Where the good bricks go'**
+  String get productionWhere;
+
+  /// No description provided for @productionLosses.
+  ///
+  /// In en, this message translates to:
+  /// **'Broken and rejects'**
+  String get productionLosses;
+
+  /// No description provided for @productionLossesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Counted, not stocked.'**
+  String get productionLossesHint;
+
+  /// No description provided for @attendanceGangAndDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Gang and day'**
+  String get attendanceGangAndDate;
+
+  /// No description provided for @attendanceWorkers.
+  ///
+  /// In en, this message translates to:
+  /// **'Workers'**
+  String get attendanceWorkers;
+
+  /// No description provided for @attendanceWorkersCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} on the roll'**
+  String attendanceWorkersCount(int count);
+
+  /// No description provided for @attendancePickGang.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a gang to see its workers.'**
+  String get attendancePickGang;
+
+  /// No description provided for @grnFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From whom, and when'**
+  String get grnFrom;
+
+  /// No description provided for @dispatchTo.
+  ///
+  /// In en, this message translates to:
+  /// **'To whom, and when'**
+  String get dispatchTo;
+
+  /// No description provided for @dispatchTruck.
+  ///
+  /// In en, this message translates to:
+  /// **'Truck'**
+  String get dispatchTruck;
+
+  /// No description provided for @dispatchTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get dispatchTotal;
+
+  /// No description provided for @dispatchOnThisChallan.
+  ///
+  /// In en, this message translates to:
+  /// **'On this challan'**
+  String get dispatchOnThisChallan;
+
+  /// No description provided for @syncSentOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{sent} of {total} sent'**
+  String syncSentOf(int sent, int total);
+
+  /// No description provided for @syncAllEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything on this phone'**
+  String get syncAllEntries;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

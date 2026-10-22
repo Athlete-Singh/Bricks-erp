@@ -21,7 +21,7 @@ void main() {
         const SyncSummary(online: false, pending: 3, failed: 0, syncing: false),
       );
       expect(find.text('3 waiting'), findsOneWidget);
-      expect(find.byIcon(Icons.cloud_off), findsOneWidget);
+      expect(find.byIcon(Icons.cloud_off_rounded), findsOneWidget);
     });
 
     testWidgets('failures win over everything else', (tester) async {
@@ -36,7 +36,7 @@ void main() {
   testWidgets('AppButton ignores taps while busy', (tester) async {
     var taps = 0;
     await tester.pumpApp(AppButton(label: 'Save', onPressed: () => taps++, busy: true));
-    await tester.tap(find.byType(FilledButton));
+    await tester.tap(find.byType(AppButton));
     expect(taps, 0);
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
@@ -52,11 +52,11 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.byIcon(Icons.add));
+    await tester.tap(find.byIcon(Icons.add_rounded));
     await tester.pump();
     expect(value, 2);
     for (var i = 0; i < 3; i++) {
-      await tester.tap(find.byIcon(Icons.remove));
+      await tester.tap(find.byIcon(Icons.remove_rounded));
       await tester.pump();
     }
     expect(value, 0);
@@ -66,6 +66,6 @@ void main() {
 
   testWidgets('touch targets are at least 48 dp', (tester) async {
     await tester.pumpApp(AppButton(label: 'Save', onPressed: () {}));
-    expect(tester.getSize(find.byType(FilledButton)).height, greaterThanOrEqualTo(48));
+    expect(tester.getSize(find.byType(AppButton)).height, greaterThanOrEqualTo(48));
   });
 }

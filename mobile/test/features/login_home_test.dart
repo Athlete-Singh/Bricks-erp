@@ -60,7 +60,7 @@ void main() {
     expect(find.text('Choose your kiln'), findsOneWidget);
     await tester.tap(find.text('Kiln B'));
     await settle(tester);
-    expect(find.text('Hello, Ramesh'), findsOneWidget);
+    expect(find.text('Ramesh'), findsOneWidget);
     expect(find.text('Kiln B'), findsOneWidget);
     await tester.disposeApp();
   });

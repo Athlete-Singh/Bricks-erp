@@ -6,7 +6,6 @@ import 'package:brics_mobile/core/l10n/l10n.dart';
 import 'package:brics_mobile/core/router/app_router.dart';
 import 'package:brics_mobile/core/sync/queue_repository.dart';
 import 'package:brics_mobile/core/sync/record_ref.dart';
-import 'package:brics_mobile/core/theme/app_colors.dart';
 import 'package:brics_mobile/core/theme/app_spacing.dart';
 import 'package:brics_mobile/core/theme/app_text_styles.dart';
 import 'package:brics_mobile/core/utils/formatters.dart';
@@ -15,6 +14,7 @@ import 'package:brics_mobile/features/auth/presentation/session_controller.dart'
 import 'package:brics_mobile/features/dispatch/domain/dispatch.dart';
 import 'package:brics_mobile/features/dispatch/presentation/dispatch_providers.dart';
 import 'package:brics_mobile/features/dispatch/presentation/dispatch_screen.dart';
+import 'package:brics_mobile/features/dispatch/presentation/journey_tracker.dart';
 import 'package:brics_mobile/features/masters/data/master_providers.dart';
 import 'package:brics_mobile/features/masters/domain/masters.dart';
 import 'package:brics_mobile/features/sync/presentation/entry_editors.dart';
@@ -74,71 +74,118 @@ class _ChallanScreenState extends ConsumerState<ChallanScreen> {
     final pending = [actions.confirm, actions.acknowledge].whereType<QueueRow>();
     final target = challan.ref.encode();
 
+    final total = lines.fold<double>(
+      0,
+      (sum, l) => sum + (double.tryParse('${(l as Map)['quantity']}') ?? 0),
+    );
+
     return AppScaffold(
       title: challan.challanNo ?? l10n.dispatchChallanUnsent,
+      subtitle: customerName(ref, l10n, challan.customerPartyId),
       actions: const [SyncBadgeAction()],
+      header: JourneyTracker(status: status, onHeader: true),
       bottomAction: canGateOut
           ? AppButton(
               label: l10n.dispatchGateOut,
-              icon: Icons.logout,
+              icon: Icons.logout_rounded,
               onPressed: () => context.push(AppRoutes.dispatchAction(target, 'gate-out')),
             )
           : canDeliver
           ? AppButton(
               label: l10n.dispatchDeliver,
-              icon: Icons.assignment_turned_in_outlined,
+              icon: Icons.assignment_turned_in_rounded,
               onPressed: () => context.push(AppRoutes.dispatchAction(target, 'deliver')),
             )
           : null,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          AppCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        customerName(ref, l10n, challan.customerPartyId),
-                        style: text.titleLarge,
-                      ),
+          Entrance(
+            child: AppCard(
+              child: Row(
+                children: [
+                  const IconBadge(icon: Icons.storefront_rounded, tone: Tone.gold),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          customerName(ref, l10n, challan.customerPartyId),
+                          style: text.titleMedium,
+                        ),
+                        Text(
+                          Formatters.displayIsoDate(challan.dispatchDate),
+                          style: text.bodySmall,
+                        ),
+                      ],
                     ),
-                    Text(
-                      dispatchStatusLabel(l10n, status),
-                      style: text.labelMedium?.copyWith(color: context.colors.info),
+                  ),
+                  if (vehicle != null)
+                    StatusPill(
+                      label: vehicle.registrationNo,
+                      tone: Tone.neutral,
+                      icon: Icons.local_shipping_rounded,
                     ),
-                  ],
-                ),
-                Text(Formatters.displayIsoDate(challan.dispatchDate), style: text.bodySmall),
-                if (vehicle != null) Text(vehicle.registrationNo, style: text.bodyMedium),
-              ],
+                ],
+              ),
             ),
           ),
           if (lines.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.lg),
-            Text(l10n.dispatchLinesLoaded, style: text.titleMedium),
-            const SizedBox(height: AppSpacing.sm),
-            for (final line in lines.cast<Map<dynamic, dynamic>>())
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-                child: Row(
+            SectionLabel(l10n.dispatchOnThisChallan),
+            Entrance(
+              index: 1,
+              child: AppCard(
+                child: Column(
                   children: [
-                    Expanded(child: Text(items[line['itemId']] ?? '—')),
-                    Text(
-                      Formatters.quantity(line['quantity'] as String),
-                      style: AppTextStyles.number(text.bodyLarge!),
-                    ),
+                    for (final line in lines.cast<Map<dynamic, dynamic>>())
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                        child: Row(
+                          children: [
+                            const IconBadge(
+                              icon: Icons.view_agenda_rounded,
+                              tone: Tone.warning,
+                              size: 34,
+                            ),
+                            const SizedBox(width: AppSpacing.md),
+                            Expanded(
+                              child: Text(items[line['itemId']] ?? '—', style: text.bodyLarge),
+                            ),
+                            Text(
+                              Formatters.quantity(line['quantity'] as String),
+                              style: AppTextStyles.number(text.titleMedium!),
+                            ),
+                          ],
+                        ),
+                      ),
+                    if (lines.length > 1) ...[
+                      const Divider(height: AppSpacing.xl),
+                      Row(
+                        children: [
+                          Expanded(child: Text(l10n.dispatchTotal, style: text.titleSmall)),
+                          Text(
+                            Formatters.quantity(
+                              total == total.roundToDouble() ? total.toStringAsFixed(0) : '$total',
+                            ),
+                            style: AppTextStyles.number(text.titleLarge!),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
+            ),
           ],
           if (pending.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.lg),
-            for (final row in pending) ...[
-              QueueEntryTile(row: row, onEdit: editorFor(context, row)),
-              const SizedBox(height: AppSpacing.sm),
+            SectionLabel(l10n.tileSync),
+            for (final (i, row) in pending.indexed) ...[
+              Entrance(
+                index: i + 2,
+                child: QueueEntryTile(row: row, onEdit: editorFor(context, row)),
+              ),
+              const SizedBox(height: AppSpacing.md),
             ],
           ],
         ],

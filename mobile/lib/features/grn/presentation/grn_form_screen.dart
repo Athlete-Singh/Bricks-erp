@@ -114,7 +114,11 @@ class _GrnFormScreenState extends ConsumerState<GrnFormScreen> {
     }
     ref.read(syncControllerProvider.notifier).kick();
     if (!mounted) return;
-    showAppSnack(context, widget.editId != null ? l10n.savedCorrected : l10n.savedOffline);
+    showAppSnack(
+      context,
+      widget.editId != null ? l10n.savedCorrected : l10n.savedOffline,
+      celebrate: widget.editId == null,
+    );
     context.pop();
   }
 
@@ -127,8 +131,10 @@ class _GrnFormScreenState extends ConsumerState<GrnFormScreen> {
 
     return AppScaffold(
       title: l10n.grnNew,
+      subtitle: ref.watch(selectedSiteProvider)?.name,
       bottomAction: AppButton(
         label: l10n.commonSave,
+        icon: Icons.check_rounded,
         busy: _busy,
         onPressed: () => _save(suppliers),
       ),
@@ -137,53 +143,73 @@ class _GrnFormScreenState extends ConsumerState<GrnFormScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (suppliers.isEmpty)
-              Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                child: Text(l10n.grnNoSuppliers),
+            Entrance(
+              child: FormSection(
+                title: l10n.grnFrom,
+                icon: Icons.local_shipping_rounded,
+                children: [
+                  if (suppliers.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                      child: Text(l10n.grnNoSuppliers),
+                    ),
+                  AppDropdown<String>(
+                    label: l10n.grnSupplier,
+                    value: _supplierId,
+                    items: [for (final s in suppliers) AppDropdownItem(value: s.id, label: s.name)],
+                    validator: validators.required,
+                    onChanged: (v) => setState(() => _supplierId = v),
+                  ),
+                  AppDateField(
+                    label: l10n.grnReceiptDate,
+                    value: _date,
+                    today: ref.read(clockProvider)(),
+                    onChanged: (d) => setState(() => _date = d),
+                  ),
+                  AppTextField(
+                    label: '${l10n.grnChallanNo} (${l10n.commonOptional})',
+                    controller: _challan,
+                    prefixIcon: Icons.receipt_long_rounded,
+                    maxLength: 50,
+                    validator: validators.maxLength(50),
+                  ),
+                ],
               ),
-            AppDropdown<String>(
-              label: l10n.grnSupplier,
-              value: _supplierId,
-              items: [for (final s in suppliers) AppDropdownItem(value: s.id, label: s.name)],
-              validator: validators.required,
-              onChanged: (v) => setState(() => _supplierId = v),
             ),
-            AppDateField(
-              label: l10n.grnReceiptDate,
-              value: _date,
-              today: ref.read(clockProvider)(),
-              onChanged: (d) => setState(() => _date = d),
-            ),
-            AppTextField(
-              label: '${l10n.grnChallanNo} (${l10n.commonOptional})',
-              controller: _challan,
-              maxLength: 50,
-              validator: validators.maxLength(50),
-            ),
-            ItemLinesEditor(
-              lines: _lines,
-              title: l10n.grnLines,
-              hint: l10n.grnLinesHint,
-              addLabel: l10n.grnAddLine,
-              storeLabel: l10n.grnIntoStore,
-              onChanged: () => setState(() {}),
+            Entrance(
+              index: 1,
+              child: ItemLinesEditor(
+                lines: _lines,
+                title: l10n.grnLines,
+                hint: l10n.grnLinesHint,
+                addLabel: l10n.grnAddLine,
+                storeLabel: l10n.grnIntoStore,
+                onChanged: () => setState(() {}),
+              ),
             ),
             if (_linesError != null)
               Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.sm),
+                padding: const EdgeInsets.only(bottom: AppSpacing.md),
                 child: Text(
                   _linesError!,
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
               ),
-            const SizedBox(height: AppSpacing.lg),
-            AppTextField(
-              label: '${l10n.commonNotes} (${l10n.commonOptional})',
-              controller: _notes,
-              maxLines: 2,
-              maxLength: 500,
-              validator: validators.maxLength(500),
+            Entrance(
+              index: 2,
+              child: FormSection(
+                title: l10n.formMore,
+                icon: Icons.notes_rounded,
+                children: [
+                  AppTextField(
+                    label: '${l10n.commonNotes} (${l10n.commonOptional})',
+                    controller: _notes,
+                    maxLines: 2,
+                    maxLength: 500,
+                    validator: validators.maxLength(500),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

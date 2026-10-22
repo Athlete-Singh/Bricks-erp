@@ -3,6 +3,7 @@ import 'package:brics_mobile/core/l10n/l10n.dart';
 import 'package:brics_mobile/core/network/api_exception.dart';
 import 'package:brics_mobile/core/providers.dart';
 import 'package:brics_mobile/core/theme/app_colors.dart';
+import 'package:brics_mobile/core/theme/app_motion.dart';
 import 'package:brics_mobile/core/theme/app_spacing.dart';
 import 'package:brics_mobile/core/utils/validators.dart';
 import 'package:brics_mobile/core/widgets/widgets.dart';
@@ -80,62 +81,145 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final expired = state is SignedOut && state.expired;
 
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Form(
-                key: _form,
-                child: AutofillGroup(
+      backgroundColor: colors.heroEnd,
+      body: Stack(
+        children: [
+          const Positioned.fill(child: HeroBackdrop()),
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.xl,
+                  AppSpacing.lg,
+                  AppSpacing.xl,
+                ),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 440),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Icon(Icons.factory_outlined, size: 56, color: colors.primary),
+                      const Center(child: AnimatedBricsLogo(size: 84)),
                       const SizedBox(height: AppSpacing.md),
-                      Text(l10n.appTitle, textAlign: TextAlign.center, style: text.displaySmall),
-                      Text(l10n.appSubtitle, textAlign: TextAlign.center, style: text.titleMedium),
-                      const SizedBox(height: AppSpacing.xl),
-                      if (expired) ...[
-                        _Notice(
-                          color: colors.warning,
-                          icon: Icons.lock_clock,
-                          message: l10n.loginSessionExpired,
+                      Entrance(
+                        index: 2,
+                        child: Column(
+                          children: [
+                            Text(
+                              l10n.appTitle,
+                              textAlign: TextAlign.center,
+                              style: text.displaySmall?.copyWith(
+                                color: Colors.white,
+                                letterSpacing: 4,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              l10n.loginTagline,
+                              textAlign: TextAlign.center,
+                              style: text.bodyMedium?.copyWith(
+                                color: Colors.white.withValues(alpha: 0.75),
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: AppSpacing.lg),
-                      ],
-                      AppTextField(
-                        label: l10n.loginIdLabel,
-                        controller: _id,
-                        autofillHints: const [AutofillHints.username],
-                        textInputAction: TextInputAction.next,
-                        validator: validators.required,
                       ),
-                      AppTextField(
-                        label: l10n.loginPasswordLabel,
-                        controller: _password,
-                        kind: AppFieldKind.password,
-                        autofillHints: const [AutofillHints.password],
-                        textInputAction: TextInputAction.done,
-                        onSubmitted: (_) => _submit(),
-                        validator: validators.required,
-                      ),
-                      if (_error != null) ...[
-                        _Notice(
-                          color: colors.danger,
-                          icon: _suspended ? Icons.pause_circle : Icons.error_outline,
-                          title: _suspended ? l10n.loginSuspendedTitle : null,
-                          message: _error!,
+                      const SizedBox(height: AppSpacing.xxl),
+                      Entrance(
+                        index: 4,
+                        from: 60,
+                        child: Container(
+                          padding: const EdgeInsets.all(AppSpacing.xl),
+                          decoration: BoxDecoration(
+                            color: colors.surface,
+                            borderRadius: BorderRadius.circular(28),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x55000000),
+                                blurRadius: 40,
+                                offset: Offset(0, 20),
+                              ),
+                            ],
+                          ),
+                          child: Form(
+                            key: _form,
+                            child: AutofillGroup(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Text(l10n.loginWelcome, style: text.headlineSmall),
+                                  const SizedBox(height: AppSpacing.xs),
+                                  Text(l10n.loginWelcomeHint, style: text.bodySmall),
+                                  const SizedBox(height: AppSpacing.xl),
+                                  if (expired) ...[
+                                    _Notice(
+                                      tone: Tone.warning,
+                                      icon: Icons.lock_clock,
+                                      message: l10n.loginSessionExpired,
+                                    ),
+                                    const SizedBox(height: AppSpacing.lg),
+                                  ],
+                                  AppTextField(
+                                    label: l10n.loginIdLabel,
+                                    controller: _id,
+                                    prefixIcon: Icons.person_outline_rounded,
+                                    autofillHints: const [AutofillHints.username],
+                                    textInputAction: TextInputAction.next,
+                                    validator: validators.required,
+                                  ),
+                                  AppTextField(
+                                    label: l10n.loginPasswordLabel,
+                                    controller: _password,
+                                    kind: AppFieldKind.password,
+                                    prefixIcon: Icons.lock_outline_rounded,
+                                    autofillHints: const [AutofillHints.password],
+                                    textInputAction: TextInputAction.done,
+                                    onSubmitted: (_) => _submit(),
+                                    validator: validators.required,
+                                  ),
+                                  AnimatedSize(
+                                    duration: AppMotion.medium,
+                                    curve: AppMotion.enter,
+                                    child: _error == null
+                                        ? const SizedBox(width: double.infinity)
+                                        : Padding(
+                                            padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                                            child: _Notice(
+                                              tone: Tone.danger,
+                                              icon: _suspended
+                                                  ? Icons.pause_circle_rounded
+                                                  : Icons.error_outline_rounded,
+                                              title: _suspended ? l10n.loginSuspendedTitle : null,
+                                              message: _error!,
+                                            ),
+                                          ),
+                                  ),
+                                  const SizedBox(height: AppSpacing.sm),
+                                  AppButton(
+                                    label: l10n.loginButton,
+                                    icon: Icons.arrow_forward_rounded,
+                                    onPressed: _submit,
+                                    busy: _busy,
+                                  ),
+                                  const SizedBox(height: AppSpacing.lg),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.wifi_off_rounded,
+                                        size: 16,
+                                        color: colors.mutedForeground,
+                                      ),
+                                      const SizedBox(width: AppSpacing.sm),
+                                      Expanded(
+                                        child: Text(l10n.loginNeedsNetwork, style: text.bodySmall),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
-                        const SizedBox(height: AppSpacing.md),
-                      ],
-                      AppButton(label: l10n.loginButton, onPressed: _submit, busy: _busy),
-                      const SizedBox(height: AppSpacing.lg),
-                      Text(
-                        l10n.loginNeedsNetwork,
-                        textAlign: TextAlign.center,
-                        style: text.bodySmall,
                       ),
                     ],
                   ),
@@ -143,16 +227,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 }
 
 class _Notice extends StatelessWidget {
-  const _Notice({required this.color, required this.icon, required this.message, this.title});
+  const _Notice({required this.tone, required this.icon, required this.message, this.title});
 
-  final Color color;
+  final Tone tone;
   final IconData icon;
   final String message;
   final String? title;
@@ -160,22 +244,24 @@ class _Notice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
+    final (fg, bg) = tone.of(context.colors);
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        border: Border.all(color: color, width: 1.5),
-        borderRadius: BorderRadius.circular(AppRadius.card),
+        color: bg,
+        borderRadius: BorderRadius.circular(AppRadius.input),
+        border: Border.all(color: fg.withValues(alpha: 0.35)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color),
+          Icon(icon, color: fg),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (title != null) Text(title!, style: text.titleMedium),
+                if (title != null) Text(title!, style: text.titleSmall?.copyWith(color: fg)),
                 Text(message, style: text.bodyMedium),
               ],
             ),

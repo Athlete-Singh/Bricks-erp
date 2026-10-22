@@ -1,6 +1,7 @@
 import 'package:brics_mobile/core/l10n/l10n.dart';
 import 'package:brics_mobile/core/providers.dart';
 import 'package:brics_mobile/core/sync/queue_repository.dart';
+import 'package:brics_mobile/core/theme/app_colors.dart';
 import 'package:brics_mobile/core/theme/app_spacing.dart';
 import 'package:brics_mobile/core/utils/formatters.dart';
 import 'package:brics_mobile/core/utils/validators.dart';
@@ -182,7 +183,11 @@ class _StageFormScreenState extends ConsumerState<StageFormScreen> {
     }
     ref.read(syncControllerProvider.notifier).kick();
     if (!mounted) return;
-    showAppSnack(context, widget.editId != null ? l10n.savedCorrected : l10n.savedOffline);
+    showAppSnack(
+      context,
+      widget.editId != null ? l10n.savedCorrected : l10n.savedOffline,
+      celebrate: widget.editId == null,
+    );
     context.pop();
   }
 
@@ -194,31 +199,57 @@ class _StageFormScreenState extends ConsumerState<StageFormScreen> {
     if (batch == null) return AppScaffold(title: l10n.productionTitle, body: const EmptyView());
 
     return AppScaffold(
-      title: '${stageLabel(l10n, widget.stage)} · ${batch.chamber}',
-      bottomAction: AppButton(label: l10n.commonSave, onPressed: () => _save(batch), busy: _busy),
+      title: stageLabel(l10n, widget.stage),
+      subtitle: '${batch.chamber} · ${Formatters.displayIsoDate(batch.batchDate)}',
+      bottomAction: AppButton(
+        label: l10n.commonSave,
+        icon: Icons.check_rounded,
+        onPressed: () => _save(batch),
+        busy: _busy,
+      ),
       body: Form(
         key: _form,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            AppDateField(
-              label: l10n.productionEntryDate,
-              value: _date,
-              today: ref.read(clockProvider)(),
-              onChanged: (d) => setState(() => _date = d),
+            Entrance(
+              child: FormSection(
+                title: l10n.formWhen,
+                icon: Icons.event_rounded,
+                children: [
+                  AppDateField(
+                    label: l10n.productionEntryDate,
+                    value: _date,
+                    today: ref.read(clockProvider)(),
+                    onChanged: (d) => setState(() => _date = d),
+                  ),
+                ],
+              ),
             ),
-            ...switch (widget.stage) {
-              ProductionStage.making => _making(l10n, validators),
-              ProductionStage.drying => const <Widget>[],
-              ProductionStage.firing => _firing(l10n, validators),
-              ProductionStage.sorting => _sorting(l10n, validators),
-            },
-            AppTextField(
-              label: '${l10n.commonNotes} (${l10n.commonOptional})',
-              controller: _notes,
-              maxLines: 2,
-              maxLength: 500,
-              validator: validators.maxLength(500),
+            ...[
+              for (final (i, w) in switch (widget.stage) {
+                ProductionStage.making => _making(l10n, validators),
+                ProductionStage.drying => const <Widget>[],
+                ProductionStage.firing => _firing(l10n, validators),
+                ProductionStage.sorting => _sorting(l10n, validators),
+              }.indexed)
+                Entrance(index: i + 1, child: w),
+            ],
+            Entrance(
+              index: 5,
+              child: FormSection(
+                title: l10n.formMore,
+                icon: Icons.notes_rounded,
+                children: [
+                  AppTextField(
+                    label: '${l10n.commonNotes} (${l10n.commonOptional})',
+                    controller: _notes,
+                    maxLines: 2,
+                    maxLength: 500,
+                    validator: validators.maxLength(500),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -227,12 +258,19 @@ class _StageFormScreenState extends ConsumerState<StageFormScreen> {
   }
 
   Widget _count(String label, Validators validators) {
-    return NumberStepper(
-      label: label,
-      value: _bricks,
-      step: 1000,
-      onChanged: (v) => setState(() => _bricks = v),
-      validator: validators.brickCount,
+    return FormSection(
+      title: context.l10n.formCount,
+      icon: stageIcon(widget.stage),
+      children: [
+        NumberStepper(
+          label: label,
+          value: _bricks,
+          step: 1000,
+          quickAdds: const [500, 1000, 5000],
+          onChanged: (v) => setState(() => _bricks = v),
+          validator: validators.brickCount,
+        ),
+      ],
     );
   }
 
@@ -241,17 +279,22 @@ class _StageFormScreenState extends ConsumerState<StageFormScreen> {
     return [
       _count(l10n.productionGreenBricks, validators),
       if (sardars.isNotEmpty)
-        AppDropdown<String?>(
-          label: '${l10n.productionSardar} (${l10n.commonOptional})',
-          value: _sardarId,
-          items: [
-            AppDropdownItem(value: null, label: l10n.productionNoSardar),
-            for (final s in sardars) AppDropdownItem(value: s.id, label: s.name),
+        FormSection(
+          title: l10n.productionSardar,
+          icon: Icons.engineering_rounded,
+          children: [
+            AppDropdown<String?>(
+              label: '${l10n.productionSardar} (${l10n.commonOptional})',
+              value: _sardarId,
+              items: [
+                AppDropdownItem(value: null, label: l10n.productionNoSardar),
+                for (final s in sardars) AppDropdownItem(value: s.id, label: s.name),
+              ],
+              onChanged: (v) => setState(() => _sardarId = v),
+            ),
           ],
-          onChanged: (v) => setState(() => _sardarId = v),
         ),
       _materials(l10n, l10n.productionConsumptionMaking),
-      const SizedBox(height: AppSpacing.lg),
     ];
   }
 
@@ -259,7 +302,6 @@ class _StageFormScreenState extends ConsumerState<StageFormScreen> {
     return [
       _count(l10n.productionFiredBricks, validators),
       _materials(l10n, l10n.productionConsumptionFiring),
-      const SizedBox(height: AppSpacing.lg),
     ];
   }
 
@@ -272,6 +314,7 @@ class _StageFormScreenState extends ConsumerState<StageFormScreen> {
       hint: hint,
       addLabel: l10n.productionAddMaterial,
       storeLabel: l10n.productionFromStore,
+      icon: Icons.landscape_rounded,
       categories: const {'raw_material', 'consumable'},
       onChanged: () => setState(() {}),
     );
@@ -279,52 +322,83 @@ class _StageFormScreenState extends ConsumerState<StageFormScreen> {
 
   List<Widget> _sorting(AppLocalizations l10n, Validators validators) {
     final text = Theme.of(context).textTheme;
+    final colors = context.colors;
     final stores = ref.watch(warehousesProvider).value ?? const <Warehouse>[];
     final grades = ref.watch(brickTypesProvider).value ?? const <BrickType>[];
     if (_warehouseId == null && stores.length == 1) _warehouseId = stores.single.id;
     return [
-      if (stores.isEmpty)
-        Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.md),
-          child: Text(l10n.productionNoStores),
-        )
-      else
-        AppDropdown<String>(
-          label: l10n.productionSortingWarehouse,
-          value: _warehouseId,
-          items: [for (final w in stores) AppDropdownItem(value: w.id, label: w.name)],
-          validator: validators.required,
-          onChanged: (v) => setState(() => _warehouseId = v),
-        ),
-      Text(l10n.productionGrades, style: text.titleMedium),
-      const SizedBox(height: AppSpacing.sm),
-      if (grades.isEmpty) Text(l10n.productionNoGrades),
-      for (final g in grades)
-        AppTextField(
-          label: g.grade,
-          controller: _grade(g.id),
-          kind: AppFieldKind.wholeNumber,
-          validator: (v) => (v == null || v.trim().isEmpty) ? null : validators.brickCountOrZero(v),
-        ),
-      if (_gradeError != null)
-        Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.md),
-          child: Text(
-            _gradeError!,
-            style: text.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.error),
-          ),
-        ),
-      AppTextField(
-        label: l10n.productionBroken,
-        controller: _broken,
-        kind: AppFieldKind.wholeNumber,
-        validator: validators.brickCountOrZero,
+      FormSection(
+        title: l10n.productionWhere,
+        icon: Icons.warehouse_rounded,
+        children: [
+          if (stores.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.md),
+              child: Text(l10n.productionNoStores),
+            )
+          else
+            AppDropdown<String>(
+              label: l10n.productionSortingWarehouse,
+              value: _warehouseId,
+              items: [for (final w in stores) AppDropdownItem(value: w.id, label: w.name)],
+              validator: validators.required,
+              onChanged: (v) => setState(() => _warehouseId = v),
+            ),
+        ],
       ),
-      AppTextField(
-        label: l10n.productionRejects,
-        controller: _rejects,
-        kind: AppFieldKind.wholeNumber,
-        validator: validators.brickCountOrZero,
+      FormSection(
+        title: l10n.productionGrades,
+        icon: Icons.grid_view_rounded,
+        children: [
+          if (grades.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.md),
+              child: Text(l10n.productionNoGrades),
+            ),
+          for (final g in grades)
+            AppTextField(
+              label: g.grade,
+              controller: _grade(g.id),
+              kind: AppFieldKind.wholeNumber,
+              prefixIcon: Icons.view_agenda_rounded,
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? null : validators.brickCountOrZero(v),
+            ),
+          if (_gradeError != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.md),
+              child: Text(_gradeError!, style: text.bodyMedium?.copyWith(color: colors.danger)),
+            ),
+        ],
+      ),
+      FormSection(
+        title: l10n.productionLosses,
+        hint: l10n.productionLossesHint,
+        icon: Icons.broken_image_rounded,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: AppTextField(
+                  label: l10n.productionBroken,
+                  controller: _broken,
+                  kind: AppFieldKind.wholeNumber,
+                  validator: validators.brickCountOrZero,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: AppTextField(
+                  label: l10n.productionRejects,
+                  controller: _rejects,
+                  kind: AppFieldKind.wholeNumber,
+                  validator: validators.brickCountOrZero,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     ];
   }

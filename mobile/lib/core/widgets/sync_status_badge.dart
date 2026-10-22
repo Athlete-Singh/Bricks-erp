@@ -1,74 +1,122 @@
+import 'dart:ui';
+
 import 'package:brics_mobile/core/l10n/l10n.dart';
 import 'package:brics_mobile/core/sync/sync_summary.dart';
 import 'package:brics_mobile/core/theme/app_colors.dart';
+import 'package:brics_mobile/core/theme/app_motion.dart';
 import 'package:brics_mobile/core/theme/app_spacing.dart';
+import 'package:brics_mobile/core/widgets/decor.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 /// The one answer to "has my entry gone through?" — always an icon plus words,
 /// never colour alone, so it reads in sunlight and for colour-blind users.
+/// A frosted pill on the green header; the icon spins while sending and a dot
+/// pulses while anything waits.
 class SyncStatusBadge extends StatelessWidget {
-  const SyncStatusBadge({required this.summary, super.key, this.onTap});
+  const SyncStatusBadge({required this.summary, super.key, this.onTap, this.onSurface = false});
 
   final SyncSummary summary;
   final VoidCallback? onTap;
+
+  /// True on a light surface rather than the green header.
+  final bool onSurface;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final colors = context.colors;
-    final (IconData icon, Color color, String label) = switch (summary) {
+    final (IconData icon, Color tint, String label, bool waiting) = switch (summary) {
       SyncSummary(failed: > 0) => (
-        Icons.error,
+        Icons.error_rounded,
         colors.danger,
         l10n.syncBadgeFailed(summary.failed),
+        true,
       ),
-      SyncSummary(syncing: true) => (Icons.sync, colors.info, l10n.syncBadgeSyncing),
+      SyncSummary(syncing: true) => (Icons.sync_rounded, colors.info, l10n.syncBadgeSyncing, false),
       SyncSummary(online: false) => (
-        Icons.cloud_off,
+        Icons.cloud_off_rounded,
         colors.warning,
         summary.pending > 0 ? l10n.syncBadgePending(summary.pending) : l10n.syncBadgeOffline,
+        summary.pending > 0,
       ),
       SyncSummary(pending: > 0) => (
-        Icons.schedule,
+        Icons.schedule_rounded,
         colors.warning,
         l10n.syncBadgePending(summary.pending),
+        true,
       ),
-      _ => (Icons.cloud_done, colors.success, l10n.syncBadgeSynced),
+      _ => (Icons.cloud_done_rounded, colors.success, l10n.syncBadgeSynced, false),
     };
+    final fg = onSurface ? colors.foreground : Colors.white;
+    final motion = MotionScope.of(context);
+
+    Widget glyph = Icon(icon, size: 16, color: onSurface ? tint : Colors.white);
+    if (summary.syncing && summary.failed == 0 && motion) {
+      glyph = glyph.animate(onPlay: (c) => c.repeat()).rotate(begin: 0, end: -1, duration: 1100.ms);
+    }
+
+    final pill = AnimatedContainer(
+      duration: AppMotion.medium,
+      padding: const EdgeInsets.fromLTRB(AppSpacing.sm, 6, AppSpacing.md, 6),
+      decoration: BoxDecoration(
+        color: onSurface ? tint.withValues(alpha: 0.12) : Colors.white.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(
+          color: onSurface ? tint.withValues(alpha: 0.4) : Colors.white.withValues(alpha: 0.28),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: onSurface ? Colors.transparent : tint,
+              shape: BoxShape.circle,
+            ),
+            child: Center(child: glyph),
+          ),
+          const SizedBox(width: 6),
+          AnimatedSwitcher(
+            duration: AppMotion.medium,
+            transitionBuilder: (child, a) => FadeTransition(
+              opacity: a,
+              child: SlideTransition(
+                position: Tween(begin: const Offset(0, 0.4), end: Offset.zero).animate(a),
+                child: child,
+              ),
+            ),
+            child: Text(
+              label,
+              key: ValueKey(label),
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(color: fg),
+            ),
+          ),
+          if (waiting) ...[const SizedBox(width: 2), PulseDot(color: tint, size: 6)],
+        ],
+      ),
+    );
 
     return Semantics(
       button: onTap != null,
       label: label,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.modal),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: AppSpacing.touchTarget),
           child: Center(
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.sm,
-                vertical: AppSpacing.xs,
-              ),
-              decoration: BoxDecoration(
-                color: colors.surface,
-                borderRadius: BorderRadius.circular(AppRadius.modal),
-                border: Border.all(color: color, width: 1.5),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(icon, size: 16, color: color),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    label,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.labelMedium?.copyWith(color: colors.foreground),
+            child: onSurface
+                ? pill
+                : ClipRRect(
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                      child: pill,
+                    ),
                   ),
-                ],
-              ),
-            ),
           ),
         ),
       ),
@@ -87,21 +135,22 @@ class RecordStatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final colors = context.colors;
-    final (IconData icon, Color color, String label) = switch (status) {
-      RecordSyncStatus.pending => (Icons.schedule, colors.warning, l10n.statusPending),
-      RecordSyncStatus.syncing => (Icons.sync, colors.info, l10n.statusSyncing),
-      RecordSyncStatus.synced => (Icons.check_circle, colors.success, l10n.statusSynced),
-      RecordSyncStatus.failed => (Icons.error, colors.danger, l10n.statusFailed),
-      RecordSyncStatus.blocked => (Icons.link, colors.mutedForeground, l10n.statusBlocked),
+    final (IconData icon, Tone tone, String label) = switch (status) {
+      RecordSyncStatus.pending => (Icons.schedule_rounded, Tone.warning, l10n.statusPending),
+      RecordSyncStatus.syncing => (Icons.sync_rounded, Tone.info, l10n.statusSyncing),
+      RecordSyncStatus.synced => (Icons.check_circle_rounded, Tone.success, l10n.statusSynced),
+      RecordSyncStatus.failed => (Icons.error_rounded, Tone.danger, l10n.statusFailed),
+      RecordSyncStatus.blocked => (Icons.link_rounded, Tone.neutral, l10n.statusBlocked),
     };
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 16, color: color),
-        const SizedBox(width: AppSpacing.xs),
-        Text(label, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color)),
-      ],
-    );
+    return StatusPill(label: label, tone: tone, icon: icon);
   }
 }
+
+/// The stripe colour of a card for a record in this state.
+Color recordAccent(AppColors c, RecordSyncStatus status) => switch (status) {
+  RecordSyncStatus.pending => c.warning,
+  RecordSyncStatus.syncing => c.info,
+  RecordSyncStatus.synced => c.success,
+  RecordSyncStatus.failed => c.danger,
+  RecordSyncStatus.blocked => c.border,
+};

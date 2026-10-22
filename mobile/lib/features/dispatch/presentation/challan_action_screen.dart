@@ -120,7 +120,11 @@ class _ChallanActionScreenState extends ConsumerState<ChallanActionScreen> {
     }
     ref.read(syncControllerProvider.notifier).kick();
     if (!mounted) return;
-    showAppSnack(context, widget.editId != null ? l10n.savedCorrected : l10n.savedOffline);
+    showAppSnack(
+      context,
+      widget.editId != null ? l10n.savedCorrected : l10n.savedOffline,
+      celebrate: widget.editId == null,
+    );
     context.pop();
   }
 
@@ -134,36 +138,46 @@ class _ChallanActionScreenState extends ConsumerState<ChallanActionScreen> {
 
     return AppScaffold(
       title: gateOut ? l10n.dispatchGateOut : l10n.dispatchDeliver,
-      bottomAction: AppButton(label: l10n.commonSave, busy: _busy, onPressed: () => _save(challan)),
+      subtitle: challan.challanNo ?? l10n.dispatchChallanUnsent,
+      bottomAction: AppButton(
+        label: l10n.commonSave,
+        icon: gateOut ? Icons.logout_rounded : Icons.check_rounded,
+        busy: _busy,
+        onPressed: () => _save(challan),
+      ),
       body: Form(
         key: _form,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (gateOut) ...[Text(l10n.dispatchGateOutHint), const SizedBox(height: 16)],
-            AppDateField(
-              label: gateOut ? l10n.dispatchGateOutOn : l10n.dispatchDeliveredOn,
-              value: _date,
-              today: ref.read(clockProvider)(),
-              firstDate: Formatters.parseIsoDate(challan.dispatchDate),
-              onChanged: (d) => setState(() => _date = d),
-            ),
-            if (!gateOut) ...[
-              AppTextField(
-                label: l10n.dispatchReceivedBy,
-                controller: _receivedBy,
-                maxLength: 100,
-                validator: validators.maxLength(100, optional: false),
+        child: Entrance(
+          child: FormSection(
+            title: gateOut ? l10n.dispatchGateOut : l10n.dispatchDeliver,
+            hint: gateOut ? l10n.dispatchGateOutHint : null,
+            icon: gateOut ? Icons.local_shipping_rounded : Icons.handshake_rounded,
+            children: [
+              AppDateField(
+                label: gateOut ? l10n.dispatchGateOutOn : l10n.dispatchDeliveredOn,
+                value: _date,
+                today: ref.read(clockProvider)(),
+                firstDate: Formatters.parseIsoDate(challan.dispatchDate),
+                onChanged: (d) => setState(() => _date = d),
               ),
-              AppTextField(
-                label: '${l10n.dispatchRemarks} (${l10n.commonOptional})',
-                controller: _remarks,
-                maxLines: 3,
-                maxLength: 1000,
-                validator: validators.maxLength(1000),
-              ),
+              if (!gateOut) ...[
+                AppTextField(
+                  label: l10n.dispatchReceivedBy,
+                  controller: _receivedBy,
+                  prefixIcon: Icons.badge_rounded,
+                  maxLength: 100,
+                  validator: validators.maxLength(100, optional: false),
+                ),
+                AppTextField(
+                  label: '${l10n.dispatchRemarks} (${l10n.commonOptional})',
+                  controller: _remarks,
+                  maxLines: 3,
+                  maxLength: 1000,
+                  validator: validators.maxLength(1000),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

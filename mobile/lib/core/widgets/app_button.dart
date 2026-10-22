@@ -1,10 +1,12 @@
 import 'package:brics_mobile/core/theme/app_colors.dart';
 import 'package:brics_mobile/core/theme/app_spacing.dart';
+import 'package:brics_mobile/core/widgets/pressable.dart';
 import 'package:flutter/material.dart';
 
 enum AppButtonVariant { primary, secondary, ghost, danger }
 
-/// The only button screens use. Full width by default, ≥ 48 dp tall.
+/// The only button screens use. Full width by default, ≥ 48 dp tall; the
+/// primary one is a green gradient with a soft glow.
 class AppButton extends StatelessWidget {
   const AppButton({
     required this.label,
@@ -29,29 +31,76 @@ class AppButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final action = busy ? null : onPressed;
+
+    if (variant == AppButtonVariant.primary || variant == AppButtonVariant.danger) {
+      final enabled = action != null;
+      final gradient = variant == AppButtonVariant.danger
+          ? LinearGradient(colors: [colors.danger, Color.lerp(colors.danger, Colors.black, 0.15)!])
+          : colors.primaryGradient;
+      final glow = variant == AppButtonVariant.danger ? colors.danger : colors.primary;
+      final button = Semantics(
+        button: true,
+        enabled: enabled,
+        label: label,
+        child: Pressable(
+          onTap: action,
+          child: AnimatedOpacity(
+            opacity: enabled || busy ? 1 : 0.5,
+            duration: const Duration(milliseconds: 150),
+            child: Container(
+              constraints: const BoxConstraints(
+                minHeight: AppSpacing.primaryAction,
+                minWidth: AppSpacing.touchTarget,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+              decoration: BoxDecoration(
+                gradient: gradient,
+                borderRadius: BorderRadius.circular(AppRadius.button),
+                boxShadow: [
+                  BoxShadow(
+                    color: glow.withValues(alpha: 0.35),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Center(
+                widthFactor: 1,
+                heightFactor: 1,
+                child: ExcludeSemantics(
+                  child: DefaultTextStyle.merge(
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelLarge!.copyWith(color: colors.onPrimary),
+                    child: IconTheme.merge(
+                      data: IconThemeData(color: colors.onPrimary),
+                      child: busy
+                          ? SizedBox.square(
+                              dimension: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                color: colors.onPrimary,
+                              ),
+                            )
+                          : _Label(label: label, icon: icon),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      return expand ? SizedBox(width: double.infinity, child: button) : button;
+    }
+
     final child = busy
         ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
         : _Label(label: label, icon: icon);
-
-    final Widget button = switch (variant) {
-      AppButtonVariant.primary => FilledButton(onPressed: action, child: child),
-      AppButtonVariant.danger => FilledButton(
-        onPressed: action,
-        style: FilledButton.styleFrom(
-          backgroundColor: colors.danger,
-          foregroundColor: colors.onPrimary,
-        ),
-        child: child,
-      ),
-      AppButtonVariant.secondary => OutlinedButton(onPressed: action, child: child),
-      AppButtonVariant.ghost => TextButton(onPressed: action, child: child),
-    };
-
-    if (expand) return SizedBox(width: double.infinity, child: button);
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: AppSpacing.touchTarget),
-      child: button,
-    );
+    final Widget button = variant == AppButtonVariant.secondary
+        ? OutlinedButton(onPressed: action, child: child)
+        : TextButton(onPressed: action, child: child);
+    return expand ? SizedBox(width: double.infinity, child: button) : button;
   }
 }
 
@@ -63,7 +112,7 @@ class _Label extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (icon == null) return Text(label);
+    if (icon == null) return Text(label, textAlign: TextAlign.center);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [

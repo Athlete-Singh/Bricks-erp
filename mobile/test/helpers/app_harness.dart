@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:brics_mobile/app.dart';
 import 'package:brics_mobile/core/storage/token_store.dart';
 import 'package:brics_mobile/features/auth/domain/session.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -52,6 +53,11 @@ void stubEmptyLists(TestEnv env) {
 extension PumpBrics on WidgetTester {
   /// The whole app — router, session, sync engine — on a fake phone.
   Future<void> pumpBrics(TestEnv env) async {
+    // A tall phone, so long forms fit without scrolling the target into view.
+    view
+      ..physicalSize = const Size(1200, 4200)
+      ..devicePixelRatio = 3;
+    addTearDown(view.reset);
     await pumpWidget(
       ProviderScope(overrides: env.overrides, retry: (_, _) => null, child: const BricsApp()),
     );

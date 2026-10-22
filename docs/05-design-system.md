@@ -56,3 +56,25 @@ Inter (web via `next/font`; mobile via system/Inter). Scale: 12 / 14 (body web) 
 - Dark mode from day one (web: `class` strategy on `<html>`; mobile: `ThemeMode.system`).
 - Web: the same PageHeader + filters + DataTable layout on every list page; keyboard-first forms.
 - Mobile: high contrast for sunlight, minimal typing, clear online/offline/sync state.
+
+## Mobile (supervisor app) — ADR-054
+
+Same palette; a mobile layer on top, all in `mobile/lib/core/theme/` and `mobile/lib/core/widgets/`:
+
+| Token / pattern   | Value                                                                                        | Where                                 |
+| ----------------- | -------------------------------------------------------------------------------------------- | ------------------------------------- |
+| Hero gradient     | primary-500 → primary-900 (dark: primary-600 → #03170D) + brick texture + drifting gold glow | Every page header, sign-in, splash    |
+| Soft status tints | success / warning / danger / info at ~10 % (`successSoft` …)                                 | Pills, icon badges, refused-entry box |
+| Radii             | input 14 · button 14 · card 18 · sheet 24 · pill 999                                         | All mobile surfaces                   |
+| Type              | Inter 400–800, bundled; headings 800 with tight tracking; counts tabular                     | `AppTextStyles`                       |
+| Primary action    | Green gradient, 56 dp tall, glow, squeeze + haptic on tap                                    | `AppButton`                           |
+| Motion            | 160 / 320 / 560 ms, ease-out-cubic; 55 ms stagger                                            | `AppMotion`                           |
+
+Rules added for mobile:
+
+- Every decorative animation checks `MotionScope` — off with the phone's reduce-motion setting and in tests.
+- Status is never colour alone: a pill carries an icon and a word.
+- Task colours (production brick-red, attendance blue, goods receipt gold, dispatch green) are for recognition only, never for status.
+- The logo, launcher icon and native splash all come from `BricsLogo` (drawn in code); regenerate the images with
+  `flutter test screenshots/icon_test.dart`, then `dart run flutter_launcher_icons` and `dart run flutter_native_splash:create`.
+- Design review without a device: `flutter test screenshots --update-goldens` renders the main screens, light and dark, to `mobile/screenshots/out/`.

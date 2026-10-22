@@ -386,5 +386,88 @@
       }
     }
   },
-  "loginNoServer": "This copy of the app was built without a server address. Ask for a correctly built app."
+  "loginNoServer": "This copy of the app was built without a server address. Ask for a correctly built app.",
+  "loginWelcome": "Welcome back",
+  "loginWelcomeHint": "Sign in to record today's work at the kiln.",
+  "loginTagline": "Kiln to customer, on one phone",
+  "homeGoodMorning": "Good morning",
+  "homeGoodAfternoon": "Good afternoon",
+  "homeGoodEvening": "Good evening",
+  "homeOnThisPhone": "On this phone",
+  "homeStatWaiting": "Waiting",
+  "homeStatSent": "Sent",
+  "homeStatAttention": "Need attention",
+  "homeYourWork": "Your work",
+  "homeLastSynced": "Last synced {time}",
+  "@homeLastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "homeNotSyncedYet": "Not synced yet — entries are safe on this phone",
+  "kilnPickerSelected": "Selected",
+  "productionStagesDone": "{done} of 4 stages",
+  "@productionStagesDone": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      }
+    }
+  },
+  "productionGreenCount": "{bricks} green",
+  "@productionGreenCount": {
+    "placeholders": {
+      "bricks": {
+        "type": "String"
+      }
+    }
+  },
+  "productionFiredCount": "{bricks} fired",
+  "@productionFiredCount": {
+    "placeholders": {
+      "bricks": {
+        "type": "String"
+      }
+    }
+  },
+  "productionMakingHint": "Green bricks moulded by the gang",
+  "productionDryingHint": "Bricks dried in the yard",
+  "productionFiringHint": "Bricks fired in the chamber",
+  "productionSortingHint": "Good bricks into the yard by grade",
+  "formWhen": "When",
+  "formCount": "How many",
+  "formMore": "Anything else",
+  "productionWhere": "Where the good bricks go",
+  "productionLosses": "Broken and rejects",
+  "productionLossesHint": "Counted, not stocked.",
+  "attendanceGangAndDate": "Gang and day",
+  "attendanceWorkers": "Workers",
+  "attendanceWorkersCount": "{count} on the roll",
+  "@attendanceWorkersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "attendancePickGang": "Pick a gang to see its workers.",
+  "grnFrom": "From whom, and when",
+  "dispatchTo": "To whom, and when",
+  "dispatchTruck": "Truck",
+  "dispatchTotal": "Total",
+  "dispatchOnThisChallan": "On this challan",
+  "syncSentOf": "{sent} of {total} sent",
+  "@syncSentOf": {
+    "placeholders": {
+      "sent": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "syncAllEntries": "Everything on this phone"
 }

@@ -1,9 +1,9 @@
-import 'package:brics_mobile/core/widgets/widgets.dart';
 import 'package:brics_mobile/features/attendance/presentation/attendance_form_screen.dart';
 import 'package:brics_mobile/features/attendance/presentation/attendance_screen.dart';
 import 'package:brics_mobile/features/auth/presentation/kiln_picker_screen.dart';
 import 'package:brics_mobile/features/auth/presentation/login_screen.dart';
 import 'package:brics_mobile/features/auth/presentation/session_controller.dart';
+import 'package:brics_mobile/features/auth/presentation/splash_screen.dart';
 import 'package:brics_mobile/features/dispatch/presentation/challan_action_screen.dart';
 import 'package:brics_mobile/features/dispatch/presentation/challan_form_screen.dart';
 import 'package:brics_mobile/features/dispatch/presentation/challan_screen.dart';
@@ -65,10 +65,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) =>
         authRedirect(ref.read(sessionControllerProvider), state.matchedLocation),
     routes: [
-      GoRoute(
-        path: AppRoutes.splash,
-        builder: (_, _) => const Scaffold(body: AppLoader()),
-      ),
+      GoRoute(path: AppRoutes.splash, builder: (_, _) => const SplashScreen()),
       GoRoute(path: AppRoutes.login, builder: (_, _) => const LoginScreen()),
       GoRoute(path: AppRoutes.kiln, builder: (_, _) => const KilnPickerScreen()),
       GoRoute(path: AppRoutes.home, builder: (_, _) => const HomeScreen()),

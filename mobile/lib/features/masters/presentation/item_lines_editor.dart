@@ -39,6 +39,7 @@ class ItemLinesEditor extends ConsumerWidget {
     super.key,
     this.categories,
     this.itemFilter,
+    this.icon = Icons.inventory_2_rounded,
   });
 
   final List<ItemLineDraft> lines;
@@ -53,6 +54,7 @@ class ItemLinesEditor extends ConsumerWidget {
 
   /// A further narrowing, e.g. only items that are brick grades.
   final bool Function(Item item)? itemFilter;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -72,51 +74,32 @@ class ItemLinesEditor extends ConsumerWidget {
       }
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return FormSection(
+      title: title,
+      hint: hint,
+      icon: icon,
       children: [
-        Text(title, style: text.titleMedium),
-        Text(hint, style: text.bodySmall),
-        const SizedBox(height: AppSpacing.sm),
-        for (final line in lines)
-          AppCard(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
+        for (final (i, line) in lines.indexed)
+          Container(
+            margin: const EdgeInsets.only(bottom: AppSpacing.md),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.xs, 0),
+            decoration: BoxDecoration(
+              border: Border.all(color: Theme.of(context).colorScheme.outline),
+              borderRadius: BorderRadius.circular(AppRadius.input),
+            ),
             child: Column(
               children: [
-                AppDropdown<String>(
-                  label: l10n.productionItem,
-                  value: line.itemId,
-                  items: [for (final i in items) AppDropdownItem(value: i.id, label: i.name)],
-                  validator: validators.required,
-                  onChanged: (v) {
-                    line.itemId = v;
-                    onChanged();
-                  },
-                ),
-                AppDropdown<String>(
-                  label: storeLabel,
-                  value: line.warehouseId,
-                  items: [for (final w in stores) AppDropdownItem(value: w.id, label: w.name)],
-                  validator: validators.required,
-                  onChanged: (v) {
-                    line.warehouseId = v;
-                    onChanged();
-                  },
-                ),
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: AppTextField(
-                        label: _unitLabel(l10n, items, units, line.itemId),
-                        controller: line.quantity,
-                        kind: AppFieldKind.decimal,
-                        validator: validators.quantity,
-                      ),
+                    CircleAvatar(
+                      radius: 12,
+                      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                      child: Text('${i + 1}', style: text.labelSmall),
                     ),
+                    const Spacer(),
                     IconButton(
                       tooltip: l10n.commonRemove,
-                      icon: const Icon(Icons.delete_outline),
+                      icon: const Icon(Icons.close_rounded),
                       onPressed: () {
                         lines.remove(line);
                         line.dispose();
@@ -125,18 +108,55 @@ class ItemLinesEditor extends ConsumerWidget {
                     ),
                   ],
                 ),
+                Padding(
+                  padding: const EdgeInsets.only(right: AppSpacing.sm),
+                  child: Column(
+                    children: [
+                      AppDropdown<String>(
+                        label: l10n.productionItem,
+                        value: line.itemId,
+                        items: [for (final i in items) AppDropdownItem(value: i.id, label: i.name)],
+                        validator: validators.required,
+                        onChanged: (v) {
+                          line.itemId = v;
+                          onChanged();
+                        },
+                      ),
+                      AppDropdown<String>(
+                        label: storeLabel,
+                        value: line.warehouseId,
+                        items: [
+                          for (final w in stores) AppDropdownItem(value: w.id, label: w.name),
+                        ],
+                        validator: validators.required,
+                        onChanged: (v) {
+                          line.warehouseId = v;
+                          onChanged();
+                        },
+                      ),
+                      AppTextField(
+                        label: _unitLabel(l10n, items, units, line.itemId),
+                        controller: line.quantity,
+                        kind: AppFieldKind.decimal,
+                        validator: validators.quantity,
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
-        const SizedBox(height: AppSpacing.sm),
-        AppButton(
-          label: addLabel,
-          icon: Icons.add,
-          variant: AppButtonVariant.secondary,
-          onPressed: () {
-            lines.add(ItemLineDraft(warehouseId: stores.length == 1 ? stores.single.id : null));
-            onChanged();
-          },
+        Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.md),
+          child: AppButton(
+            label: addLabel,
+            icon: Icons.add_rounded,
+            variant: AppButtonVariant.secondary,
+            onPressed: () {
+              lines.add(ItemLineDraft(warehouseId: stores.length == 1 ? stores.single.id : null));
+              onChanged();
+            },
+          ),
         ),
       ],
     );

@@ -25,6 +25,14 @@ dart run build_runner build -d && flutter analyze && flutter test
 Generated files (`*.g.dart`, `*.freezed.dart`, `lib/core/l10n/generated/`) are committed (ADR-007). After editing
 `lib/core/l10n/app_en.arb` run `flutter gen-l10n`.
 
+## Design review without a phone
+```bash
+flutter test screenshots --update-goldens     # → screenshots/out/*.png, light and dark (git-ignored)
+flutter test screenshots/icon_test.dart       # re-render assets/icon/ from the in-code logo
+dart run flutter_launcher_icons && dart run flutter_native_splash:create
+```
+Visual rules: `../docs/05-design-system.md` → Mobile, ADR-054.
+
 ## Release builds
 ```bash
 API_BASE_URL=https://<api-host>/api/v1 scripts/build_release.sh android   # per-ABI APKs (~20 MB) + an .aab for Play

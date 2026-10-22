@@ -223,7 +223,7 @@ void main() {
     await tester.tap(find.text('Save'));
     await settle(tester);
 
-    expect(find.text('Stages'), findsOneWidget);
+    expect(find.text('0 of 4 stages'), findsOneWidget);
     await tester.tap(find.text('Record').first);
     await settle(tester);
     await tester.enterText(find.widgetWithText(TextFormField, 'Green bricks'), '12000');

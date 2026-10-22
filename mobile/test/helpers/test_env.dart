@@ -5,6 +5,7 @@ import 'package:brics_mobile/core/database/app_database.dart';
 import 'package:brics_mobile/core/providers.dart';
 import 'package:brics_mobile/core/storage/key_value_store.dart';
 import 'package:brics_mobile/core/sync/connectivity.dart';
+import 'package:brics_mobile/core/theme/app_motion.dart';
 import 'package:brics_mobile/features/sync/presentation/sync_controller.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
@@ -42,6 +43,9 @@ class TestEnv {
   final connectivity = FakeConnectivity();
   DateTime now = DateTime(2026, 10, 22, 9);
 
+  /// Decorative animation; off so `pumpAndSettle` settles.
+  bool motion = false;
+
   List<Override> get overrides => [
     databaseProvider.overrideWithValue(db),
     keyValueStoreProvider.overrideWithValue(store),
@@ -49,6 +53,7 @@ class TestEnv {
     appConfigProvider.overrideWithValue(const AppConfig(apiBaseUrl: 'http://api.test')),
     httpAdapterProvider.overrideWithValue(api),
     connectivityWatcherProvider.overrideWithValue(connectivity),
+    reduceMotionProvider.overrideWithValue(!motion),
   ];
 
   ProviderContainer container() {

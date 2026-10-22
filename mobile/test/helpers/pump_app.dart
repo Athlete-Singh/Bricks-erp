@@ -1,4 +1,5 @@
 import 'package:brics_mobile/core/l10n/l10n.dart';
+import 'package:brics_mobile/core/theme/app_motion.dart';
 import 'package:brics_mobile/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -20,7 +21,7 @@ extension PumpApp on WidgetTester {
             GlobalWidgetsLocalizations.delegate,
           ],
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(body: child),
+          home: MotionScope(enabled: false, child: Scaffold(body: child)),
         ),
       ),
     );

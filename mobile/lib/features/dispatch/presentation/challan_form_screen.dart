@@ -123,7 +123,11 @@ class _ChallanFormScreenState extends ConsumerState<ChallanFormScreen> {
     }
     ref.read(syncControllerProvider.notifier).kick();
     if (!mounted) return;
-    showAppSnack(context, widget.editId != null ? l10n.savedCorrected : l10n.savedOffline);
+    showAppSnack(
+      context,
+      widget.editId != null ? l10n.savedCorrected : l10n.savedOffline,
+      celebrate: widget.editId == null,
+    );
     context.pop();
   }
 
@@ -152,8 +156,10 @@ class _ChallanFormScreenState extends ConsumerState<ChallanFormScreen> {
 
     return AppScaffold(
       title: l10n.dispatchNew,
+      subtitle: ref.watch(selectedSiteProvider)?.name,
       bottomAction: AppButton(
         label: l10n.commonSave,
+        icon: Icons.check_rounded,
         busy: _busy,
         onPressed: () => _save(customers),
       ),
@@ -162,74 +168,106 @@ class _ChallanFormScreenState extends ConsumerState<ChallanFormScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (customers.isEmpty)
-              Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                child: Text(l10n.dispatchNoCustomers),
-              ),
-            AppDropdown<String>(
-              label: l10n.dispatchCustomer,
-              value: _customerId,
-              items: [for (final c in customers) AppDropdownItem(value: c.id, label: c.name)],
-              validator: validators.required,
-              onChanged: (v) => setState(() => _customerId = v),
-            ),
-            AppDateField(
-              label: l10n.dispatchDate,
-              value: _date,
-              today: ref.read(clockProvider)(),
-              onChanged: (d) => setState(() => _date = d),
-            ),
-            if (vehicles.isNotEmpty)
-              AppDropdown<String?>(
-                label: '${l10n.dispatchVehicle} (${l10n.commonOptional})',
-                value: _vehicleId,
-                items: [
-                  AppDropdownItem(value: null, label: l10n.dispatchNoVehicle),
-                  for (final v in vehicles) AppDropdownItem(value: v.id, label: v.registrationNo),
+            Entrance(
+              child: FormSection(
+                title: l10n.dispatchTo,
+                icon: Icons.storefront_rounded,
+                children: [
+                  if (customers.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                      child: Text(l10n.dispatchNoCustomers),
+                    ),
+                  AppDropdown<String>(
+                    label: l10n.dispatchCustomer,
+                    value: _customerId,
+                    items: [for (final c in customers) AppDropdownItem(value: c.id, label: c.name)],
+                    validator: validators.required,
+                    onChanged: (v) => setState(() => _customerId = v),
+                  ),
+                  AppDateField(
+                    label: l10n.dispatchDate,
+                    value: _date,
+                    today: ref.read(clockProvider)(),
+                    onChanged: (d) => setState(() => _date = d),
+                  ),
+                  AppTextField(
+                    label: '${l10n.dispatchDeliveryLocation} (${l10n.commonOptional})',
+                    controller: _location,
+                    prefixIcon: Icons.place_rounded,
+                    maxLength: 200,
+                    validator: validators.maxLength(200),
+                  ),
                 ],
-                onChanged: (v) => setState(() => _vehicleId = v),
               ),
-            if (drivers.isNotEmpty)
-              AppDropdown<String?>(
-                label: '${l10n.dispatchDriver} (${l10n.commonOptional})',
-                value: _driverId,
-                items: [
-                  AppDropdownItem(value: null, label: l10n.dispatchNoDriver),
-                  for (final d in drivers) AppDropdownItem(value: d.id, label: d.name),
-                ],
-                onChanged: (v) => setState(() => _driverId = v),
-              ),
-            AppTextField(
-              label: '${l10n.dispatchDeliveryLocation} (${l10n.commonOptional})',
-              controller: _location,
-              maxLength: 200,
-              validator: validators.maxLength(200),
             ),
-            ItemLinesEditor(
-              lines: _lines,
-              title: l10n.dispatchLines,
-              hint: l10n.dispatchLinesHint,
-              addLabel: l10n.dispatchAddLine,
-              storeLabel: l10n.dispatchFromYard,
-              itemFilter: brickItems.isEmpty ? null : (i) => brickItems.contains(i.id),
-              onChanged: () => setState(() {}),
+            if (vehicles.isNotEmpty || drivers.isNotEmpty)
+              Entrance(
+                index: 1,
+                child: FormSection(
+                  title: l10n.dispatchTruck,
+                  icon: Icons.local_shipping_rounded,
+                  children: [
+                    if (vehicles.isNotEmpty)
+                      AppDropdown<String?>(
+                        label: '${l10n.dispatchVehicle} (${l10n.commonOptional})',
+                        value: _vehicleId,
+                        items: [
+                          AppDropdownItem(value: null, label: l10n.dispatchNoVehicle),
+                          for (final v in vehicles)
+                            AppDropdownItem(value: v.id, label: v.registrationNo),
+                        ],
+                        onChanged: (v) => setState(() => _vehicleId = v),
+                      ),
+                    if (drivers.isNotEmpty)
+                      AppDropdown<String?>(
+                        label: '${l10n.dispatchDriver} (${l10n.commonOptional})',
+                        value: _driverId,
+                        items: [
+                          AppDropdownItem(value: null, label: l10n.dispatchNoDriver),
+                          for (final d in drivers) AppDropdownItem(value: d.id, label: d.name),
+                        ],
+                        onChanged: (v) => setState(() => _driverId = v),
+                      ),
+                  ],
+                ),
+              ),
+            Entrance(
+              index: 2,
+              child: ItemLinesEditor(
+                lines: _lines,
+                title: l10n.dispatchLines,
+                hint: l10n.dispatchLinesHint,
+                addLabel: l10n.dispatchAddLine,
+                storeLabel: l10n.dispatchFromYard,
+                icon: Icons.view_agenda_rounded,
+                itemFilter: brickItems.isEmpty ? null : (i) => brickItems.contains(i.id),
+                onChanged: () => setState(() {}),
+              ),
             ),
             if (_linesError != null)
               Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.sm),
+                padding: const EdgeInsets.only(bottom: AppSpacing.md),
                 child: Text(
                   _linesError!,
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
               ),
-            const SizedBox(height: AppSpacing.lg),
-            AppTextField(
-              label: '${l10n.commonNotes} (${l10n.commonOptional})',
-              controller: _notes,
-              maxLines: 2,
-              maxLength: 1000,
-              validator: validators.maxLength(1000),
+            Entrance(
+              index: 3,
+              child: FormSection(
+                title: l10n.formMore,
+                icon: Icons.notes_rounded,
+                children: [
+                  AppTextField(
+                    label: '${l10n.commonNotes} (${l10n.commonOptional})',
+                    controller: _notes,
+                    maxLines: 2,
+                    maxLength: 1000,
+                    validator: validators.maxLength(1000),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

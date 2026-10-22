@@ -1,6 +1,8 @@
 import 'package:brics_mobile/core/l10n/l10n.dart';
 import 'package:brics_mobile/core/providers.dart';
 import 'package:brics_mobile/core/sync/queue_repository.dart';
+import 'package:brics_mobile/core/theme/app_colors.dart';
+import 'package:brics_mobile/core/theme/app_motion.dart';
 import 'package:brics_mobile/core/theme/app_spacing.dart';
 import 'package:brics_mobile/core/utils/formatters.dart';
 import 'package:brics_mobile/core/utils/validators.dart';
@@ -136,7 +138,11 @@ class _AttendanceFormScreenState extends ConsumerState<AttendanceFormScreen> {
     }
     ref.read(syncControllerProvider.notifier).kick();
     if (!mounted) return;
-    showAppSnack(context, widget.editId != null ? l10n.savedCorrected : l10n.savedOffline);
+    showAppSnack(
+      context,
+      widget.editId != null ? l10n.savedCorrected : l10n.savedOffline,
+      celebrate: widget.editId == null,
+    );
     context.pop();
   }
 
@@ -155,18 +161,46 @@ class _AttendanceFormScreenState extends ConsumerState<AttendanceFormScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
     final groups = ref.watch(labourGroupsProvider).value ?? const <LabourGroup>[];
     final group = groups.where((g) => g.id == _groupId).firstOrNull;
     final workers = _groupId == null
         ? const <Worker>[]
         : ref.watch(workersInGroupProvider(_groupId!)).value ?? const <Worker>[];
+    final lines = group == null ? const <AttendanceLine>[] : _lines(workers);
+    int count(AttendanceMark m) => lines.where((l) => l.mark == m).length;
 
     return AppScaffold(
       title: l10n.attendanceTake,
+      subtitle: Formatters.displayDate(_date),
+      header: group == null
+          ? null
+          : Row(
+              children: [
+                _Tally(
+                  label: l10n.attendancePresent,
+                  value: count(AttendanceMark.present),
+                  color: AppPalette.primary300,
+                ),
+                _Tally(
+                  label: l10n.attendanceHalfDay,
+                  value: count(AttendanceMark.halfDay),
+                  color: AppPalette.accent300,
+                ),
+                _Tally(
+                  label: l10n.attendanceAbsent,
+                  value: count(AttendanceMark.absent),
+                  color: const Color(0xFFFCA5A5),
+                ),
+              ],
+            ),
       bottomAction: group == null
           ? null
-          : AppButton(label: l10n.commonSave, busy: _busy, onPressed: () => _save(group, workers)),
+          : AppButton(
+              label: l10n.commonSave,
+              icon: Icons.check_rounded,
+              busy: _busy,
+              onPressed: () => _save(group, workers),
+            ),
       body: Form(
         key: _form,
         child: Column(
@@ -175,47 +209,118 @@ class _AttendanceFormScreenState extends ConsumerState<AttendanceFormScreen> {
             if (groups.isEmpty)
               EmptyView(message: l10n.attendanceNoGangs, icon: Icons.groups_outlined)
             else
-              AppDropdown<String>(
-                label: l10n.attendanceGang,
-                value: _groupId,
-                items: [for (final g in groups) AppDropdownItem(value: g.id, label: g.name)],
-                onChanged: (v) => setState(() => _groupId = v),
-              ),
-            AppDateField(
-              label: l10n.commonDate,
-              value: _date,
-              today: ref.read(clockProvider)(),
-              onChanged: (d) => setState(() => _date = d),
-            ),
-            if (group != null && workers.isEmpty) ...[
-              Text(l10n.attendanceWholeGang, style: text.bodyMedium),
-              const SizedBox(height: AppSpacing.sm),
-              _MarkPicker(value: _groupMark, onChanged: (m) => setState(() => _groupMark = m)),
-            ],
-            if (workers.isNotEmpty) ...[
-              AppButton(
-                label: l10n.attendanceAllPresent,
-                icon: Icons.done_all,
-                variant: AppButtonVariant.secondary,
-                onPressed: () => setState(() {
-                  for (final w in workers) {
-                    _marks[w.id] = AttendanceMark.present;
-                  }
-                }),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              for (final w in workers) ...[
-                _WorkerRow(
-                  worker: w,
-                  mark: _marks[w.id] ?? AttendanceMark.present,
-                  overtime: _ot(w.id),
-                  onChanged: (m) => setState(() => _marks[w.id] = m),
+              Entrance(
+                child: FormSection(
+                  title: l10n.attendanceGangAndDate,
+                  icon: Icons.groups_rounded,
+                  children: [
+                    AppDropdown<String>(
+                      label: l10n.attendanceGang,
+                      value: _groupId,
+                      items: [for (final g in groups) AppDropdownItem(value: g.id, label: g.name)],
+                      onChanged: (v) => setState(() => _groupId = v),
+                    ),
+                    AppDateField(
+                      label: l10n.commonDate,
+                      value: _date,
+                      today: ref.read(clockProvider)(),
+                      onChanged: (d) => setState(() => _date = d),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: AppSpacing.sm),
+              ),
+            if (groups.isNotEmpty && group == null)
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Text(
+                  l10n.attendancePickGang,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+            if (group != null && workers.isEmpty)
+              Entrance(
+                index: 1,
+                child: FormSection(
+                  title: group.name,
+                  hint: l10n.attendanceWholeGang,
+                  icon: Icons.groups_2_rounded,
+                  children: [
+                    _MarkPicker(
+                      value: _groupMark,
+                      onChanged: (m) => setState(() => _groupMark = m),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                  ],
+                ),
+              ),
+            if (workers.isNotEmpty) ...[
+              SectionLabel(
+                '${l10n.attendanceWorkers} · ${l10n.attendanceWorkersCount(workers.length)}',
+                trailing: TextButton.icon(
+                  icon: const Icon(Icons.done_all_rounded, size: 18),
+                  label: Text(l10n.attendanceAllPresent),
+                  onPressed: () => setState(() {
+                    for (final w in workers) {
+                      _marks[w.id] = AttendanceMark.present;
+                    }
+                  }),
+                ),
+              ),
+              for (final (i, w) in workers.indexed) ...[
+                Entrance(
+                  index: i + 1,
+                  child: _WorkerRow(
+                    worker: w,
+                    mark: _marks[w.id] ?? AttendanceMark.present,
+                    overtime: _ot(w.id),
+                    onChanged: (m) => setState(() => _marks[w.id] = m),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
               ],
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// A count in the header that rolls as marks change.
+class _Tally extends StatelessWidget {
+  const _Tally({required this.label, required this.value, required this.color});
+
+  final String label;
+  final int value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: text.labelSmall?.copyWith(color: Colors.white.withValues(alpha: 0.8)),
+              ),
+            ],
+          ),
+          AnimatedCount(
+            value: value,
+            style: text.headlineSmall?.copyWith(color: Colors.white),
+          ),
+        ],
       ),
     );
   }
@@ -234,35 +339,83 @@ class _WorkerRow extends StatelessWidget {
   final TextEditingController overtime;
   final ValueChanged<AttendanceMark> onChanged;
 
+  static const List<List<Color>> _avatarColors = [
+    [AppPalette.brickLight, AppPalette.brick],
+    [AppPalette.info400, AppPalette.info600],
+    [AppPalette.accent300, AppPalette.accent600],
+    [AppPalette.primary300, AppPalette.primary600],
+  ];
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final text = Theme.of(context).textTheme;
+    final initials = worker.name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .take(2)
+        .map((p) => p[0].toUpperCase())
+        .join();
+    final palette = _avatarColors[worker.name.hashCode.abs() % _avatarColors.length];
+
     return AppCard(
+      accent: switch (mark) {
+        AttendanceMark.present => context.colors.success,
+        AttendanceMark.halfDay => context.colors.warning,
+        AttendanceMark.absent => context.colors.danger,
+      },
       padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(worker.name, style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: palette,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: Text(
+                  initials,
+                  style: text.labelLarge?.copyWith(color: Colors.white, fontSize: 14),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(child: Text(worker.name, style: text.titleMedium)),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
           _MarkPicker(value: mark, onChanged: onChanged),
-          const SizedBox(height: AppSpacing.sm),
-          if (mark != AttendanceMark.absent)
-            AppTextField(
-              label: '${l10n.attendanceOvertime} (${l10n.commonOptional})',
-              controller: overtime,
-              kind: AppFieldKind.decimal,
-              validator: (v) =>
-                  isValidOvertime(v?.trim() ?? '') ? null : l10n.attendanceOvertimeInvalid,
-            )
-          else
-            const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.md),
+          AnimatedSize(
+            duration: AppMotion.medium,
+            curve: AppMotion.enter,
+            child: mark == AttendanceMark.absent
+                ? const SizedBox(width: double.infinity)
+                : AppTextField(
+                    label: '${l10n.attendanceOvertime} (${l10n.commonOptional})',
+                    controller: overtime,
+                    kind: AppFieldKind.decimal,
+                    prefixIcon: Icons.more_time_rounded,
+                    validator: (v) =>
+                        isValidOvertime(v?.trim() ?? '') ? null : l10n.attendanceOvertimeInvalid,
+                  ),
+          ),
         ],
       ),
     );
   }
 }
 
-/// Three big buttons — gloves, sunlight, a gang of forty.
+/// Three big pills — gloves, sunlight, a gang of forty. The chosen one fills
+/// with its colour; the others stay quiet.
 class _MarkPicker extends StatelessWidget {
   const _MarkPicker({required this.value, required this.onChanged});
 
@@ -272,16 +425,66 @@ class _MarkPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return SegmentedButton<AttendanceMark>(
-      style: SegmentedButton.styleFrom(minimumSize: const Size(0, AppSpacing.touchTarget)),
-      showSelectedIcon: false,
-      segments: [
-        ButtonSegment(value: AttendanceMark.present, label: Text(l10n.attendancePresent)),
-        ButtonSegment(value: AttendanceMark.halfDay, label: Text(l10n.attendanceHalfDay)),
-        ButtonSegment(value: AttendanceMark.absent, label: Text(l10n.attendanceAbsent)),
+    final colors = context.colors;
+    final text = Theme.of(context).textTheme;
+    final options = [
+      (AttendanceMark.present, l10n.attendancePresent, Icons.check_circle_rounded, colors.success),
+      (AttendanceMark.halfDay, l10n.attendanceHalfDay, Icons.timelapse_rounded, colors.warning),
+      (AttendanceMark.absent, l10n.attendanceAbsent, Icons.cancel_rounded, colors.danger),
+    ];
+    return Row(
+      children: [
+        for (final (i, (mark, label, icon, color)) in options.indexed) ...[
+          if (i > 0) const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Semantics(
+              selected: value == mark,
+              button: true,
+              child: Pressable(
+                onTap: () => onChanged(mark),
+                child: AnimatedContainer(
+                  duration: AppMotion.medium,
+                  curve: AppMotion.enter,
+                  height: AppSpacing.touchTarget,
+                  decoration: BoxDecoration(
+                    color: value == mark ? color : colors.surfaceMuted,
+                    borderRadius: BorderRadius.circular(AppRadius.button),
+                    boxShadow: value == mark
+                        ? [
+                            BoxShadow(
+                              color: color.withValues(alpha: 0.35),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        icon,
+                        size: 16,
+                        color: value == mark ? Colors.white : colors.mutedForeground,
+                      ),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          label,
+                          overflow: TextOverflow.ellipsis,
+                          style: text.labelMedium?.copyWith(
+                            color: value == mark ? Colors.white : colors.foreground,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ],
-      selected: {value},
-      onSelectionChanged: (s) => onChanged(s.single),
     );
   }
 }

@@ -692,4 +692,130 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get loginNoServer =>
       'This copy of the app was built without a server address. Ask for a correctly built app.';
+
+  @override
+  String get loginWelcome => 'Welcome back';
+
+  @override
+  String get loginWelcomeHint => 'Sign in to record today\'s work at the kiln.';
+
+  @override
+  String get loginTagline => 'Kiln to customer, on one phone';
+
+  @override
+  String get homeGoodMorning => 'Good morning';
+
+  @override
+  String get homeGoodAfternoon => 'Good afternoon';
+
+  @override
+  String get homeGoodEvening => 'Good evening';
+
+  @override
+  String get homeOnThisPhone => 'On this phone';
+
+  @override
+  String get homeStatWaiting => 'Waiting';
+
+  @override
+  String get homeStatSent => 'Sent';
+
+  @override
+  String get homeStatAttention => 'Need attention';
+
+  @override
+  String get homeYourWork => 'Your work';
+
+  @override
+  String homeLastSynced(String time) {
+    return 'Last synced $time';
+  }
+
+  @override
+  String get homeNotSyncedYet => 'Not synced yet — entries are safe on this phone';
+
+  @override
+  String get kilnPickerSelected => 'Selected';
+
+  @override
+  String productionStagesDone(int done) {
+    return '$done of 4 stages';
+  }
+
+  @override
+  String productionGreenCount(String bricks) {
+    return '$bricks green';
+  }
+
+  @override
+  String productionFiredCount(String bricks) {
+    return '$bricks fired';
+  }
+
+  @override
+  String get productionMakingHint => 'Green bricks moulded by the gang';
+
+  @override
+  String get productionDryingHint => 'Bricks dried in the yard';
+
+  @override
+  String get productionFiringHint => 'Bricks fired in the chamber';
+
+  @override
+  String get productionSortingHint => 'Good bricks into the yard by grade';
+
+  @override
+  String get formWhen => 'When';
+
+  @override
+  String get formCount => 'How many';
+
+  @override
+  String get formMore => 'Anything else';
+
+  @override
+  String get productionWhere => 'Where the good bricks go';
+
+  @override
+  String get productionLosses => 'Broken and rejects';
+
+  @override
+  String get productionLossesHint => 'Counted, not stocked.';
+
+  @override
+  String get attendanceGangAndDate => 'Gang and day';
+
+  @override
+  String get attendanceWorkers => 'Workers';
+
+  @override
+  String attendanceWorkersCount(int count) {
+    return '$count on the roll';
+  }
+
+  @override
+  String get attendancePickGang => 'Pick a gang to see its workers.';
+
+  @override
+  String get grnFrom => 'From whom, and when';
+
+  @override
+  String get dispatchTo => 'To whom, and when';
+
+  @override
+  String get dispatchTruck => 'Truck';
+
+  @override
+  String get dispatchTotal => 'Total';
+
+  @override
+  String get dispatchOnThisChallan => 'On this challan';
+
+  @override
+  String syncSentOf(int sent, int total) {
+    return '$sent of $total sent';
+  }
+
+  @override
+  String get syncAllEntries => 'Everything on this phone';
 }

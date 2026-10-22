@@ -8,9 +8,9 @@ import 'package:brics_mobile/core/widgets/widgets.dart';
 import 'package:brics_mobile/features/auth/presentation/session_controller.dart';
 import 'package:brics_mobile/features/dispatch/domain/dispatch.dart';
 import 'package:brics_mobile/features/dispatch/presentation/dispatch_providers.dart';
+import 'package:brics_mobile/features/dispatch/presentation/journey_tracker.dart';
 import 'package:brics_mobile/features/masters/data/master_providers.dart';
-import 'package:brics_mobile/features/sync/presentation/entry_editors.dart';
-import 'package:brics_mobile/features/sync/presentation/queue_entry_tile.dart';
+import 'package:brics_mobile/features/sync/presentation/entry_list.dart';
 import 'package:brics_mobile/features/sync/presentation/queue_providers.dart';
 import 'package:brics_mobile/features/sync/presentation/sync_badge_action.dart';
 import 'package:flutter/material.dart';
@@ -48,24 +48,21 @@ class DispatchScreen extends ConsumerWidget {
       length: 2,
       child: AppScaffold(
         title: l10n.dispatchTitle,
+        subtitle: ref.watch(selectedSiteProvider)?.name,
         actions: const [SyncBadgeAction()],
         scrollable: false,
         floatingAction: canRaise
             ? FloatingActionButton.extended(
                 onPressed: () => context.push(AppRoutes.dispatchNew),
-                icon: const Icon(Icons.add),
+                icon: const Icon(Icons.add_rounded),
                 label: Text(l10n.dispatchNew),
               )
             : null,
-        body: Column(
+        header: HeaderTabs(labels: [l10n.dispatchTabChallans, l10n.dispatchTabEntries]),
+        body: TabBarView(
           children: [
-            TabBar(
-              tabs: [
-                Tab(text: l10n.dispatchTabChallans),
-                Tab(text: l10n.dispatchTabEntries),
-              ],
-            ),
-            const Expanded(child: TabBarView(children: [_ChallanList(), _EntryList()])),
+            const _ChallanList(),
+            EntryList(group: QueueGroup.dispatch, emptyMessage: l10n.dispatchNoEntries),
           ],
         ),
       ),
@@ -85,10 +82,13 @@ class _ChallanList extends ConsumerWidget {
         icon: Icons.local_shipping_outlined,
       ),
       AsyncData(:final value) => ListView.separated(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, 96),
+        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, 112),
         itemCount: value.length,
-        separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
-        itemBuilder: (context, i) => _ChallanCard(challan: value[i]),
+        separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
+        itemBuilder: (context, i) => Entrance(
+          index: i,
+          child: _ChallanCard(challan: value[i]),
+        ),
       ),
       AsyncError() => const ErrorView(),
       _ => const AppLoader(),
@@ -111,48 +111,50 @@ class _ChallanCard extends ConsumerWidget {
       confirm: actions.confirm,
       acknowledge: actions.acknowledge,
     );
+    final colors = context.colors;
     return AppCard(
+      accent: switch (status) {
+        DispatchStatus.delivered => colors.success,
+        DispatchStatus.confirmed => colors.info,
+        _ => challan.serverStatus == null ? colors.warning : colors.primary,
+      },
       onTap: () => context.push(AppRoutes.dispatchChallan(challan.ref.encode())),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(challan.challanNo ?? l10n.dispatchChallanUnsent, style: text.titleMedium),
-                Text(customerName(ref, l10n, challan.customerPartyId), style: text.bodyMedium),
-                Text(Formatters.displayIsoDate(challan.dispatchDate), style: text.bodySmall),
-              ],
-            ),
+          Row(
+            children: [
+              const IconBadge(icon: Icons.local_shipping_rounded, size: 44),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(challan.challanNo ?? l10n.dispatchChallanUnsent, style: text.titleMedium),
+                    Text(customerName(ref, l10n, challan.customerPartyId), style: text.bodyMedium),
+                  ],
+                ),
+              ),
+              Text(Formatters.displayIsoDate(challan.dispatchDate), style: text.bodySmall),
+            ],
           ),
-          Text(
-            dispatchStatusLabel(l10n, status),
-            style: text.labelMedium?.copyWith(color: context.colors.info),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              Expanded(child: JourneyTracker(status: status, compact: true)),
+              const SizedBox(width: AppSpacing.md),
+              StatusPill(label: dispatchStatusLabel(l10n, status), tone: _tone(status)),
+            ],
           ),
-          const Icon(Icons.chevron_right),
         ],
       ),
     );
   }
-}
 
-class _EntryList extends ConsumerWidget {
-  const _EntryList();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    return switch (ref.watch(queueRowsProvider(QueueGroup.dispatch))) {
-      AsyncData(:final value) when value.isEmpty => EmptyView(message: l10n.dispatchNoEntries),
-      AsyncData(:final value) => ListView.separated(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, 96),
-        itemCount: value.length,
-        separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
-        itemBuilder: (context, i) =>
-            QueueEntryTile(row: value[i], onEdit: editorFor(context, value[i])),
-      ),
-      AsyncError() => const ErrorView(),
-      _ => const AppLoader(),
-    };
-  }
+  static Tone _tone(String status) => switch (status) {
+    DispatchStatus.delivered => Tone.success,
+    DispatchStatus.confirmed => Tone.info,
+    DispatchStatus.cancelled => Tone.danger,
+    _ => Tone.neutral,
+  };
 }

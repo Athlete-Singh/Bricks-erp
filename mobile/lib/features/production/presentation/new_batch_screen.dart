@@ -84,7 +84,11 @@ class _NewBatchScreenState extends ConsumerState<NewBatchScreen> {
     }
     ref.read(syncControllerProvider.notifier).kick();
     if (!mounted) return;
-    showAppSnack(context, widget.editId != null ? l10n.savedCorrected : l10n.savedOffline);
+    showAppSnack(
+      context,
+      widget.editId != null ? l10n.savedCorrected : l10n.savedOffline,
+      celebrate: widget.editId == null,
+    );
     if (widget.editId != null) {
       context.pop();
     } else {
@@ -98,30 +102,55 @@ class _NewBatchScreenState extends ConsumerState<NewBatchScreen> {
     final validators = Validators(l10n);
     return AppScaffold(
       title: l10n.productionNewBatch,
-      bottomAction: AppButton(label: l10n.commonSave, onPressed: _save, busy: _busy),
+      subtitle: ref.watch(selectedSiteProvider)?.name,
+      bottomAction: AppButton(
+        label: l10n.commonSave,
+        icon: Icons.check_rounded,
+        onPressed: _save,
+        busy: _busy,
+      ),
       body: Form(
         key: _form,
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            AppTextField(
-              label: l10n.productionChamber,
-              hint: l10n.productionChamberHint,
-              controller: _chamber,
-              maxLength: 20,
-              validator: validators.maxLength(20, optional: false),
+            Entrance(
+              child: FormSection(
+                title: l10n.productionChamber,
+                icon: Icons.local_fire_department_rounded,
+                children: [
+                  AppTextField(
+                    label: l10n.productionChamber,
+                    hint: l10n.productionChamberHint,
+                    controller: _chamber,
+                    prefixIcon: Icons.door_sliding_rounded,
+                    maxLength: 20,
+                    validator: validators.maxLength(20, optional: false),
+                  ),
+                  AppDateField(
+                    label: l10n.productionBatchDate,
+                    value: _date,
+                    today: ref.read(clockProvider)(),
+                    onChanged: (d) => setState(() => _date = d),
+                  ),
+                ],
+              ),
             ),
-            AppDateField(
-              label: l10n.productionBatchDate,
-              value: _date,
-              today: ref.read(clockProvider)(),
-              onChanged: (d) => setState(() => _date = d),
-            ),
-            AppTextField(
-              label: '${l10n.commonNotes} (${l10n.commonOptional})',
-              controller: _notes,
-              maxLines: 3,
-              maxLength: 500,
-              validator: validators.maxLength(500),
+            Entrance(
+              index: 1,
+              child: FormSection(
+                title: l10n.formMore,
+                icon: Icons.notes_rounded,
+                children: [
+                  AppTextField(
+                    label: '${l10n.commonNotes} (${l10n.commonOptional})',
+                    controller: _notes,
+                    maxLines: 3,
+                    maxLength: 500,
+                    validator: validators.maxLength(500),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
