@@ -13,7 +13,9 @@ cp env/dev.example.json env/dev.json        # API_BASE_URL; git-ignored
 flutter pub get
 flutter run --dart-define-from-file=env/dev.json
 ```
-`10.0.2.2` is the host machine as the Android emulator sees it; use `http://localhost:4000/api/v1` on the iOS simulator.
+`env/dev.json` points at the deployed dev API (`https://bhatta-erp-backend.vercel.app/api/v1`), which is also the debug
+default when no file is passed. For a local backend use `http://10.0.2.2:4000/api/v1` (Android emulator) or
+`http://localhost:4000/api/v1` (iOS simulator).
 Debug builds allow plain HTTP to the local API only; release builds are HTTPS only.
 
 ## Gate (M track)
