@@ -15,6 +15,8 @@ import { IdempotencyService } from '../../common/idempotency/idempotency.service
 import { todayCalendarDate } from '../../common/time/calendar-date';
 import { StockService } from '../../stock/stock.service';
 import { AuditService } from '../audit/audit.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { smsDate, smsQuantity } from '../notifications/notification-templates';
 import { Party } from '../parties/entities/party.entity';
 import { Site } from '../company/entities/site.entity';
 import { Item } from '../inventory/entities/item.entity';
@@ -50,6 +52,7 @@ export class DispatchService {
     private readonly stock: StockService,
     private readonly audit: AuditService,
     private readonly idempotency: IdempotencyService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   // ── shared guards ──────────────────────────────────────────────────────────
@@ -257,7 +260,7 @@ export class DispatchService {
    * happened is recorded on `moved_stock` rather than inferred later.
    */
   async confirmDispatch(companyId: string, userId: string, id: string, dto: ConfirmDispatchDto): Promise<Dispatch> {
-    return this.dataSource.transaction(async (manager) => {
+    const confirmed = await this.dataSource.transaction(async (manager) => {
       // Two confirms racing would deduct the yard twice. The lock is per
       // challan, so unrelated trucks are not serialised behind each other.
       await manager.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [`dispatch-confirm:${id}`]);
@@ -322,8 +325,21 @@ export class DispatchService {
         manager,
       );
 
+      // NTF-01 — the customer hears the load is on its way (if the company has it on).
+      const quantity = lines.reduce((sum, line) => sum.plus(line.quantity), new Decimal(0));
+      await this.notifications.enqueue(manager, {
+        companyId,
+        event: 'dispatch_sent',
+        to: { phone: customer?.phone ?? null },
+        variables: { challan: saved.challanNo, quantity: smsQuantity(quantity.toString()), date: smsDate(confirmedOn) },
+        sourceType: 'dispatch',
+        sourceId: saved.id,
+      });
+
       return saved;
     });
+    this.notifications.kick(companyId);
+    return confirmed;
   }
 
   // ── DSP-03 the customer signs for the load ─────────────────────────────────

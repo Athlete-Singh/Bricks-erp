@@ -1,3 +1,4 @@
+import { NotificationsService } from '../../notifications/notifications.service';
 import { Test } from '@nestjs/testing';
 import { DataSource } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
@@ -82,6 +83,7 @@ describe('LabourService', () => {
         { provide: PostingService, useValue: postingService },
         { provide: AuditService, useValue: auditService },
         { provide: IdempotencyService, useValue: idempotencyService },
+        { provide: NotificationsService, useValue: { enqueue: jest.fn(), kick: jest.fn() } },
       ],
     }).compile();
 

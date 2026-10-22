@@ -118,6 +118,17 @@ yard exactly once, and the challan row says which document did it.
 billed against it, and what was not. Trucks that left with no bill at all are
 counted at the top.
 
+## SMS alerts
+
+**Settings → Alerts** turns on text messages: to the customer when their load
+leaves the gate and when their payment is recorded, and to you when an advance
+leaves a Sardar owing more than his gang has earned. Customers are texted on the
+phone number in their party record; put your own mobile on the Alerts page.
+
+Until the SMS account is connected the page says so, and messages are listed as
+**Logged, not sent** — you can read exactly what would go out before paying for
+it. A message that fails shows why, and **Send waiting now** tries again.
+
 ## The supervisor app (phone)
 
 For the people at the kiln. Sign in once where there is signal; after that the app

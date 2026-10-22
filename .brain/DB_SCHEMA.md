@@ -48,3 +48,6 @@ Seed: `pnpm seed` fills `roles`, `permissions`, `role_permissions` (10 roles inc
 
 ## Mobile (Drift, on the phone — M1, ADR-053)
 `sync_queue` (the outbox; the row is the field record; id = Idempotency-Key; `depends_on` + `{parent}` path) · `cached_records (kind, id, site_id, json)` · `app_state (key, value)`. Timestamps stored as ISO text with milliseconds. See `.brain/modules/mobile-app.md`.
+
+## Notifications (NTF-01, migration 1798000000000)
+`notification_settings` (company_id unique, owner_phone, dispatch_sent, payment_received, advance_alert) · `notifications` outbox (event, channel, to_phone, body, variables jsonb, source_type, source_id, status queued|sent|logged|failed, provider, provider_message_id, error, attempts, next_attempt_at, sent_at); `uq_notifications_source (company_id, event, source_id)`.

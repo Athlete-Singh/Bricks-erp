@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AccountingModule } from '../../accounting/accounting.module';
 import { IdempotencyModule } from '../../common/idempotency/idempotency.module';
@@ -24,6 +25,7 @@ import { SalesService } from './sales.service';
 
 @Module({
   imports: [
+    NotificationsModule,
     TypeOrmModule.forFeature([
       Quotation,
       QuotationLine,

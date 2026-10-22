@@ -25,6 +25,8 @@ import { BusinessRuleException } from '../../common/exceptions/business-rule.exc
 import { IdempotencyService } from '../../common/idempotency/idempotency.service';
 import { toCalendarDate, todayCalendarDate } from '../../common/time/calendar-date';
 import { AuditService } from '../audit/audit.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { smsDate, smsMoney } from '../notifications/notification-templates';
 import { Party } from '../parties/entities/party.entity';
 import { Company } from '../company/entities/company.entity';
 import { Site } from '../company/entities/site.entity';
@@ -115,6 +117,7 @@ export class SalesService {
     private readonly posting: PostingService,
     private readonly audit: AuditService,
     private readonly idempotency: IdempotencyService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   // ── shared guards ──────────────────────────────────────────────────────────
@@ -931,7 +934,7 @@ export class SalesService {
   ): Promise<CustomerReceipt> {
     assertNotFuture(dto.receiptDate, 'A receipt');
 
-    return this.dataSource.transaction((manager) =>
+    const result = await this.dataSource.transaction((manager) =>
       this.idempotency.runOnce(
         manager,
         { companyId, userId, endpoint: 'POST /sales/receipts', key: idempotencyKey, body: dto },
@@ -1047,10 +1050,26 @@ export class SalesService {
             manager,
           );
 
+          // NTF-01 — the customer gets a receipt by SMS (if the company has it on).
+          await this.notifications.enqueue(manager, {
+            companyId,
+            event: 'payment_received',
+            to: { phone: customer.phone },
+            variables: {
+              amount: smsMoney(receipt.amount),
+              date: smsDate(receipt.receiptDate),
+              receipt: posted.voucher.number,
+            },
+            sourceType: 'customer_receipt',
+            sourceId: receipt.id,
+          });
+
           return receipt;
         },
       ),
     );
+    this.notifications.kick(companyId);
+    return result;
   }
 
   // ── SAL-06 credit note (value and/or stock) ────────────────────────────────

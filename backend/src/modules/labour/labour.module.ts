@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AccountingModule } from '../../accounting/accounting.module';
 import { AuditModule } from '../audit/audit.module';
@@ -19,6 +20,7 @@ import { WageRatesService } from './wage-rates.service';
 
 @Module({
   imports: [
+    NotificationsModule,
     TypeOrmModule.forFeature([
       WageRate,
       LabourGroup,

@@ -19,10 +19,10 @@
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 | ----------------------------------- | ---------- | ------- | ---------------- | -------------- | ---------- | -------------- |
-| Backend                             | 97         | 95      | 0                | 0              | 0          | 2              |
-| Web                                 | 91         | 89      | 0                | 0              | 0          | 2              |
+| Backend                             | 97         | 96      | 0                | 0              | 0          | 1              |
+| Web                                 | 91         | 90      | 0                | 0              | 0          | 1              |
 | Mobile                              | 11         | 10      | 0                | 0              | 1          | 0              |
-| Tests                               | 101        | 100     | 0                | 0              | 0          | 1              |
+| Tests                               | 101        | 101     | 0                | 0              | 0          | 0              |
 
 ## Client phases
 
@@ -241,6 +241,10 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 | POST   | `/platform/tenants/:id/reactivate`                | PLT-06               | ✅      | ✅  | —      |
 | PATCH  | `/platform/tenants/:id/settings`                  | PLT-10               | ✅      | ✅  | —      |
 | POST   | `/platform/support-sessions`                      | PLT-07               | ✅      | ✅  | —      |
+| GET    | `/notifications/settings`                         | NTF-01               | ✅      | ✅  | —      |
+| PUT    | `/notifications/settings`                         | NTF-01               | ✅      | ✅  | —      |
+| GET    | `/notifications`                                  | NTF-01               | ✅      | ✅  | —      |
+| POST   | `/notifications/send-pending`                     | NTF-01               | ✅      | ✅  | —      |
 | POST   | `/platform/support-sessions/:id/close`            | PLT-07               | ✅      | ✅  | —      |
 | GET    | `/platform/support-sessions`                      | PLT-07               | ✅      | ✅  | —      |
 | GET    | `/platform/support-sessions/for-tenant/:tenantId` | PLT-07               | ✅      | ✅  | —      |
@@ -579,4 +583,4 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 
 | ID     | Feature                                                                                       | CP  | Phase | Backend | Web | Mobile | Tests | Status |
 | ------ | --------------------------------------------------------------------------------------------- | --- | ----- | ------- | --- | ------ | ----- | ------ |
-| NTF-01 | SMS/WhatsApp alerts (dispatch sent, payment received, advance limit crossed) via MSG91/Twilio | CP1 | P13   | ⬜      | ⬜  | —      | ⬜    | ⚠️     |
+| NTF-01 | SMS/WhatsApp alerts (dispatch sent, payment received, advance limit crossed) via MSG91/Twilio | CP1 | P13   | ✅      | ✅  | —      | ✅    | ⚠️     |

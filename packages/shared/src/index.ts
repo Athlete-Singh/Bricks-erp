@@ -25,3 +25,4 @@ export * from './schemas/gst';
 export * from './schemas/dashboard';
 export * from './schemas/onboarding';
 export * from './schemas/platform';
+export * from './schemas/notifications';

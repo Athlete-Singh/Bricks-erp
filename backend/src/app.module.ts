@@ -26,6 +26,7 @@ import { ProductionModule } from './modules/production/production.module';
 import { SalesModule } from './modules/sales/sales.module';
 import { DispatchModule } from './modules/dispatch/dispatch.module';
 import { ExpensesModule } from './modules/expenses/expenses.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { FinancialsModule } from './modules/financials/financials.module';
 import { GstModule } from './modules/gst/gst.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
@@ -92,6 +93,7 @@ import { SupportModule } from './modules/support/support.module';
     SalesModule,
     DispatchModule,
     ExpensesModule,
+    NotificationsModule,
     FinancialsModule,
     GstModule,
     DashboardModule,

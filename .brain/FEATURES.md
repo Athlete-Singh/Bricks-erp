@@ -21,10 +21,10 @@
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
-| Backend | 97 | 95 | 0 | 0 | 0 | 2 |
-| Web | 91 | 89 | 0 | 0 | 0 | 2 |
+| Backend | 97 | 96 | 0 | 0 | 0 | 1 |
+| Web | 91 | 90 | 0 | 0 | 0 | 1 |
 | Mobile | 11 | 10 | 0 | 0 | 1 | 0 |
-| Tests | 101 | 100 | 0 | 0 | 0 | 1 |
+| Tests | 101 | 101 | 0 | 0 | 0 | 0 |
 
 ## Client Phase 1 — MVP
 
@@ -256,7 +256,7 @@ reasoning in `.brain/modules/saas-platform.md`, decision in ADR-052.
 
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| NTF-01 | SMS/WhatsApp alerts (dispatch sent, payment received, advance limit crossed) via MSG91/Twilio | CP1 | P13 | ⬜ | ⬜ | — | ⬜ | ⚠️ | **Blocked on the client.** SOW §3 excludes the *gateway charges* "(paid directly to MSG91/Twilio)" — naming the vendors implies the integration itself is in scope. Was wrongly filed under "not in PDFs". See OPEN_QUESTIONS #14 |
+| NTF-01 | SMS/WhatsApp alerts (dispatch sent, payment received, advance limit crossed) via MSG91/Twilio | CP1 | P13 | ✅ | ✅ | — | ✅ | ⚠️ | **Built 2026-10-22, switched off.** Outbox in the event's transaction (gate-out → customer, receipt → customer, advance over LEK-03 → owner), MSG91 + Twilio adapters, `log` mode by default; Settings → Alerts (switches, owner number, message log). **Waits on the client:** gateway account, DLT registration of sender + texts, env vars (OQ #14, docs/modules/notifications.md) |
 
 ## CP2 candidates (genuinely not in any client PDF — need client approval + quote)
 

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { IdempotencyModule } from '../../common/idempotency/idempotency.module';
 import { StockModule } from '../../stock/stock.module';
@@ -12,6 +13,7 @@ import { DispatchService } from './dispatch.service';
 
 @Module({
   imports: [
+    NotificationsModule,
     TypeOrmModule.forFeature([Dispatch, DispatchLine]),
     AuditModule,
     AuthModule,

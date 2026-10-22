@@ -7,6 +7,8 @@ import { BusinessRuleException } from '../../common/exceptions/business-rule.exc
 import { todayCalendarDate } from '../../common/time/calendar-date';
 import { PostingService } from '../../accounting/posting.service';
 import { AuditService } from '../audit/audit.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { smsMoney } from '../notifications/notification-templates';
 import { IdempotencyService } from '../../common/idempotency/idempotency.service';
 import { Party } from '../parties/entities/party.entity';
 import { Site } from '../company/entities/site.entity';
@@ -69,6 +71,7 @@ export class LabourService {
     private readonly posting: PostingService,
     private readonly audit: AuditService,
     private readonly idempotency: IdempotencyService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   // ── GROUPS ──────────────────────────────────────────────────────────────────
@@ -345,7 +348,7 @@ export class LabourService {
   ): Promise<CreateAdvanceResult> {
     assertNotFuture(dto.date, 'An advance');
 
-    return this.dataSource.transaction(async (manager) =>
+    const result = await this.dataSource.transaction(async (manager) =>
       this.idempotency.runOnce(
         manager,
         {
@@ -426,6 +429,23 @@ export class LabourService {
             manager,
           );
 
+          // NTF-01 / LEK-03 — the owner hears at once when an advance leaves the
+          // Sardar owing more than he has earned (if the company has it on).
+          if (exposureAfter.warning) {
+            await this.notifications.enqueue(manager, {
+              companyId,
+              event: 'advance_alert',
+              to: 'owner',
+              variables: {
+                amount: smsMoney(savedAdvance.amount),
+                sardar: sardar.name,
+                exposure: smsMoney(exposureAfter.netExposure),
+              },
+              sourceType: 'labour_advance',
+              sourceId: savedAdvance.id,
+            });
+          }
+
           return {
             advance: savedAdvance,
             exposure: exposureAfter,
@@ -434,6 +454,8 @@ export class LabourService {
         },
       ),
     );
+    this.notifications.kick(companyId);
+    return result;
   }
 
   async findAllAdvances(companyId: string, query: AdvanceQueryDto) {

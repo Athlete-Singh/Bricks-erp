@@ -211,6 +211,10 @@ Add the row when you **plan** an endpoint (BE ⬜), and update it the moment any
 | POST | /platform/tenants/:id/reactivate | PLT-06 — reactivate a suspended tenant | platform.tenants.manage | PLT-06 | S1.1 | ✅ | ✅ | — |
 | PATCH | /platform/tenants/:id/settings | PLT-10 — update tenant platform settings (e.g. requireSupportApproval) | platform.tenants.manage | PLT-10 | S3.2 | ✅ | ✅ | — |
 | POST | /platform/support-sessions | PLT-07 — open a session on one tenant (reason required, 2 h); returns `{ session, auth }` with an owner-scoped switched JWT | platform.support.request | PLT-07 | S2.1 | ✅ | ✅ | — |
+| GET | /notifications/settings | NTF-01 which alerts are on, the owner's alert number, and the configured gateway | company.view | NTF-01 | P13 | ✅ | ✅ | — |
+| PUT | /notifications/settings | NTF-01 turn alerts on/off; set the owner's alert mobile | company.manage | NTF-01 | P13 | ✅ | ✅ | — |
+| GET | /notifications | NTF-01 the outbox — every alert written and what happened to it, paged | company.view | NTF-01 | P13 | ✅ | ✅ | — |
+| POST | /notifications/send-pending | NTF-01 send queued alerts now (button, or a cron) | company.manage | NTF-01 | P13 | ✅ | ✅ | — |
 | POST | /platform/support-sessions/:id/close | PLT-07 — close early (opener only) | platform.support.request | PLT-07 | S2.1 | ✅ | ✅ | — |
 | GET | /platform/support-sessions | PLT-07 — the signed-in admin's own session history (filter `?tenantId=`) | platform.support.request | PLT-07 | S2.1 | ✅ | ✅ | — |
 | GET | /platform/support-sessions/for-tenant/:tenantId | PLT-07 — session history for one tenant | platform.tenants.view | PLT-07 | S2.1 | ✅ | ✅ | — |
