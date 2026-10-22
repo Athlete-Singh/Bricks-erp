@@ -1,44 +1,63 @@
 # BRICS mobile (Flutter supervisor app)
 
-**Status:** folder structure only. **P0.4 is closed ✅** — it delivered everything that could be built without the Flutter SDK
-(this folder tree, the placeholder app, a widget test, `env/dev.example.json` and this README).
+Offline-first field app: production, attendance, goods receipt, dispatch + delivery. Built in steps M0–M6
+(`../.brain/PROGRESS.md`); design in `../docs/09-offline-sync.md` and `../.brain/modules/mobile-app.md` (ADR-053).
+Rules: `../AGENTS.md`, `../.brain/CONVENTIONS.md` (Mobile section).
 
-**The rest is step `M0`.** The Flutter work is a separate track (`M0` → `M6`) in `.brain/PROGRESS.md`, run on whatever machine
-has the Flutter SDK. The backend and web track (`P0` → `P13`) is built first and never waits on this.
-Rules: `../AGENTS.md`, `../.brain/CONVENTIONS.md` (Mobile section). Tracker: `../.brain/PROGRESS.md` → "Resume here: mobile".
+Flutter 3.47 / Dart 3.13 · Riverpod 3 · go_router · dio · Drift · freezed + json_serializable · `very_good_analysis`.
 
-## First time, on a machine with Flutter (step M0)
+## Run
 ```bash
 cd mobile
-flutter create --org com.brics --project-name brics_mobile --platforms=android,ios .   # adds android/ ios/; keeps existing files
-# NOTE: `--org` sets the package id and is painful to change after the first store upload. Confirm it first — OPEN_QUESTIONS #12.
-flutter pub add flutter_riverpod riverpod_annotation go_router dio freezed_annotation json_annotation \
-  drift drift_flutter flutter_secure_storage connectivity_plus decimal intl uuid flutter_localizations:'{"sdk":"flutter"}'
-flutter pub add --dev build_runner riverpod_generator freezed json_serializable drift_dev mocktail very_good_analysis
-cp env/dev.example.json env/dev.json
-flutter analyze && flutter test
+cp env/dev.example.json env/dev.json        # API_BASE_URL; git-ignored
+flutter pub get
+flutter run --dart-define-from-file=env/dev.json
 ```
-Then build the M0 scaffold (theme tokens, widgets, router, dio client, Drift stub, sync skeleton, l10n) per BRICS_MASTER_PROMPT.md §4 / §6, and commit the generated `*.g.dart` / `*.freezed.dart` files (ADR-007).
+`10.0.2.2` is the host machine as the Android emulator sees it; use `http://localhost:4000/api/v1` on the iOS simulator.
+Debug builds allow plain HTTP to the local API only; release builds are HTTPS only.
 
-Run: `flutter run --dart-define-from-file=env/dev.json`
+## Gate (M track)
+```bash
+dart run build_runner build -d && flutter analyze && flutter test
+```
+Generated files (`*.g.dart`, `*.freezed.dart`, `lib/core/l10n/generated/`) are committed (ADR-007). After editing
+`lib/core/l10n/app_en.arb` run `flutter gen-l10n`.
+
+## Release builds
+```bash
+API_BASE_URL=https://<api-host>/api/v1 scripts/build_release.sh android   # per-ABI APKs (~20 MB) + an .aab for Play
+API_BASE_URL=https://<api-host>/api/v1 scripts/build_release.sh ios       # .ipa — needs signing in Xcode
+```
+The script refuses to build without an `https://` API address; a release build has no fallback server.
+
+**Android signing.** Create a keystore once and keep it — and its passwords — somewhere the owner controls (OPEN_QUESTIONS #22):
+```bash
+keytool -genkey -v -keystore ~/brics-upload.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+```
+then `android/key.properties` (git-ignored):
+```
+storeFile=/absolute/path/brics-upload.jks
+storePassword=…
+keyAlias=upload
+keyPassword=…
+```
+Without it the release build is signed with the debug key — fine for installing on a test phone, refused by the Play Store.
+
+**Package id.** `com.brics.brics_mobile` / `com.brics.bricsMobile` are placeholders (OPEN_QUESTIONS #12). They are fixed for
+good at the first store upload — settle the publishing account first.
+
+**iOS.** Builds unsigned here (`flutter build ios --release --no-codesign`). TestFlight / App Store need the client's
+Apple developer account (OPEN_QUESTIONS #23; the $99/yr fee is the client's, SOW §3).
 
 ## Structure
 ```
 lib/
   main.dart, app.dart
-  core/
-    theme/      colours, text styles, spacing, light + dark theme (tokens from docs/05-design-system.md)
-    widgets/    AppButton, AppTextField, AppCard, AppDropdown, AppLoader, EmptyView, ErrorView, SyncStatusBadge, NumberStepper
-    network/    dio client, interceptors (auth, retry, logging), api_endpoints.dart, ApiException
-    database/   Drift database, tables, DAOs
-    sync/       sync queue, SyncService, connectivity watcher, conflict policy
-    router/     go_router config + guards
-    utils/      ₹ / date formatters, validators, constants
-    l10n/       app_en.arb (Hindi-ready)
-  features/<auth|production|attendance|grn|dispatch|sync>/
-    data/         models (freezed), remote + local data sources, repository impl
-    domain/       entities, repository interfaces (keep light)
-    presentation/ screens, widgets, Riverpod providers
-test/
-env/            dev.example.json (copy to dev.json, git-ignored)
+  core/       config, theme (tokens), widgets, network (ApiClient, AuthInterceptor), storage (tokens),
+              database (Drift: sync_queue, cached_records, app_state), sync (queue, cache, SyncService,
+              MasterSyncService, RecordRef), router, utils (formatters, validators), l10n
+  features/   auth · home · masters · production · attendance · grn · dispatch · sync
+              each data/ domain/ presentation/
+test/         helpers (fake API with lost-response simulation, test env, harness) + core, sync, auth, features
+scripts/      build_release.sh
 ```

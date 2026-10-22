@@ -109,7 +109,7 @@ Map<String, dynamic> loginResponse({
 class IdempotentCreate {
   IdempotentCreate(this._create);
 
-  final Map<String, dynamic> Function(RecordedRequest request) _create;
+  final Object? Function(RecordedRequest request) _create;
   final Map<String, FakeResponse> _seen = {};
   int created = 0;
 

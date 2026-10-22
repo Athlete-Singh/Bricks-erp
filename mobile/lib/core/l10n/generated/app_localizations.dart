@@ -1321,6 +1321,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{action} waiting to be sent'**
   String dispatchPendingAction(String action);
+
+  /// No description provided for @loginNoServer.
+  ///
+  /// In en, this message translates to:
+  /// **'This copy of the app was built without a server address. Ask for a correctly built app.'**
+  String get loginNoServer;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

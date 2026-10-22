@@ -11,11 +11,11 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 101 | 92 | 4 | 1 | 4 | 0 |
+| CP1 MVP | 101 | 93 | 4 | 3 | 1 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 | S — SaaS platform | 11 | 10 | 1 | 0 | 0 | 0 |
 
-**CP1 done: 91 %** (92 of 101 features ✅)
+**CP1 done: 92 %** (93 of 101 features ✅)
 
 ### Per app
 
@@ -23,8 +23,8 @@
 |---|---|---|---|---|---|---|
 | Backend | 97 | 94 | 0 | 0 | 0 | 3 |
 | Web | 91 | 88 | 0 | 0 | 0 | 3 |
-| Mobile | 11 | 7 | 0 | 0 | 0 | 4 |
-| Tests | 101 | 96 | 0 | 0 | 0 | 5 |
+| Mobile | 11 | 8 | 0 | 0 | 2 | 1 |
+| Tests | 101 | 99 | 0 | 0 | 0 | 2 |
 
 ## Client Phase 1 — MVP
 
@@ -192,9 +192,9 @@
 | MOB-01 | Login, kiln selection, role-based home | CP1 | M1 | ✅ | — | ✅ | ✅ | ✅ | M1 — sign-in (offline reopen from the stored session), kiln picker (auto when one), home tiles by permission (ADR-053). A **suspended tenant** (PLT-06) sees "Company access is on hold" with the server's contact line, not "login failed" |
 | MOB-02 | Offline storage + sync queue + sync status badge (skeleton) | CP1 | M1 | — | — | ✅ | ✅ | ✅ | M1 — Drift `sync_queue` (the row is the record, ADR-053) + `cached_records` + `app_state`; SyncService (Idempotency-Key = row UUID, `{parent}` dependencies, 5 s→30 s→2 min→10 min backoff, refusals kept with the reason); master pull by `?since=`; SyncStatusBadge on every screen; Sync screen with send again / discard |
 | MOB-03 | Feature screens: production, attendance, GRN, dispatch/delivery | CP1 | M2–M5 | ⬜ | ⬜ | ✅ | ✅ | ✅ | Production (M2), attendance (M3), GRN (M4), dispatch + delivery (M5) |
-| MOB-04 | A full working day offline; syncs with no duplicates; conflict handling | CP1 | M6 | — | — | ⬜ | ⬜ | ⬜ |  |
-| MOB-05 | Android release APK | CP1 | M6 | — | — | ⬜ | ⬜ | ⬜ |  |
-| MOB-06 | iOS build + TestFlight/App Store release | CP1 | M6 | — | — | ⬜ | ⬜ | ⬜ | **Contracted:** SOW §1 says "Cross-platform iOS & Android"; §3 excludes only the Apple $99/yr fee. Was wrongly filed under "CP2 candidates" |
+| MOB-04 | A full working day offline; syncs with no duplicates; conflict handling | CP1 | M6 | — | — | ✅ | ✅ | ✅ | M6 — `test/sync/full_day_offline_test.dart`: 21 entries across production, attendance, GRN and dispatch made offline, synced through lost responses and a 503 — every server create exactly once, stages in order, both challans delivered. Reconnect sends at once; a child of a refused parent does not wake the sync; the two non-idempotent PATCHes settle by reading the challan back; sent entries pruned after 30 days |
+| MOB-05 | Android release APK | CP1 | M6 | — | — | ⚠️ | ✅ | ⚠️ | M6 — release APK builds (`scripts/build_release.sh android`: per-ABI APKs ~20 MB + .aab; verified 2026-10-22). **Blocked for distribution** on the production API address and the upload keystore (OQ #22) and the package id (OQ #12) |
+| MOB-06 | iOS build + TestFlight/App Store release | CP1 | M6 | — | — | ⚠️ | ✅ | ⚠️ | **Contracted:** SOW §1 says "Cross-platform iOS & Android"; §3 excludes only the Apple $99/yr fee. M6 — iOS release build verified unsigned (21 MB). **Blocked** on the client's Apple developer account for signing / TestFlight (OQ #23) and the bundle id (OQ #12) |
 
 ### S — SaaS platform (the vendor's own surface, not a kiln's)
 

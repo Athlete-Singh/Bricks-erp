@@ -1,70 +1,52 @@
 # M12 Supervisor Mobile App
 
-**Purpose:** Offline-first Flutter app for supervisors: production, attendance, GRN, dispatch/delivery, sync.
-**Phase:** P1, P5–P9, P12 · **Status:** ⬜ not started
+**Purpose:** Offline-first Flutter app for the field: production, attendance, GRN, dispatch/delivery, sync.
+**Phase:** M0–M6 (2026-10-22) · **Status:** ✅ built and tested; distributable builds wait on OQ #12, #22, #23
 
 ## Features
-| ID | Feature | Phase | Status |
+| ID | Feature | Step | Status |
 |---|---|---|---|
-| MOB-01 | Login, kiln selection, role-based home | P1 | ⬜ |
-| MOB-02 | Offline storage + sync queue + sync status badge (skeleton) | P1 | ⬜ |
-| MOB-03 | Feature screens: production (P5), attendance (P6), GRN (P7), dispatch/delivery (P9) | P5–P9 | ⬜ |
-| MOB-04 | A full working day offline; syncs with no duplicates; conflict handling | P12 | ⬜ |
-| MOB-05 | Android release APK | P12 | ⬜ |
+| MOB-01 | Login (offline reopen), kiln selection, role-based home; suspended tenant told who to contact | M1 | ✅ |
+| MOB-02 | Drift outbox + caches, SyncService, SyncStatusBadge, Sync screen | M1 | ✅ |
+| MOB-03 | Production (PRD-06), attendance (LAB-02), GRN (PUR-02), dispatch + delivery (DSP-04) | M2–M5 | ✅ |
+| MOB-04 | A full working day offline, no duplicates, conflict handling (test: `test/sync/full_day_offline_test.dart`) | M6 | ✅ |
+| MOB-05 | Android release APK — builds (`scripts/build_release.sh android`); signing key + API URL pending | M6 | 🟨 |
+| MOB-06 | iOS release build — builds unsigned; TestFlight needs the client's Apple account | M6 | ⚠️ |
 
-## Tables (planned)
-(local Drift) sync_queue + per-feature tables; server idempotency_keys
+## Architecture (ADR-053)
+- `mobile/lib/core/` — theme tokens, widgets, dio `ApiClient` (envelope + `ApiException` transient/refused split), `AuthInterceptor`
+  (single-flight refresh; only a *refused* refresh ends the session), Drift `AppDatabase`, `sync/` (queue, cache, sender, puller, `RecordRef`).
+- `mobile/lib/features/<auth|home|masters|production|attendance|grn|dispatch|sync>/{data,domain,presentation}`.
+- Riverpod 3 hand-written providers; go_router with an auth redirect; l10n in `core/l10n/app_en.arb` (Hindi-ready, OQ #6).
 
-## Endpoints
-_(none yet — add one line each, mirror in API_INDEX.md)_
+## Local tables (Drift, on the phone)
+- `sync_queue` — **the row is the field record**: id (client UUID = `Idempotency-Key`), entity, method, path (`{parent}` placeholder),
+  payload, depends_on, status `pending|syncing|synced|failed`, attempts, next_attempt_at, last_error(_code), server_id, server_ref
+  (challan/GRN no.), title, site_id, user_id, company_id, timestamps. Timestamps stored as ISO text with ms (FIFO within a second).
+- `cached_records (kind, id, site_id, json)` — masters (delta by `?since=` where SYN-02 offers it) and the open batches / open challans.
+- `app_state (key, value)` — watermarks `since.<kind>`, `site.selected`, `sync.lastAt`, `session.userId`.
 
-## Screens (planned)
-Mobile: login, kiln select, home, production, attendance, GRN, dispatch, sync status.
+## Sync rules (as built)
+- Oldest first; a child waits for its parent (`depends_on`) and goes to the parent's server id. A delivery waits on a queued gate-out.
+- Network / timeout / 5xx / 429 → retry 5 s → 30 s → 2 min → 10 min; regaining signal sends at once. 4xx → `failed` with the
+  server's reason; the person corrects it (same key — a refused attempt never stored it), sends again, or discards (with dependants).
+- 401 → the entry waits for the same person; a refused refresh signs out but keeps the queue. Entries only go with their author's token.
+- PATCH confirm / acknowledge are not idempotent on the server: a resend refused with `DISPATCH_NOT_DRAFT` / `DISPATCH_ALREADY_DELIVERED`
+  is settled by reading the challan back.
+- Sent entries are pruned after 30 days; sign-out wipes the phone (after warning about unsent entries).
+
+## Endpoints used
+`POST /auth/login|refresh|logout` · `GET /sites, /parties, /inventory/{units,items,brick-types,warehouses}, /labour/{groups,workers},
+/transport/{vehicles,drivers}` · `GET|POST /production/batches`, `GET /production/batches/:id`, `POST …/:id/{making,drying,firing,sorting}` ·
+`POST /labour/attendance` · `POST /purchases/goods-receipts` · `GET|POST /dispatches`, `GET /dispatches/:id`, `PATCH …/:id/{confirm,acknowledge}`.
 
 ## Postings
-None directly — server posts on sync.
+None on the phone — the server posts stock and journals when it takes an entry.
 
 ## Known gaps / notes
--
-
-## Build track (added 2026-10-08)
-The Flutter app is built **after** the backend and web, as steps **M0 → M6** in `PROGRESS.md`, on whatever machine has the
-Flutter SDK. The P track (backend + web) never waits on it and `mobile/` is never a blocker there.
-
-**M0 is the unfinished half of P0.4.** P0.4 is closed — it delivered the folder tree, placeholder app, widget test and
-`env/dev.example.json`, which was everything possible without the SDK. `flutter create`, packages, theme, core widgets,
-go_router, dio, Drift and l10n moved to M0.
-
-| Step | Scope | Waits for |
-|---|---|---|
-| M0 | `flutter create`, packages, theme, core widgets, go_router, dio, Drift stub, l10n *(was the rest of P0.4)* | — |
-| M1 | Login, kiln select, sync-queue skeleton | P1.1b ✅ (APIs ready now) |
-| M2 | Production entry offline | P5.1 **incl. SYN-01** |
-| M3 | Attendance offline | P6.1 |
-| M4 | GRN offline | P7.1 |
-| M5 | Dispatch + delivery acknowledgement | P9.1 |
-| M6 | Offline hardening, Android APK, **iOS build (MOB-06, contracted in SOW §1)** | all |
-
-## The contract the backend owes mobile (build it with the module, not afterwards)
-1. **`Idempotency-Key` on every create endpoint the app calls** (`SYN-01`, shipped P5.1c on the five production POSTs). The app
-   queues entries offline and resends on reconnect; without this, one retry = one duplicate production entry / GRN / dispatch.
-   Key = the client-generated row UUID; a repeat returns the original result, it does not create a second row. GRN (P7),
-   dispatch (P9) and attendance (M-track) wire theirs when they ship — `IdempotencyService.runOnce(manager, …)` wraps the work
-   inside the same transaction as the business insert.
-2. **Delta pull** (`?since=`) for cached masters (`SYN-02`, shipped P5.1c): `GET /sites`, `GET /parties`, `GET /inventory/items`,
-   `GET /inventory/brick-types`, `GET /inventory/warehouses`, `GET /labour/wage-rates`. Rows carry `deleted: true|false` so the
-   app reconciles tombstones.
-3. **Lean payloads** on anything the app calls — field connections are poor.
-4. **Money as strings**, brick quantities as integers (CONVENTIONS) — Dart `decimal` on the other side.
-5. The envelope is `{ data }` / `{ data, meta }`; errors are `{ error: { code, message, details? } }`. Validation failures are
-   400 `VALIDATION_FAILED` with a `details` array of `{ field, message }`.
-
-## APIs ready for the app today
-`POST /auth/login` · `POST /auth/refresh` · `POST /auth/logout` · `GET /auth/me` · `GET /sites` (returns only the kilns that
-user may work on) · `POST /auth/change-password`. All tenant-scoped and tested — see `API_INDEX.md`.
-
-## Why the field app matters more than it looks
-The green-brick count entered at moulding is the number that **pays the labour** and **measures the yield** (`LEK-01`).
-If it is written on paper and typed in the office later, the control is gone before it reaches the system. Same for coal
-issued to the kiln (`LEK-02`). Offline-first is not a convenience here — it is what makes the measurement trustworthy.
-
+- Roles: the app shows what the role may do; no role widened. Supervisor = production + dispatch (works challans raised on the
+  web; no `parties.view`, so no customer names and no "New challan"). Attendance needs `labour.manage`, GRN `purchases.manage`.
+- GRN does not link a purchase order from the phone (optional on the API) — CP2 candidate if the client asks.
+- A production stage or dispatch step, once on the server, is corrected on the web (server rule: immutable).
+- Release: `applicationId com.brics.brics_mobile` is a placeholder (OQ #12); release API URL and Android keystore custody (OQ #22);
+  Apple developer account for TestFlight (OQ #23).

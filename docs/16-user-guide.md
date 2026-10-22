@@ -113,6 +113,33 @@ yard exactly once, and the challan row says which document did it.
 billed against it, and what was not. Trucks that left with no bill at all are
 counted at the top.
 
+## The supervisor app (phone)
+
+For the people at the kiln. Sign in once where there is signal; after that the app
+works without it. Choose your kiln — every entry is recorded against it.
+
+The home screen shows only what your role may do: **Production**, **Attendance**,
+**Goods receipt**, **Dispatch**. If something you need is missing, the owner gives
+your role the permission on the web (Users & roles).
+
+- **Production** — start a batch (chamber and date), then record making, drying,
+  firing and sorting as they happen, with the coal or soil used. You can record a
+  stage on a batch you started a minute ago with no signal.
+- **Attendance** — pick the gang and the date, mark each worker Present, Half day
+  or Absent (or _Mark all present_), add overtime if any.
+- **Goods receipt** — the supplier, what arrived and into which store. Quantity
+  only; the price comes with the supplier's bill on the web.
+- **Dispatch** — raise a challan, then **Gate out** when the truck leaves (that is
+  when the bricks come off stock) and **Record delivery** when the customer signs.
+
+The badge at the top right says where your entries are: **All sent**, **N waiting**
+(saved on the phone, going when there is signal), **Offline**, or **N need
+attention** — the server refused an entry. Tap the badge: each refused entry shows
+the reason, with **Edit** to correct it, **Send again**, or **Discard**.
+
+Signing out of the app deletes what is on the phone. If entries are still waiting,
+the app says so first — sync before you sign out.
+
 ## Money
 
 **Reports → Expenses** for everything else the kiln spends — electricity,

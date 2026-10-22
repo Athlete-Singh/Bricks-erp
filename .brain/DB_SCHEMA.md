@@ -45,3 +45,6 @@ Status: ⬜ planned · ✅ migrated. Update when migrations land.
 | `1797000000000-PlatformBilling` | `companies.subscription_status` (varchar(32) NOT NULL DEFAULT 'trial', CHECK IN {'trial', 'active', 'past_due', 'canceled'}, indexed) · `companies.billing_cycle` (varchar(32) NOT NULL DEFAULT 'monthly', CHECK IN {'monthly', 'yearly', 'custom'}) · `companies.grace_period_days` (integer NOT NULL DEFAULT 7, CHECK >= 0). `platform_invoices` (company_id → companies CASCADE, invoice_number unique, amount, tax_amount, total_amount NUMERIC(18,2), status CHECK IN {'pending', 'paid', 'overdue', 'void'}, plan_name, billing_cycle, period_start, period_end, due_date, paid_at, payment_method CHECK IN {'upi', 'bank_transfer', 'card', 'cash', 'manual'}, payment_ref, notes). Indexes on company_id, invoice_number, status, due_date. |
 
 Seed: `pnpm seed` fills `roles`, `permissions`, `role_permissions` (10 roles including `platform_admin`, idempotent).
+
+## Mobile (Drift, on the phone — M1, ADR-053)
+`sync_queue` (the outbox; the row is the field record; id = Idempotency-Key; `depends_on` + `{parent}` path) · `cached_records (kind, id, site_id, json)` · `app_state (key, value)`. Timestamps stored as ISO text with milliseconds. See `.brain/modules/mobile-app.md`.

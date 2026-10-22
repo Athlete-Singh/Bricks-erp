@@ -5,13 +5,13 @@
 
 ## Where we are
 
-**Client Phase:** CP1 (MVP) · **Current step:** P13.3 — go-live import and user guide ✅ done; UAT remains. P13.1 ✅. P13.2: both apps deployed on Vercel against the development database; **backups (ADM-09) still open** · P11 ✅ done and **audited** — dashboard + CST + three register reports with CSV exports, with the audit's three defects and three gaps fixed → **next: P13** (e2e + security, deploy + backups, onboarding + guide + UAT → CP1 sign-off)
+**Client Phase:** CP1 (MVP) · **Current step:** **M track (Flutter app) M0–M6 ✅ 2026-10-22** — store release ⚠️ on OQ #12/#22/#23. P13.3 — go-live import and user guide ✅ done; UAT remains. P13.1 ✅. P13.2: both apps deployed on Vercel against the development database; **backups (ADM-09) still open** · P11 ✅ done and **audited** — dashboard + CST + three register reports with CSV exports, with the audit's three defects and three gaps fixed → **next: P13** (e2e + security, deploy + backups, onboarding + guide + UAT → CP1 sign-off)
 
-**Client Phase 1 (MVP) progress: 91 %** (92 of 101 features done)
+**Client Phase 1 (MVP) progress: 92 %** (93 of 101 features done)
 
 |                   | Total | ✅  | 🟨  | ⚠️  | ⬜  | ⏭️  |
 | ----------------- | ----- | --- | --- | --- | --- | --- |
-| CP1 MVP           | 101   | 92  | 4   | 1   | 4   | 0   |
+| CP1 MVP           | 101   | 93  | 4   | 3   | 1   | 0   |
 | CP2 Advanced      | 10    | 0   | 0   | 0   | 0   | 10  |
 | S — SaaS platform | 11    | 10  | 1   | 0   | 0   | 0   |
 
@@ -21,8 +21,8 @@
 | ----------------------------------- | ---------- | ------- | ---------------- | -------------- | ---------- | -------------- |
 | Backend                             | 97         | 94      | 0                | 0              | 0          | 3              |
 | Web                                 | 91         | 88      | 0                | 0              | 0          | 3              |
-| Mobile                              | 11         | 7       | 0                | 0              | 0          | 4              |
-| Tests                               | 101        | 96      | 0                | 0              | 0          | 5              |
+| Mobile                              | 11         | 8       | 0                | 0              | 2          | 1              |
+| Tests                               | 101        | 99      | 0                | 0              | 0          | 2              |
 
 ## Client phases
 
@@ -336,6 +336,7 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 - ✅ **MOB-01** Login, kiln selection, role-based home _(M1)_
 - ✅ **MOB-02** Offline storage + sync queue + sync status badge (skeleton) _(M1)_
 - ✅ **MOB-03** Feature screens: production, attendance, GRN, dispatch/delivery _(M2–M5)_
+- ✅ **MOB-04** A full working day offline; syncs with no duplicates; conflict handling _(M6)_
 - ✅ **EXP-01** Expense categories (labour, coal, diesel, electricity, vehicle, machinery, repairs, salary, food, rent, office, govt charges, bank charges, misc) _(P10)_
 - ✅ **EXP-02** Expense entry by kiln with payment mode Cash / Bank / UPI / Credit _(P10)_
 - ✅ **CSH-01** Opening/closing cash; cash receipts/payments; bank deposit, withdrawal and transfer (contra); bank charges; cheque no. / UPI ref on vouchers _(P10)_
@@ -354,14 +355,13 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 - 🟨 **ADM-08** Company bank accounts (as Bank ledgers) _(P2)_
 - 🟨 **SYN-01** `Idempotency-Key` header on every mobile-facing create endpoint + `idempotency_keys` table; a repeat with the same key returns the original result instead of creating a duplicate _(P5)_
 - 🟨 **SYN-02** Delta pull endpoints (`?since=`) for the masters the app caches: kilns, parties, items, brick types, wage rates _(P5)_
+- ⚠️ **MOB-05** Android release APK _(M6)_
+- ⚠️ **MOB-06** iOS build + TestFlight/App Store release _(M6)_
 - ⚠️ **NTF-01** SMS/WhatsApp alerts (dispatch sent, payment received, advance limit crossed) via MSG91/Twilio _(P13)_
 
 ## Remaining for CP1
 
 - ⬜ **ADM-09** Backups via managed DB (Supabase daily backups) + documented restore procedure _(P13)_
-- ⬜ **MOB-04** A full working day offline; syncs with no duplicates; conflict handling _(M6)_
-- ⬜ **MOB-05** Android release APK _(M6)_
-- ⬜ **MOB-06** iOS build + TestFlight/App Store release _(M6)_
 
 ## Feature status by module
 
@@ -520,9 +520,9 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 | MOB-01 | Login, kiln selection, role-based home                                  | CP1 | M1    | ✅      | —   | ✅     | ✅    | ✅     |
 | MOB-02 | Offline storage + sync queue + sync status badge (skeleton)             | CP1 | M1    | —       | —   | ✅     | ✅    | ✅     |
 | MOB-03 | Feature screens: production, attendance, GRN, dispatch/delivery         | CP1 | M2–M5 | ⬜      | ⬜  | ✅     | ✅    | ✅     |
-| MOB-04 | A full working day offline; syncs with no duplicates; conflict handling | CP1 | M6    | —       | —   | ⬜     | ⬜    | ⬜     |
-| MOB-05 | Android release APK                                                     | CP1 | M6    | —       | —   | ⬜     | ⬜    | ⬜     |
-| MOB-06 | iOS build + TestFlight/App Store release                                | CP1 | M6    | —       | —   | ⬜     | ⬜    | ⬜     |
+| MOB-04 | A full working day offline; syncs with no duplicates; conflict handling | CP1 | M6    | —       | —   | ✅     | ✅    | ✅     |
+| MOB-05 | Android release APK                                                     | CP1 | M6    | —       | —   | ⚠️     | ✅    | ⚠️     |
+| MOB-06 | iOS build + TestFlight/App Store release                                | CP1 | M6    | —       | —   | ⚠️     | ✅    | ⚠️     |
 
 ### S — SaaS platform (the vendor's own surface, not a kiln's)
 

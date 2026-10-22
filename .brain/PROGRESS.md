@@ -1,12 +1,12 @@
 # PROGRESS — live build tracker
 
-**Client Phase:** CP1 (MVP) · **Current step:** P13.3 — go-live import and user guide ✅ done; UAT remains. P13.1 ✅. P13.2: both apps deployed on Vercel against the development database; **backups (ADM-09) still open** · P11 ✅ done and **audited** — dashboard + CST + three register reports with CSV exports, with the audit's three defects and three gaps fixed → **next: P13** (e2e + security, deploy + backups, onboarding + guide + UAT → CP1 sign-off)
+**Client Phase:** CP1 (MVP) · **Current step:** **M track (Flutter app) M0–M6 ✅ 2026-10-22** — store release ⚠️ on OQ #12/#22/#23. P13.3 — go-live import and user guide ✅ done; UAT remains. P13.1 ✅. P13.2: both apps deployed on Vercel against the development database; **backups (ADM-09) still open** · P11 ✅ done and **audited** — dashboard + CST + three register reports with CSV exports, with the audit's three defects and three gaps fixed → **next: P13** (e2e + security, deploy + backups, onboarding + guide + UAT → CP1 sign-off)
 Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
 
 ## ▶ Resume here (update at end of EVERY session)
 - **What shipped (P13.1):** the pre-go-live security pass and the first browser e2e. Three holes closed — no rate limiting on login, no security headers, Swagger served in production. `docs/14-security-review.md` records what was checked, what was fixed, what is accepted with a reason, and what P13.2 must do on the hosting platforms (TLS, real `CORS_ORIGINS`, fresh JWT secrets per environment, a database not on the public internet, `NODE_ENV=production`, a **restore** actually tested, and `pnpm seed` re-run when a release adds permission codes). Playwright covers sign-in, the unauthenticated redirect, a walk through all eight owner modules against a real API, and a cross-screen read of the yard balance; it skips without `E2E_EMAIL`/`E2E_PASSWORD`.
 - **What is left for CP1, as at 2026-10-13** (checked against the register, not from memory):
-  1. **The mobile app — the entire M track (M0–M6).** CP1 scope per the SOW (MOB-01…06, plus the mobile halves of PRD-06, LAB-02, PUR-02, DSP-04). Nothing is built; it needs a machine with the Flutter SDK. This is the largest remaining piece by far, and it is not deployment.
+  1. ~~The mobile app — the entire M track (M0–M6).~~ **Built 2026-10-22** (MOB-01…04, PRD-06, LAB-02, PUR-02, DSP-04 ✅). What remains is release, not product: the production API address, the Android upload keystore, the package id and the Apple account (OQ #12, #22, #23) — MOB-05/06 ⚠️.
   2. **P13.2 — deploy + backups (ADM-09).** Needs the hosting accounts.
   3. **P13.3 — CSV onboarding (ONB-01), user guide, UAT.**
   4. **Two web gaps that block go-live:** no screen to add a bank or any other ledger (**ADM-08** — the API has it, nothing calls it), and no screen for opening balances (**ACC-04**; ONB-01's CSV import would also cover it).
@@ -258,19 +258,22 @@ correctness" — a step is ✅ only when a test proves a *second tenant is refus
 - **S4 delivered:** SaaS platform billing, subscriptions, invoices, and automatic suspension (PLT-11). Migration `1797000000000-PlatformBilling` added `companies.subscription_status`, `billing_cycle`, `grace_period_days`, and table `platform_invoices` with exact `NUMERIC(18,2)` decimal money storage, 18% GST breakdown, and full indexes. Canonical plans (`Starter`, `Growth`, `Enterprise`) with tiered pricing and resource limits. `PlatformBillingService` provides endpoints for listing plans, tenant billing overview, subscription updates, invoice generation, payment recording (with tenant reactivation), and automated expiry / overdue check jobs under audit. `CompanyController` exposes `GET /companies/current/billing` for tenant owner self-service overview. Web Platform Admin UI features `TenantBillingTab` with `EditSubscriptionDialog`, `CreateInvoiceDialog` (with 18% GST auto-calc), `RecordPaymentDialog` (reconciling UPI/bank transfer with UTR), and invoices table. Web Tenant Owner UI features `TenantSubscriptionCard` in `/settings/company` displaying active plan, status badge, feature checklist, renewal/trial countdown, and past platform invoices with statuses. 15 new web tests (web 218 → 233 across 42 suites) and 16 new backend tests (9 unit, 7 e2e).
 - **Where the metadata line sits:** counts and dates are the platform's business; money and the client's own parties are not. The test for a new field — would the kiln mind a competitor seeing it?
 
-## ▶ Resume here: M track — the Flutter app (needs the Flutter SDK)
-- **State:** M0 not started. `mobile/` holds `pubspec.yaml` (no packages), `lib/main.dart` + `lib/app.dart` placeholders,
-  `test/app_test.dart`, the full `lib/core/*` and `lib/features/<auth|production|attendance|grn|dispatch|sync>/{data,domain,presentation}`
-  folder tree, `env/dev.example.json` and `mobile/README.md`.
-- **Flutter is not installed in the current environment.** Nothing in `mobile/` is built, analysed or tested here, and `mobile/` must never be reported as red or blocking.
-- **Where this runs:** any machine with the Flutter SDK. If no second machine turns up, install Flutter here — but only **after** the backend and web are substantially done, so the P track is never interrupted.
-- **Next step (exact):** M0 — follow `mobile/README.md` "First time" (`flutter create`, `flutter pub add`, analyze, test), then
-  build the scaffold: theme tokens from `docs/05-design-system.md`, core widgets, go_router, dio client, Drift stub, sync
-  skeleton, l10n → `flutter analyze` + `flutter test` green → commit + push. Then M1 → M6 in order.
-- **Before starting M2:** SYN-01 shipped in P5.1c (2026-10-10) — the 5 production POSTs honour `Idempotency-Key` and return the original result on replay. SYN-02 (`?since=`) also shipped on the 5 cached masters. M2 is unblocked.
-- **What M0 is:** the half of the original P0.4 that needed Flutter. P0.4 itself is closed — see the Done list above.
-- **APIs ready for mobile now:** `/auth/login`, `/auth/refresh`, `/auth/logout`, `/auth/me`, `/sites` — all tested, see `API_INDEX.md`.
-- **Blockers:** none. The only prerequisite is a Flutter SDK, and nothing in the P track waits on it.
+## ▶ Resume here: M track — the Flutter app
+- **State (2026-10-22): M0–M6 done** in one session on this machine (Flutter 3.47.7, Android SDK 35, Xcode 27). Commits
+  `7a90c7d` M0 · `5606420` M1 · `05b7663` M2+M3 · `671b4cf` M4 · `d8b238f` M5 · M6 (this commit). Gate green:
+  `flutter analyze` 0 issues, `flutter test` **73**. Release builds verified: Android per-ABI APKs (19.6–23.4 MB), iOS unsigned (21.3 MB).
+- **What the app does:** sign in once with signal, then works offline; kiln picker; home tiles by permission (no role widened — owner's
+  choice, ADR-053); production batches + four stages with consumption; attendance by gang; goods receipt; challan, gate out, delivery;
+  Sync screen and badge. Design and rules: `.brain/modules/mobile-app.md`, `docs/09-offline-sync.md` (as-built section).
+- **Not verified here:** a run against a live API — this machine has no Postgres/docker and no backend `.env`. The fake backend in
+  `mobile/test/helpers/fake_api.dart` follows the real envelope, error contract and `IdempotencyService` replay; the first run on a
+  phone against the dev API is the next check (see `docs/modules/mobile-app.md` → How to test).
+- **Blockers (owner):** OQ #12 package id · OQ #22 production API address + Android keystore custody · OQ #23 Apple developer account.
+  Until then MOB-05/06 are ⚠️: the builds work, nothing can be published.
+- **Found while building (backend, not changed):** none blocking. Attendance duplicates are enforced only by the DB unique indexes
+  (`uq_labour_attendance_*` → 409 `DUPLICATE_VALUE`), not by the service; the app warns before a second roll, which is enough for CP1.
+- **Next step (exact):** first run on a phone against the dev API (needs the backend running somewhere reachable), then P13.2 —
+  whose API address unblocks a distributable APK.
 
 ## CP1 internal steps
 
@@ -348,7 +351,7 @@ backend and web first. Whoever builds this track edits only the **Mob** columns 
 | M3 | Attendance offline (LAB-02) | P6.1 | ✅ |
 | M4 | GRN offline (PUR-02) | P7.1 | ✅ |
 | M5 | Dispatch + delivery acknowledgement (DSP-04) | P9.1 | ✅ |
-| M6 | Offline hardening (MOB-04), Android APK (MOB-05), **iOS build (MOB-06)** | all of the above | ⬜ |
+| M6 | Offline hardening (MOB-04), Android APK (MOB-05), **iOS build (MOB-06)** | all of the above | ✅ (store release ⚠️ — OQ #12/#22/#23) |
 
 > **Why M2–M5 must wait for `SYN-01`:** the app queues entries offline and resends them when the network returns. Without
 > `Idempotency-Key` on the create endpoints, every retry creates a **duplicate** production entry, GRN or dispatch. That is

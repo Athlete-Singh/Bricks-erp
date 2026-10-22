@@ -138,33 +138,44 @@ class QueueRepository {
   }
 
   /// FIFO: an entry is never sent before one made earlier (docs/09 "Ordering").
-  Future<List<QueueRow>> due(String userId) {
+  /// An entry waiting on a parent that is not on the server yet is not due —
+  /// otherwise a refused parent would wake the sync timer every tick, forever.
+  Future<List<QueueRow>> due(String userId) async {
     final now = _now();
-    return (_db.select(_q)
-          ..where(
-            (t) =>
-                t.userId.equals(userId) &
-                t.status.equals(QueueStatus.pending) &
-                (t.nextAttemptAt.isNull() | t.nextAttemptAt.isSmallerOrEqualValue(now)),
-          )
-          ..orderBy([(t) => OrderingTerm.asc(t.createdAt), (t) => OrderingTerm.asc(t.id)]))
-        .get();
-  }
-
-  /// When the next retry falls due, so the scheduler can wake for it.
-  Future<DateTime?> nextRetryAt(String userId) async {
-    final row =
+    final rows =
         await (_db.select(_q)
               ..where(
                 (t) =>
                     t.userId.equals(userId) &
                     t.status.equals(QueueStatus.pending) &
-                    t.nextAttemptAt.isNotNull(),
+                    (t.nextAttemptAt.isNull() | t.nextAttemptAt.isSmallerOrEqualValue(now)),
               )
-              ..orderBy([(t) => OrderingTerm.asc(t.nextAttemptAt)])
-              ..limit(1))
-            .getSingleOrNull();
-    return row?.nextAttemptAt;
+              ..orderBy([(t) => OrderingTerm.asc(t.createdAt), (t) => OrderingTerm.asc(t.id)]))
+            .get();
+    final parentIds = {for (final r in rows) ?r.dependsOn};
+    if (parentIds.isEmpty) return rows;
+    final parents = {
+      for (final p in await (_db.select(_q)..where((t) => t.id.isIn(parentIds))).get())
+        p.id: p.status,
+    };
+    // A parent that no longer exists is let through, so the sender can say so.
+    return [
+      for (final r in rows)
+        if (r.dependsOn == null ||
+            (parents[r.dependsOn] ?? QueueStatus.synced) == QueueStatus.synced)
+          r,
+    ];
+  }
+
+  /// Sent entries are kept so "my entries" shows the day's work; after [age]
+  /// they only take space.
+  Future<int> pruneSynced(Duration age) {
+    return (_db.delete(_q)..where(
+          (t) =>
+              t.status.equals(QueueStatus.synced) &
+              t.syncedAt.isSmallerThanValue(_now().subtract(age)),
+        ))
+        .go();
   }
 
   Future<void> markSyncing(String id) =>

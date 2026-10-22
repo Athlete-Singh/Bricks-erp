@@ -12,7 +12,10 @@ _AuthUser _$AuthUserFromJson(Map<String, dynamic> json) => _AuthUser(
   mobile: json['mobile'] as String,
   roleCode: json['roleCode'] as String,
   permissions:
-      (json['permissions'] as List<dynamic>?)?.map((e) => e as String).toList() ?? const <String>[],
+      (json['permissions'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const <String>[],
   isSuperAdmin: json['isSuperAdmin'] as bool? ?? false,
   email: json['email'] as String?,
 );

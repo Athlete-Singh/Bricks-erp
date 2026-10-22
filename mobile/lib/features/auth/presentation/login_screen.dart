@@ -1,6 +1,7 @@
 import 'package:brics_mobile/core/auth/permissions.dart';
 import 'package:brics_mobile/core/l10n/l10n.dart';
 import 'package:brics_mobile/core/network/api_exception.dart';
+import 'package:brics_mobile/core/providers.dart';
 import 'package:brics_mobile/core/theme/app_colors.dart';
 import 'package:brics_mobile/core/theme/app_spacing.dart';
 import 'package:brics_mobile/core/utils/validators.dart';
@@ -42,6 +43,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _submit() async {
     if (!_form.currentState!.validate()) return;
     final l10n = context.l10n;
+    if (!ref.read(appConfigProvider).hasServer) {
+      setState(() => _error = l10n.loginNoServer);
+      return;
+    }
     setState(() {
       _busy = true;
       _error = null;

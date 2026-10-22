@@ -385,5 +385,6 @@
         "type": "String"
       }
     }
-  }
+  },
+  "loginNoServer": "This copy of the app was built without a server address. Ask for a correctly built app."
 }

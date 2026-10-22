@@ -44,6 +44,9 @@ final pullSpecsProvider = Provider<List<PullSpec>>(
   (ref) => [...masterPullSpecs, ...productionPullSpecs, ...dispatchPullSpecs],
 );
 
+/// How long a sent entry stays in "my entries" before it is cleared from the phone.
+const keepSentFor = Duration(days: 30);
+
 /// How often to look for due retries while the app is open.
 const syncTick = Duration(seconds: 30);
 
@@ -88,7 +91,9 @@ class SyncController extends Notifier<SyncSummary> {
 
   Future<void> _start(ConnectivityWatcher watcher) async {
     final db = ref.read(databaseProvider);
-    await ref.read(queueRepositoryProvider).releaseInterrupted();
+    final queue = ref.read(queueRepositoryProvider);
+    await queue.releaseInterrupted();
+    await queue.pruneSynced(keepSentFor);
     final last = await db.readState(_lastSyncedKey);
     final online = await watcher.check();
     if (!ref.mounted) return;

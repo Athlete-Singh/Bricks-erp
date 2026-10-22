@@ -51,63 +51,75 @@ class SyncService {
     var failed = 0;
     var retrying = 0;
 
-    for (final row in await queue.due(owner.userId)) {
-      final String path;
-      if (row.dependsOn != null) {
-        final parent = await queue.byId(row.dependsOn!);
-        if (parent == null) {
-          await queue.markFailed(
-            row.id,
-            code: 'PARENT_MISSING',
-            error: 'The entry this depends on was discarded',
-          );
-          failed++;
-          continue;
-        }
-        // Not yet on the server (or refused) — this one waits; it is not its fault.
-        if (parent.status != QueueStatus.synced || parent.serverId == null) continue;
-        path = row.path.replaceAll(parentPlaceholder, parent.serverId!);
-      } else {
-        path = row.path;
-      }
-
-      await queue.markSyncing(row.id);
-      try {
-        final envelope = await api.send(
-          row.method,
-          path,
-          body: row.payloadMap,
-          idempotencyKey: row.id,
-        );
-        await _markSynced(row, envelope.data);
-        sent++;
-      } on ApiException catch (e) {
-        if (e.kind == ApiFailureKind.unauthenticated) {
-          await queue.release(row.id);
-          return PushResult(sent: sent, failed: failed, retrying: retrying, unauthenticated: true);
-        }
-        if (e.isTransient) {
-          final attempts = row.attempts + 1;
-          await queue.scheduleRetry(
-            row.id,
-            attempts: attempts,
-            delay: backoffFor(attempts),
-            code: e.code,
-            error: e.message,
-          );
-          retrying++;
-          if (e.kind == ApiFailureKind.network) {
-            return PushResult(sent: sent, failed: failed, retrying: retrying, offline: true);
+    // A pass sends what is due; a parent sent in it makes its children due,
+    // so go again until a pass sends nothing — a batch and its stages leave
+    // together in one run.
+    var sentBefore = -1;
+    while (sent > sentBefore) {
+      sentBefore = sent;
+      for (final row in await queue.due(owner.userId)) {
+        final String path;
+        if (row.dependsOn != null) {
+          final parent = await queue.byId(row.dependsOn!);
+          if (parent == null) {
+            await queue.markFailed(
+              row.id,
+              code: 'PARENT_MISSING',
+              error: 'The entry this depends on was discarded',
+            );
+            failed++;
+            continue;
           }
-          continue;
-        }
-        final resolved = await _resolveConflict(row, path, e);
-        if (resolved != null) {
-          await _markSynced(row, resolved);
-          sent++;
+          // Not yet on the server (or refused) — this one waits; it is not its fault.
+          if (parent.status != QueueStatus.synced || parent.serverId == null) continue;
+          path = row.path.replaceAll(parentPlaceholder, parent.serverId!);
         } else {
-          await queue.markFailed(row.id, code: e.code, error: _describe(e));
-          failed++;
+          path = row.path;
+        }
+
+        await queue.markSyncing(row.id);
+        try {
+          final envelope = await api.send(
+            row.method,
+            path,
+            body: row.payloadMap,
+            idempotencyKey: row.id,
+          );
+          await _markSynced(row, envelope.data);
+          sent++;
+        } on ApiException catch (e) {
+          if (e.kind == ApiFailureKind.unauthenticated) {
+            await queue.release(row.id);
+            return PushResult(
+              sent: sent,
+              failed: failed,
+              retrying: retrying,
+              unauthenticated: true,
+            );
+          }
+          if (e.isTransient) {
+            final attempts = row.attempts + 1;
+            await queue.scheduleRetry(
+              row.id,
+              attempts: attempts,
+              delay: backoffFor(attempts),
+              code: e.code,
+              error: e.message,
+            );
+            retrying++;
+            if (e.kind == ApiFailureKind.network) {
+              return PushResult(sent: sent, failed: failed, retrying: retrying, offline: true);
+            }
+            continue;
+          }
+          final resolved = await _resolveConflict(row, path, e);
+          if (resolved != null) {
+            await _markSynced(row, resolved);
+            sent++;
+          } else {
+            await queue.markFailed(row.id, code: e.code, error: _describe(e));
+            failed++;
+          }
         }
       }
     }

@@ -688,4 +688,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String dispatchPendingAction(String action) {
     return '$action waiting to be sent';
   }
+
+  @override
+  String get loginNoServer =>
+      'This copy of the app was built without a server address. Ask for a correctly built app.';
 }
