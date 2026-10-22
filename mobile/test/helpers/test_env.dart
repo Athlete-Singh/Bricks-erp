@@ -56,7 +56,9 @@ class TestEnv {
     return c;
   }
 
-  Future<void> dispose() => db.close();
+  /// Not awaited: a widget test that failed before unmounting still holds
+  /// Drift streams open, and awaiting the close would stall the whole run.
+  Future<void> dispose() async => unawaited(db.close());
 }
 
 const companyId = '00000000-0000-4000-8000-0000000000c1';

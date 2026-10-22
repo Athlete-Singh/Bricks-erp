@@ -8,9 +8,9 @@ import 'package:brics_mobile/core/widgets/widgets.dart';
 import 'package:brics_mobile/features/auth/presentation/session_controller.dart';
 import 'package:brics_mobile/features/masters/data/master_providers.dart';
 import 'package:brics_mobile/features/masters/domain/masters.dart';
+import 'package:brics_mobile/features/masters/presentation/item_lines_editor.dart';
 import 'package:brics_mobile/features/production/domain/production.dart';
 import 'package:brics_mobile/features/production/presentation/batch_screen.dart';
-import 'package:brics_mobile/features/production/presentation/consumption_editor.dart';
 import 'package:brics_mobile/features/production/presentation/production_providers.dart';
 import 'package:brics_mobile/features/sync/presentation/sync_controller.dart';
 import 'package:flutter/material.dart';
@@ -40,7 +40,7 @@ class _StageFormScreenState extends ConsumerState<StageFormScreen> {
   int _bricks = 0;
   String? _sardarId;
   String? _warehouseId;
-  final _consumption = <ConsumptionDraft>[];
+  final _consumption = <ItemLineDraft>[];
   final _gradeCounts = <String, TextEditingController>{};
   final _broken = TextEditingController(text: '0');
   final _rejects = TextEditingController(text: '0');
@@ -67,11 +67,7 @@ class _StageFormScreenState extends ConsumerState<StageFormScreen> {
     for (final c in (p['consumption'] as List?) ?? const []) {
       final line = ConsumptionLine.fromJson((c as Map).cast<String, dynamic>());
       _consumption.add(
-        ConsumptionDraft(
-          itemId: line.itemId,
-          warehouseId: line.warehouseId,
-          quantity: line.quantity,
-        ),
+        ItemLineDraft(itemId: line.itemId, warehouseId: line.warehouseId, quantity: line.quantity),
       );
     }
     for (final o in (p['outputs'] as List?) ?? const []) {
@@ -102,7 +98,7 @@ class _StageFormScreenState extends ConsumerState<StageFormScreen> {
   Map<String, dynamic> _payload() {
     final date = Formatters.isoDate(_date);
     final notes = blankToNull(_notes.text);
-    final lines = [for (final c in _consumption) c.toLine()];
+    final lines = [for (final c in _consumption) ConsumptionLine.fromJson(c.toJson())];
     return switch (widget.stage) {
       ProductionStage.making => ProductionPayloads.making(
         entryDate: date,
@@ -254,11 +250,7 @@ class _StageFormScreenState extends ConsumerState<StageFormScreen> {
           ],
           onChanged: (v) => setState(() => _sardarId = v),
         ),
-      ConsumptionEditor(
-        lines: _consumption,
-        hint: l10n.productionConsumptionMaking,
-        onChanged: () => setState(() {}),
-      ),
+      _materials(l10n, l10n.productionConsumptionMaking),
       const SizedBox(height: AppSpacing.lg),
     ];
   }
@@ -266,13 +258,23 @@ class _StageFormScreenState extends ConsumerState<StageFormScreen> {
   List<Widget> _firing(AppLocalizations l10n, Validators validators) {
     return [
       _count(l10n.productionFiredBricks, validators),
-      ConsumptionEditor(
-        lines: _consumption,
-        hint: l10n.productionConsumptionFiring,
-        onChanged: () => setState(() {}),
-      ),
+      _materials(l10n, l10n.productionConsumptionFiring),
       const SizedBox(height: AppSpacing.lg),
     ];
+  }
+
+  /// PRD-04 — material taken from stock for a stage. Raw materials and
+  /// consumables only: those are what a kiln burns or moulds.
+  Widget _materials(AppLocalizations l10n, String hint) {
+    return ItemLinesEditor(
+      lines: _consumption,
+      title: l10n.productionConsumption,
+      hint: hint,
+      addLabel: l10n.productionAddMaterial,
+      storeLabel: l10n.productionFromStore,
+      categories: const {'raw_material', 'consumable'},
+      onChanged: () => setState(() {}),
+    );
   }
 
   List<Widget> _sorting(AppLocalizations l10n, Validators validators) {

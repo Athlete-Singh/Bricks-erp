@@ -290,5 +290,29 @@
         "type": "int"
       }
     }
+  },
+  "grnTitle": "Goods receipt",
+  "grnNew": "New receipt",
+  "grnNoEntries": "No goods received on this phone yet.",
+  "grnSupplier": "Supplier",
+  "grnNoSuppliers": "No suppliers on this phone yet. Sync where there is signal.",
+  "grnReceiptDate": "Received on",
+  "grnChallanNo": "Supplier's challan no.",
+  "grnLines": "What arrived",
+  "grnLinesHint": "Quantity only — the bill brings the price.",
+  "grnAddLine": "Add item",
+  "grnIntoStore": "Into store",
+  "grnAtLeastOneLine": "Add at least one item.",
+  "grnDuplicateLine": "That item is already listed for the same store — change the quantity instead.",
+  "grnEntryTitle": "{supplier} · {lines} items",
+  "@grnEntryTitle": {
+    "placeholders": {
+      "supplier": {
+        "type": "String"
+      },
+      "lines": {
+        "type": "int"
+      }
+    }
   }
 }

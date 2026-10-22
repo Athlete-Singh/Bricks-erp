@@ -7,11 +7,11 @@
 
 **Client Phase:** CP1 (MVP) · **Current step:** P13.3 — go-live import and user guide ✅ done; UAT remains. P13.1 ✅. P13.2: both apps deployed on Vercel against the development database; **backups (ADM-09) still open** · P11 ✅ done and **audited** — dashboard + CST + three register reports with CSV exports, with the audit's three defects and three gaps fixed → **next: P13** (e2e + security, deploy + backups, onboarding + guide + UAT → CP1 sign-off)
 
-**Client Phase 1 (MVP) progress: 88 %** (89 of 101 features done)
+**Client Phase 1 (MVP) progress: 89 %** (90 of 101 features done)
 
 |                   | Total | ✅  | 🟨  | ⚠️  | ⬜  | ⏭️  |
 | ----------------- | ----- | --- | --- | --- | --- | --- |
-| CP1 MVP           | 101   | 89  | 6   | 1   | 5   | 0   |
+| CP1 MVP           | 101   | 90  | 5   | 1   | 5   | 0   |
 | CP2 Advanced      | 10    | 0   | 0   | 0   | 0   | 10  |
 | S — SaaS platform | 11    | 10  | 1   | 0   | 0   | 0   |
 
@@ -21,7 +21,7 @@
 | ----------------------------------- | ---------- | ------- | ---------------- | -------------- | ---------- | -------------- |
 | Backend                             | 97         | 93      | 0                | 0              | 0          | 4              |
 | Web                                 | 92         | 88      | 0                | 0              | 0          | 4              |
-| Mobile                              | 11         | 4       | 0                | 1              | 0          | 6              |
+| Mobile                              | 11         | 5       | 0                | 1              | 0          | 5              |
 | Tests                               | 101        | 94      | 0                | 1              | 0          | 6              |
 
 ## Client phases
@@ -158,7 +158,7 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 | POST   | `/purchases/orders`                               | PUR-01               | ✅      | ✅  | —      |
 | GET    | `/purchases/orders`                               | PUR-01               | ✅      | ✅  | —      |
 | GET    | `/purchases/orders/:id`                           | PUR-01               | ✅      | ✅  | —      |
-| POST   | `/purchases/goods-receipts`                       | PUR-02               | ✅      | ✅  | —      |
+| POST   | `/purchases/goods-receipts`                       | PUR-02               | ✅      | ✅  | ✅     |
 | GET    | `/purchases/goods-receipts`                       | PUR-02               | ✅      | ✅  | —      |
 | GET    | `/purchases/goods-receipts/:id`                   | PUR-02               | ✅      | ✅  | —      |
 | POST   | `/purchases/bills`                                | PUR-03               | ✅      | ✅  | —      |
@@ -295,6 +295,7 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 - ✅ **VEH-06** Hired vehicle / transporter charges payable _(P9)_
 - ✅ **VEH-07** Vehicle-wise profitability report (income − diesel − maintenance − driver/hire cost) _(P9)_
 - ✅ **PUR-01** Purchase order _(P7)_
+- ✅ **PUR-02** GRN (goods receipt) on web + mobile offline → stock in _(P7)_
 - ✅ **PUR-03** Supplier bill / purchase voucher with GST input (CGST/SGST/IGST), linked to GRN _(P7)_
 - ✅ **PUR-04** Supplier payment (cash/bank/UPI) with bill-wise settlement _(P7)_
 - ✅ **PUR-05** Purchase return / debit note _(P7)_
@@ -349,7 +350,6 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 
 - 🟨 **ADM-05** Users: login (email or mobile + password), JWT access/refresh, logout, change password _(P1)_
 - 🟨 **ADM-08** Company bank accounts (as Bank ledgers) _(P2)_
-- 🟨 **PUR-02** GRN (goods receipt) on web + mobile offline → stock in _(P7)_
 - 🟨 **SYN-01** `Idempotency-Key` header on every mobile-facing create endpoint + `idempotency_keys` table; a repeat with the same key returns the original result instead of creating a duplicate _(P5)_
 - 🟨 **SYN-02** Delta pull endpoints (`?since=`) for the masters the app caches: kilns, parties, items, brick types, wage rates _(P5)_
 - 🟨 **MOB-03** Feature screens: production, attendance, GRN, dispatch/delivery _(M2–M5)_
@@ -442,7 +442,7 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 | ID     | Feature                                                                         | CP  | Phase | Backend | Web | Mobile | Tests | Status |
 | ------ | ------------------------------------------------------------------------------- | --- | ----- | ------- | --- | ------ | ----- | ------ |
 | PUR-01 | Purchase order                                                                  | CP1 | P7    | ✅      | ✅  | —      | ✅    | ✅     |
-| PUR-02 | GRN (goods receipt) on web + mobile offline → stock in                          | CP1 | P7    | ✅      | ✅  | ⬜     | ✅    | 🟨     |
+| PUR-02 | GRN (goods receipt) on web + mobile offline → stock in                          | CP1 | P7    | ✅      | ✅  | ✅     | ✅    | ✅     |
 | PUR-03 | Supplier bill / purchase voucher with GST input (CGST/SGST/IGST), linked to GRN | CP1 | P7    | ✅      | ✅  | —      | ✅    | ✅     |
 | PUR-04 | Supplier payment (cash/bank/UPI) with bill-wise settlement                      | CP1 | P7    | ✅      | ✅  | —      | ✅    | ✅     |
 | PUR-05 | Purchase return / debit note                                                    | CP1 | P7    | ✅      | ✅  | —      | ✅    | ✅     |

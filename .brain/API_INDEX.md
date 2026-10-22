@@ -128,7 +128,7 @@ Add the row when you **plan** an endpoint (BE ⬜), and update it the moment any
 | POST | /purchases/orders | PUR-01 raise a purchase order | purchases.manage | PUR-01 | P7 | ✅ | ✅ | — |
 | GET | /purchases/orders | Purchase orders, paged | purchases.view | PUR-01 | P7 | ✅ | ✅ | — |
 | GET | /purchases/orders/:id | One order with its lines | purchases.view | PUR-01 | P7 | ✅ | ✅ | — |
-| POST | /purchases/goods-receipts | PUR-02 receive goods → stock IN | purchases.manage | PUR-02 | P7 | ✅ | ✅ | — |
+| POST | /purchases/goods-receipts | PUR-02 receive goods → stock IN. **Idempotency-Key** honoured (SYN-01) | purchases.manage | PUR-02 | P7 | ✅ | ✅ | ✅ |
 | GET | /purchases/goods-receipts | Goods receipts, paged | purchases.view | PUR-02 | P7 | ✅ | ✅ | — |
 | GET | /purchases/goods-receipts/:id | One receipt with its lines | purchases.view | PUR-02 | P7 | ✅ | ✅ | — |
 | POST | /purchases/bills | PUR-03 supplier bill with input GST | purchases.manage | PUR-03 | P7 | ✅ | ✅ | — |

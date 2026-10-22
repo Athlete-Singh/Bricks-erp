@@ -5,6 +5,8 @@ import 'package:brics_mobile/features/attendance/presentation/attendance_screen.
 import 'package:brics_mobile/features/auth/presentation/kiln_picker_screen.dart';
 import 'package:brics_mobile/features/auth/presentation/login_screen.dart';
 import 'package:brics_mobile/features/auth/presentation/session_controller.dart';
+import 'package:brics_mobile/features/grn/presentation/grn_form_screen.dart';
+import 'package:brics_mobile/features/grn/presentation/grn_screen.dart';
 import 'package:brics_mobile/features/home/presentation/home_screen.dart';
 import 'package:brics_mobile/features/production/domain/production.dart';
 import 'package:brics_mobile/features/production/presentation/batch_screen.dart';
@@ -29,6 +31,7 @@ abstract final class AppRoutes {
   static const attendance = '/attendance';
   static const attendanceNew = '/attendance/new';
   static const grn = '/grn';
+  static const grnNew = '/grn/new';
   static const dispatch = '/dispatch';
 }
 
@@ -99,7 +102,17 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
-      for (final path in [AppRoutes.grn, AppRoutes.dispatch])
+      GoRoute(
+        path: AppRoutes.grn,
+        builder: (_, _) => const GrnScreen(),
+        routes: [
+          GoRoute(
+            path: 'new',
+            builder: (_, state) => GrnFormScreen(editId: state.uri.queryParameters['edit']),
+          ),
+        ],
+      ),
+      for (final path in [AppRoutes.dispatch])
         GoRoute(path: path, builder: (_, _) => const _ComingSoon()),
     ],
   );

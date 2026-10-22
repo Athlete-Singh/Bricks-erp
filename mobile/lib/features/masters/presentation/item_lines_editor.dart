@@ -4,40 +4,55 @@ import 'package:brics_mobile/core/utils/validators.dart';
 import 'package:brics_mobile/core/widgets/widgets.dart';
 import 'package:brics_mobile/features/masters/data/master_providers.dart';
 import 'package:brics_mobile/features/masters/domain/masters.dart';
-import 'package:brics_mobile/features/production/domain/production.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// One editable material line.
-class ConsumptionDraft {
-  ConsumptionDraft({this.itemId, this.warehouseId, String quantity = ''})
+/// One editable line: an item, the store it moves in or out of, how much.
+class ItemLineDraft {
+  ItemLineDraft({this.itemId, this.warehouseId, String quantity = ''})
     : quantity = TextEditingController(text: quantity);
 
   String? itemId;
   String? warehouseId;
   final TextEditingController quantity;
 
-  ConsumptionLine toLine() =>
-      ConsumptionLine(itemId: itemId!, warehouseId: warehouseId!, quantity: quantity.text.trim());
+  /// `{itemId, warehouseId, quantity}` — the shape every stock line takes on the API.
+  Map<String, dynamic> toJson() => {
+    'itemId': itemId,
+    'warehouseId': warehouseId,
+    'quantity': quantity.text.trim(),
+  };
 
   void dispose() => quantity.dispose();
 }
 
-/// PRD-04 — material taken from stock for a stage. Raw materials and
-/// consumables only: those are what a kiln burns or moulds.
-class ConsumptionEditor extends ConsumerWidget {
-  const ConsumptionEditor({
+/// Item lines against this kiln's stores — material used at a stage, goods
+/// received, bricks loaded on a truck.
+class ItemLinesEditor extends ConsumerWidget {
+  const ItemLinesEditor({
     required this.lines,
     required this.onChanged,
+    required this.title,
     required this.hint,
+    required this.addLabel,
+    required this.storeLabel,
     super.key,
+    this.categories,
+    this.itemFilter,
   });
 
-  final List<ConsumptionDraft> lines;
+  final List<ItemLineDraft> lines;
   final VoidCallback onChanged;
+  final String title;
   final String hint;
+  final String addLabel;
+  final String storeLabel;
 
-  static const _categories = {'raw_material', 'consumable'};
+  /// Only items of these categories (null: every item).
+  final Set<String>? categories;
+
+  /// A further narrowing, e.g. only items that are brick grades.
+  final bool Function(Item item)? itemFilter;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -45,15 +60,22 @@ class ConsumptionEditor extends ConsumerWidget {
     final validators = Validators(l10n);
     final text = Theme.of(context).textTheme;
     final items = (ref.watch(itemsProvider).value ?? const <Item>[])
-        .where((i) => _categories.contains(i.category))
+        .where((i) => categories == null || categories!.contains(i.category))
+        .where((i) => itemFilter == null || itemFilter!(i))
         .toList();
     final units = ref.watch(unitsProvider).value ?? const {};
     final stores = ref.watch(warehousesProvider).value ?? const <Warehouse>[];
+    // One store at the kiln: nothing to choose, so do not make anyone choose it.
+    if (stores.length == 1) {
+      for (final line in lines.where((l) => l.warehouseId == null)) {
+        line.warehouseId = stores.single.id;
+      }
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(l10n.productionConsumption, style: text.titleMedium),
+        Text(title, style: text.titleMedium),
         Text(hint, style: text.bodySmall),
         const SizedBox(height: AppSpacing.sm),
         for (final line in lines)
@@ -72,7 +94,7 @@ class ConsumptionEditor extends ConsumerWidget {
                   },
                 ),
                 AppDropdown<String>(
-                  label: l10n.productionFromStore,
+                  label: storeLabel,
                   value: line.warehouseId,
                   items: [for (final w in stores) AppDropdownItem(value: w.id, label: w.name)],
                   validator: validators.required,
@@ -108,11 +130,11 @@ class ConsumptionEditor extends ConsumerWidget {
           ),
         const SizedBox(height: AppSpacing.sm),
         AppButton(
-          label: l10n.productionAddMaterial,
+          label: addLabel,
           icon: Icons.add,
           variant: AppButtonVariant.secondary,
           onPressed: () {
-            lines.add(ConsumptionDraft(warehouseId: stores.length == 1 ? stores.single.id : null));
+            lines.add(ItemLineDraft(warehouseId: stores.length == 1 ? stores.single.id : null));
             onChanged();
           },
         ),

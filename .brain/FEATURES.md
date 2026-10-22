@@ -11,11 +11,11 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 101 | 89 | 6 | 1 | 5 | 0 |
+| CP1 MVP | 101 | 90 | 5 | 1 | 5 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 | S — SaaS platform | 11 | 10 | 1 | 0 | 0 | 0 |
 
-**CP1 done: 88 %** (89 of 101 features ✅)
+**CP1 done: 89 %** (90 of 101 features ✅)
 
 ### Per app
 
@@ -23,7 +23,7 @@
 |---|---|---|---|---|---|---|
 | Backend | 97 | 93 | 0 | 0 | 0 | 4 |
 | Web | 92 | 88 | 0 | 0 | 0 | 4 |
-| Mobile | 11 | 4 | 0 | 1 | 0 | 6 |
+| Mobile | 11 | 5 | 0 | 1 | 0 | 5 |
 | Tests | 101 | 94 | 0 | 1 | 0 | 6 |
 
 ## Client Phase 1 — MVP
@@ -107,7 +107,7 @@
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
 | PUR-01 | Purchase order | CP1 | P7 | ✅ | ✅ | — | ✅ | ✅ |  |
-| PUR-02 | GRN (goods receipt) on web + mobile offline → stock in | CP1 | P7 | ✅ | ✅ | ⬜ | ✅ | 🟨 |  |
+| PUR-02 | GRN (goods receipt) on web + mobile offline → stock in | CP1 | P7 | ✅ | ✅ | ✅ | ✅ | ✅ | Web P7.2 + mobile M4: supplier, date, supplier's challan no., item × store × quantity lines (no rate — value comes with the bill), offline; the GRN number shows on the entry once the server takes it. Same item into the same store twice is refused on the phone |
 | PUR-03 | Supplier bill / purchase voucher with GST input (CGST/SGST/IGST), linked to GRN | CP1 | P7 | ✅ | ✅ | — | ✅ | ✅ |  |
 | PUR-04 | Supplier payment (cash/bank/UPI) with bill-wise settlement | CP1 | P7 | ✅ | ✅ | — | ✅ | ✅ |  |
 | PUR-05 | Purchase return / debit note | CP1 | P7 | ✅ | ✅ | — | ✅ | ✅ |  |
@@ -191,7 +191,7 @@
 |---|---|---|---|---|---|---|---|---|---|
 | MOB-01 | Login, kiln selection, role-based home | CP1 | M1 | ✅ | — | ✅ | ✅ | ✅ | M1 — sign-in (offline reopen from the stored session), kiln picker (auto when one), home tiles by permission (ADR-053). A **suspended tenant** (PLT-06) sees "Company access is on hold" with the server's contact line, not "login failed" |
 | MOB-02 | Offline storage + sync queue + sync status badge (skeleton) | CP1 | M1 | — | — | ✅ | ✅ | ✅ | M1 — Drift `sync_queue` (the row is the record, ADR-053) + `cached_records` + `app_state`; SyncService (Idempotency-Key = row UUID, `{parent}` dependencies, 5 s→30 s→2 min→10 min backoff, refusals kept with the reason); master pull by `?since=`; SyncStatusBadge on every screen; Sync screen with send again / discard |
-| MOB-03 | Feature screens: production, attendance, GRN, dispatch/delivery | CP1 | M2–M5 | ⬜ | ⬜ | 🟨 | 🟨 | 🟨 | Production (M2) and attendance (M3) done; GRN (M4) and dispatch/delivery (M5) to come |
+| MOB-03 | Feature screens: production, attendance, GRN, dispatch/delivery | CP1 | M2–M5 | ⬜ | ⬜ | 🟨 | 🟨 | 🟨 | Production (M2), attendance (M3) and GRN (M4) done; dispatch/delivery (M5) to come |
 | MOB-04 | A full working day offline; syncs with no duplicates; conflict handling | CP1 | M6 | — | — | ⬜ | ⬜ | ⬜ |  |
 | MOB-05 | Android release APK | CP1 | M6 | — | — | ⬜ | ⬜ | ⬜ |  |
 | MOB-06 | iOS build + TestFlight/App Store release | CP1 | M6 | — | — | ⬜ | ⬜ | ⬜ | **Contracted:** SOW §1 says "Cross-platform iOS & Android"; §3 excludes only the Apple $99/yr fee. Was wrongly filed under "CP2 candidates" |

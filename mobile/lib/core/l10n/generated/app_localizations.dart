@@ -1015,6 +1015,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{gang} · {present} present of {total}'**
   String attendanceEntryTitle(String gang, String present, int total);
+
+  /// No description provided for @grnTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Goods receipt'**
+  String get grnTitle;
+
+  /// No description provided for @grnNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New receipt'**
+  String get grnNew;
+
+  /// No description provided for @grnNoEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'No goods received on this phone yet.'**
+  String get grnNoEntries;
+
+  /// No description provided for @grnSupplier.
+  ///
+  /// In en, this message translates to:
+  /// **'Supplier'**
+  String get grnSupplier;
+
+  /// No description provided for @grnNoSuppliers.
+  ///
+  /// In en, this message translates to:
+  /// **'No suppliers on this phone yet. Sync where there is signal.'**
+  String get grnNoSuppliers;
+
+  /// No description provided for @grnReceiptDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Received on'**
+  String get grnReceiptDate;
+
+  /// No description provided for @grnChallanNo.
+  ///
+  /// In en, this message translates to:
+  /// **'Supplier\'s challan no.'**
+  String get grnChallanNo;
+
+  /// No description provided for @grnLines.
+  ///
+  /// In en, this message translates to:
+  /// **'What arrived'**
+  String get grnLines;
+
+  /// No description provided for @grnLinesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity only — the bill brings the price.'**
+  String get grnLinesHint;
+
+  /// No description provided for @grnAddLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Add item'**
+  String get grnAddLine;
+
+  /// No description provided for @grnIntoStore.
+  ///
+  /// In en, this message translates to:
+  /// **'Into store'**
+  String get grnIntoStore;
+
+  /// No description provided for @grnAtLeastOneLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one item.'**
+  String get grnAtLeastOneLine;
+
+  /// No description provided for @grnDuplicateLine.
+  ///
+  /// In en, this message translates to:
+  /// **'That item is already listed for the same store — change the quantity instead.'**
+  String get grnDuplicateLine;
+
+  /// No description provided for @grnEntryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{supplier} · {lines} items'**
+  String grnEntryTitle(String supplier, int lines);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

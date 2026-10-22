@@ -16,6 +16,7 @@ VoidCallback? editorFor(BuildContext context, QueueRow row) {
 
 String? editRoute(QueueRow row) {
   final edit = '?edit=${row.id}';
+  if (row.entity == QueueEntity.goodsReceipt) return '${AppRoutes.grnNew}$edit';
   if (row.entity == QueueEntity.attendance) return '${AppRoutes.attendanceNew}$edit';
   if (row.entity == QueueEntity.productionBatch) return '${AppRoutes.productionNewBatch}$edit';
   final stage = stageOfEntity(row.entity);

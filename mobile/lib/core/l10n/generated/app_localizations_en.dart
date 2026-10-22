@@ -522,4 +522,49 @@ class AppLocalizationsEn extends AppLocalizations {
   String attendanceEntryTitle(String gang, String present, int total) {
     return '$gang · $present present of $total';
   }
+
+  @override
+  String get grnTitle => 'Goods receipt';
+
+  @override
+  String get grnNew => 'New receipt';
+
+  @override
+  String get grnNoEntries => 'No goods received on this phone yet.';
+
+  @override
+  String get grnSupplier => 'Supplier';
+
+  @override
+  String get grnNoSuppliers => 'No suppliers on this phone yet. Sync where there is signal.';
+
+  @override
+  String get grnReceiptDate => 'Received on';
+
+  @override
+  String get grnChallanNo => 'Supplier\'s challan no.';
+
+  @override
+  String get grnLines => 'What arrived';
+
+  @override
+  String get grnLinesHint => 'Quantity only — the bill brings the price.';
+
+  @override
+  String get grnAddLine => 'Add item';
+
+  @override
+  String get grnIntoStore => 'Into store';
+
+  @override
+  String get grnAtLeastOneLine => 'Add at least one item.';
+
+  @override
+  String get grnDuplicateLine =>
+      'That item is already listed for the same store — change the quantity instead.';
+
+  @override
+  String grnEntryTitle(String supplier, int lines) {
+    return '$supplier · $lines items';
+  }
 }
