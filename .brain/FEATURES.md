@@ -11,20 +11,20 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 101 | 85 | 6 | 1 | 9 | 0 |
+| CP1 MVP | 101 | 87 | 6 | 1 | 7 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 | S — SaaS platform | 11 | 10 | 1 | 0 | 0 | 0 |
 
-**CP1 done: 84 %** (85 of 101 features ✅)
+**CP1 done: 86 %** (87 of 101 features ✅)
 
 ### Per app
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
-| Backend | 97 | 91 | 0 | 0 | 0 | 6 |
-| Web | 94 | 88 | 0 | 0 | 0 | 6 |
-| Mobile | 11 | 0 | 0 | 0 | 0 | 11 |
-| Tests | 101 | 91 | 0 | 0 | 0 | 10 |
+| Backend | 97 | 92 | 0 | 0 | 0 | 5 |
+| Web | 93 | 88 | 0 | 0 | 0 | 5 |
+| Mobile | 11 | 2 | 0 | 0 | 0 | 9 |
+| Tests | 101 | 93 | 0 | 0 | 0 | 8 |
 
 ## Client Phase 1 — MVP
 
@@ -189,8 +189,8 @@
 
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| MOB-01 | Login, kiln selection, role-based home | CP1 | M1 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | Handle a **suspended tenant** at sign-in (PLT-06): say the company's access is on hold and who to contact, not "login failed" |
-| MOB-02 | Offline storage + sync queue + sync status badge (skeleton) | CP1 | M1 | — | — | ⬜ | ⬜ | ⬜ |  |
+| MOB-01 | Login, kiln selection, role-based home | CP1 | M1 | ✅ | — | ✅ | ✅ | ✅ | M1 — sign-in (offline reopen from the stored session), kiln picker (auto when one), home tiles by permission (ADR-053). A **suspended tenant** (PLT-06) sees "Company access is on hold" with the server's contact line, not "login failed" |
+| MOB-02 | Offline storage + sync queue + sync status badge (skeleton) | CP1 | M1 | — | — | ✅ | ✅ | ✅ | M1 — Drift `sync_queue` (the row is the record, ADR-053) + `cached_records` + `app_state`; SyncService (Idempotency-Key = row UUID, `{parent}` dependencies, 5 s→30 s→2 min→10 min backoff, refusals kept with the reason); master pull by `?since=`; SyncStatusBadge on every screen; Sync screen with send again / discard |
 | MOB-03 | Feature screens: production, attendance, GRN, dispatch/delivery | CP1 | M2–M5 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |  |
 | MOB-04 | A full working day offline; syncs with no duplicates; conflict handling | CP1 | M6 | — | — | ⬜ | ⬜ | ⬜ |  |
 | MOB-05 | Android release APK | CP1 | M6 | — | — | ⬜ | ⬜ | ⬜ |  |

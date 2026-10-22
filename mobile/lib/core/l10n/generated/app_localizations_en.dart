@@ -134,4 +134,186 @@ class AppLocalizationsEn extends AppLocalizations {
   String validationTooLong(int max) {
     return 'Keep it under $max characters';
   }
+
+  @override
+  String get loginTitle => 'Sign in';
+
+  @override
+  String get loginIdLabel => 'Mobile number or email';
+
+  @override
+  String get loginPasswordLabel => 'Password';
+
+  @override
+  String get loginButton => 'Sign in';
+
+  @override
+  String get loginNeedsNetwork =>
+      'Signing in needs the network once. After that the app works without it.';
+
+  @override
+  String get loginNoConnection =>
+      'No connection. Signing in needs the network — try where there is signal.';
+
+  @override
+  String get loginSuspendedTitle => 'Company access is on hold';
+
+  @override
+  String get loginSessionExpired =>
+      'Your session has ended. Sign in again to send the entries still on this phone.';
+
+  @override
+  String get kilnPickerTitle => 'Choose your kiln';
+
+  @override
+  String get kilnPickerHint => 'Every entry you make is recorded against this kiln.';
+
+  @override
+  String get kilnPickerNone =>
+      'Your account has no kiln yet. Ask the owner to give you access to one.';
+
+  @override
+  String homeGreeting(String name) {
+    return 'Hello, $name';
+  }
+
+  @override
+  String get homeKiln => 'Kiln';
+
+  @override
+  String get homeSwitchKiln => 'Switch kiln';
+
+  @override
+  String get homeNoTasks =>
+      'Your role has nothing to enter from the app. Ask the owner if that is wrong.';
+
+  @override
+  String get homeSignOut => 'Sign out';
+
+  @override
+  String get homeSignOutUnsentTitle => 'Entries not sent yet';
+
+  @override
+  String homeSignOutUnsentBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count entries have',
+      one: '1 entry has',
+    );
+    String _temp1 = intl.Intl.pluralLogic(count, locale: localeName, other: 'them', one: 'it');
+    return '$_temp0 not reached the server. Signing out deletes $_temp1 from this phone.';
+  }
+
+  @override
+  String get homeSignOutAnyway => 'Sign out anyway';
+
+  @override
+  String get homeSyncAndWait => 'Keep them';
+
+  @override
+  String get tileProduction => 'Production';
+
+  @override
+  String get tileProductionHint => 'Batches, making, drying, firing, sorting';
+
+  @override
+  String get tileAttendance => 'Attendance';
+
+  @override
+  String get tileAttendanceHint => 'Daily muster roll by gang';
+
+  @override
+  String get tileGrn => 'Goods receipt';
+
+  @override
+  String get tileGrnHint => 'Coal, soil and material arriving';
+
+  @override
+  String get tileDispatch => 'Dispatch';
+
+  @override
+  String get tileDispatchHint => 'Challans, gate out, delivery';
+
+  @override
+  String get tileSync => 'Sync status';
+
+  @override
+  String tileWaiting(int count) {
+    return '$count waiting';
+  }
+
+  @override
+  String get comingSoon => 'This screen arrives in the next update.';
+
+  @override
+  String get syncTitle => 'Sync';
+
+  @override
+  String get syncNow => 'Sync now';
+
+  @override
+  String syncLastSynced(String time) {
+    return 'Last synced $time';
+  }
+
+  @override
+  String get syncNeverSynced => 'Not synced yet';
+
+  @override
+  String get syncOfflineNote =>
+      'No network. Entries are saved on this phone and go out when signal returns.';
+
+  @override
+  String get syncEmpty => 'Nothing entered on this phone yet.';
+
+  @override
+  String get syncRetry => 'Send again';
+
+  @override
+  String get syncDiscardTitle => 'Discard this entry?';
+
+  @override
+  String get syncDiscardBody =>
+      'It has not reached the server. Discarding deletes it from this phone, with anything that depends on it.';
+
+  @override
+  String syncServerNo(String ref) {
+    return 'No. $ref';
+  }
+
+  @override
+  String syncAttempts(int count) {
+    return 'Tried $count times — will retry';
+  }
+
+  @override
+  String get entityProductionBatch => 'New batch';
+
+  @override
+  String get entityProductionMaking => 'Making';
+
+  @override
+  String get entityProductionDrying => 'Drying';
+
+  @override
+  String get entityProductionFiring => 'Firing';
+
+  @override
+  String get entityProductionSorting => 'Sorting';
+
+  @override
+  String get entityAttendance => 'Attendance';
+
+  @override
+  String get entityGoodsReceipt => 'Goods receipt';
+
+  @override
+  String get entityDispatch => 'Challan';
+
+  @override
+  String get entityDispatchConfirm => 'Gate out';
+
+  @override
+  String get entityDispatchAcknowledge => 'Delivery';
 }

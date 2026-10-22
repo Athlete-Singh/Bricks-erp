@@ -331,6 +331,318 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Keep it under {max} characters'**
   String validationTooLong(int max);
+
+  /// No description provided for @loginTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get loginTitle;
+
+  /// No description provided for @loginIdLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile number or email'**
+  String get loginIdLabel;
+
+  /// No description provided for @loginPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get loginPasswordLabel;
+
+  /// No description provided for @loginButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get loginButton;
+
+  /// No description provided for @loginNeedsNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing in needs the network once. After that the app works without it.'**
+  String get loginNeedsNetwork;
+
+  /// No description provided for @loginNoConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection. Signing in needs the network — try where there is signal.'**
+  String get loginNoConnection;
+
+  /// No description provided for @loginSuspendedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Company access is on hold'**
+  String get loginSuspendedTitle;
+
+  /// No description provided for @loginSessionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Your session has ended. Sign in again to send the entries still on this phone.'**
+  String get loginSessionExpired;
+
+  /// No description provided for @kilnPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your kiln'**
+  String get kilnPickerTitle;
+
+  /// No description provided for @kilnPickerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Every entry you make is recorded against this kiln.'**
+  String get kilnPickerHint;
+
+  /// No description provided for @kilnPickerNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account has no kiln yet. Ask the owner to give you access to one.'**
+  String get kilnPickerNone;
+
+  /// No description provided for @homeGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello, {name}'**
+  String homeGreeting(String name);
+
+  /// No description provided for @homeKiln.
+  ///
+  /// In en, this message translates to:
+  /// **'Kiln'**
+  String get homeKiln;
+
+  /// No description provided for @homeSwitchKiln.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch kiln'**
+  String get homeSwitchKiln;
+
+  /// No description provided for @homeNoTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Your role has nothing to enter from the app. Ask the owner if that is wrong.'**
+  String get homeNoTasks;
+
+  /// No description provided for @homeSignOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get homeSignOut;
+
+  /// No description provided for @homeSignOutUnsentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Entries not sent yet'**
+  String get homeSignOutUnsentTitle;
+
+  /// No description provided for @homeSignOutUnsentBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 entry has} other{{count} entries have}} not reached the server. Signing out deletes {count, plural, =1{it} other{them}} from this phone.'**
+  String homeSignOutUnsentBody(int count);
+
+  /// No description provided for @homeSignOutAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out anyway'**
+  String get homeSignOutAnyway;
+
+  /// No description provided for @homeSyncAndWait.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep them'**
+  String get homeSyncAndWait;
+
+  /// No description provided for @tileProduction.
+  ///
+  /// In en, this message translates to:
+  /// **'Production'**
+  String get tileProduction;
+
+  /// No description provided for @tileProductionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Batches, making, drying, firing, sorting'**
+  String get tileProductionHint;
+
+  /// No description provided for @tileAttendance.
+  ///
+  /// In en, this message translates to:
+  /// **'Attendance'**
+  String get tileAttendance;
+
+  /// No description provided for @tileAttendanceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily muster roll by gang'**
+  String get tileAttendanceHint;
+
+  /// No description provided for @tileGrn.
+  ///
+  /// In en, this message translates to:
+  /// **'Goods receipt'**
+  String get tileGrn;
+
+  /// No description provided for @tileGrnHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Coal, soil and material arriving'**
+  String get tileGrnHint;
+
+  /// No description provided for @tileDispatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Dispatch'**
+  String get tileDispatch;
+
+  /// No description provided for @tileDispatchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Challans, gate out, delivery'**
+  String get tileDispatchHint;
+
+  /// No description provided for @tileSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync status'**
+  String get tileSync;
+
+  /// No description provided for @tileWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} waiting'**
+  String tileWaiting(int count);
+
+  /// No description provided for @comingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'This screen arrives in the next update.'**
+  String get comingSoon;
+
+  /// No description provided for @syncTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync'**
+  String get syncTitle;
+
+  /// No description provided for @syncNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get syncNow;
+
+  /// No description provided for @syncLastSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Last synced {time}'**
+  String syncLastSynced(String time);
+
+  /// No description provided for @syncNeverSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Not synced yet'**
+  String get syncNeverSynced;
+
+  /// No description provided for @syncOfflineNote.
+  ///
+  /// In en, this message translates to:
+  /// **'No network. Entries are saved on this phone and go out when signal returns.'**
+  String get syncOfflineNote;
+
+  /// No description provided for @syncEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing entered on this phone yet.'**
+  String get syncEmpty;
+
+  /// No description provided for @syncRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Send again'**
+  String get syncRetry;
+
+  /// No description provided for @syncDiscardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard this entry?'**
+  String get syncDiscardTitle;
+
+  /// No description provided for @syncDiscardBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It has not reached the server. Discarding deletes it from this phone, with anything that depends on it.'**
+  String get syncDiscardBody;
+
+  /// No description provided for @syncServerNo.
+  ///
+  /// In en, this message translates to:
+  /// **'No. {ref}'**
+  String syncServerNo(String ref);
+
+  /// No description provided for @syncAttempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Tried {count} times — will retry'**
+  String syncAttempts(int count);
+
+  /// No description provided for @entityProductionBatch.
+  ///
+  /// In en, this message translates to:
+  /// **'New batch'**
+  String get entityProductionBatch;
+
+  /// No description provided for @entityProductionMaking.
+  ///
+  /// In en, this message translates to:
+  /// **'Making'**
+  String get entityProductionMaking;
+
+  /// No description provided for @entityProductionDrying.
+  ///
+  /// In en, this message translates to:
+  /// **'Drying'**
+  String get entityProductionDrying;
+
+  /// No description provided for @entityProductionFiring.
+  ///
+  /// In en, this message translates to:
+  /// **'Firing'**
+  String get entityProductionFiring;
+
+  /// No description provided for @entityProductionSorting.
+  ///
+  /// In en, this message translates to:
+  /// **'Sorting'**
+  String get entityProductionSorting;
+
+  /// No description provided for @entityAttendance.
+  ///
+  /// In en, this message translates to:
+  /// **'Attendance'**
+  String get entityAttendance;
+
+  /// No description provided for @entityGoodsReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Goods receipt'**
+  String get entityGoodsReceipt;
+
+  /// No description provided for @entityDispatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Challan'**
+  String get entityDispatch;
+
+  /// No description provided for @entityDispatchConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Gate out'**
+  String get entityDispatchConfirm;
+
+  /// No description provided for @entityDispatchAcknowledge.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery'**
+  String get entityDispatchAcknowledge;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

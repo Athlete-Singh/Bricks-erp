@@ -41,13 +41,22 @@ BaseOptions _options(AppConfig config) => BaseOptions(
   contentType: Headers.jsonContentType,
 );
 
+/// Replaced in tests by an in-memory backend; null uses dio's real HTTP client.
+final httpAdapterProvider = Provider<HttpClientAdapter?>((ref) => null);
+
 final dioProvider = Provider<Dio>((ref) {
   final config = ref.watch(appConfigProvider);
+  final adapter = ref.watch(httpAdapterProvider);
   final dio = Dio(_options(config));
+  final refreshDio = Dio(_options(config));
+  if (adapter != null) {
+    dio.httpClientAdapter = adapter;
+    refreshDio.httpClientAdapter = adapter;
+  }
   dio.interceptors.add(
     AuthInterceptor(
       dio: dio,
-      refreshDio: Dio(_options(config)),
+      refreshDio: refreshDio,
       tokens: ref.watch(tokenStoreProvider),
       onSessionExpired: () => ref.read(sessionExpiredProvider).add(null),
     ),

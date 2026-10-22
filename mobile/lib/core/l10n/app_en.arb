@@ -2,7 +2,6 @@
   "@@locale": "en",
   "appTitle": "BRICS",
   "appSubtitle": "Supervisor",
-
   "commonRetry": "Try again",
   "commonCancel": "Cancel",
   "commonSave": "Save",
@@ -21,31 +20,139 @@
   "commonSelect": "Select…",
   "commonDecrease": "Decrease",
   "commonIncrease": "Increase",
-
   "errorNoConnection": "No connection. Your entry is saved on this phone and will be sent when the network is back.",
   "errorTimeout": "The server took too long to answer.",
   "errorServer": "The server had a problem. It will be retried.",
   "errorUnknown": "Something went wrong. Please try again.",
-
   "syncBadgeOffline": "Offline",
   "syncBadgeSynced": "All sent",
   "syncBadgePending": "{count} waiting",
-  "@syncBadgePending": {"placeholders": {"count": {"type": "int"}}},
+  "@syncBadgePending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "syncBadgeFailed": "{count} need attention",
-  "@syncBadgeFailed": {"placeholders": {"count": {"type": "int"}}},
+  "@syncBadgeFailed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "syncBadgeSyncing": "Sending…",
-
   "statusPending": "Waiting",
   "statusSyncing": "Sending",
   "statusSynced": "Sent",
   "statusFailed": "Needs attention",
   "statusBlocked": "Waiting on another entry",
-
   "validationWholeNumber": "Enter a whole number, like 10000",
   "validationQuantity": "Enter a quantity like 100 or 12.500",
   "validationMoreThanZero": "Must be more than zero",
   "validationNotNegative": "Cannot be negative",
   "validationFutureDate": "The date cannot be in the future",
   "validationTooLong": "Keep it under {max} characters",
-  "@validationTooLong": {"placeholders": {"max": {"type": "int"}}}
+  "@validationTooLong": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "loginTitle": "Sign in",
+  "loginIdLabel": "Mobile number or email",
+  "loginPasswordLabel": "Password",
+  "loginButton": "Sign in",
+  "loginNeedsNetwork": "Signing in needs the network once. After that the app works without it.",
+  "loginNoConnection": "No connection. Signing in needs the network — try where there is signal.",
+  "loginSuspendedTitle": "Company access is on hold",
+  "loginSessionExpired": "Your session has ended. Sign in again to send the entries still on this phone.",
+  "kilnPickerTitle": "Choose your kiln",
+  "kilnPickerHint": "Every entry you make is recorded against this kiln.",
+  "kilnPickerNone": "Your account has no kiln yet. Ask the owner to give you access to one.",
+  "homeGreeting": "Hello, {name}",
+  "@homeGreeting": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "homeKiln": "Kiln",
+  "homeSwitchKiln": "Switch kiln",
+  "homeNoTasks": "Your role has nothing to enter from the app. Ask the owner if that is wrong.",
+  "homeSignOut": "Sign out",
+  "homeSignOutUnsentTitle": "Entries not sent yet",
+  "homeSignOutUnsentBody": "{count, plural, =1{1 entry has} other{{count} entries have}} not reached the server. Signing out deletes {count, plural, =1{it} other{them}} from this phone.",
+  "@homeSignOutUnsentBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeSignOutAnyway": "Sign out anyway",
+  "homeSyncAndWait": "Keep them",
+  "tileProduction": "Production",
+  "tileProductionHint": "Batches, making, drying, firing, sorting",
+  "tileAttendance": "Attendance",
+  "tileAttendanceHint": "Daily muster roll by gang",
+  "tileGrn": "Goods receipt",
+  "tileGrnHint": "Coal, soil and material arriving",
+  "tileDispatch": "Dispatch",
+  "tileDispatchHint": "Challans, gate out, delivery",
+  "tileSync": "Sync status",
+  "tileWaiting": "{count} waiting",
+  "@tileWaiting": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "comingSoon": "This screen arrives in the next update.",
+  "syncTitle": "Sync",
+  "syncNow": "Sync now",
+  "syncLastSynced": "Last synced {time}",
+  "@syncLastSynced": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "syncNeverSynced": "Not synced yet",
+  "syncOfflineNote": "No network. Entries are saved on this phone and go out when signal returns.",
+  "syncEmpty": "Nothing entered on this phone yet.",
+  "syncRetry": "Send again",
+  "syncDiscardTitle": "Discard this entry?",
+  "syncDiscardBody": "It has not reached the server. Discarding deletes it from this phone, with anything that depends on it.",
+  "syncServerNo": "No. {ref}",
+  "@syncServerNo": {
+    "placeholders": {
+      "ref": {
+        "type": "String"
+      }
+    }
+  },
+  "syncAttempts": "Tried {count} times — will retry",
+  "@syncAttempts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "entityProductionBatch": "New batch",
+  "entityProductionMaking": "Making",
+  "entityProductionDrying": "Drying",
+  "entityProductionFiring": "Firing",
+  "entityProductionSorting": "Sorting",
+  "entityAttendance": "Attendance",
+  "entityGoodsReceipt": "Goods receipt",
+  "entityDispatch": "Challan",
+  "entityDispatchConfirm": "Gate out",
+  "entityDispatchAcknowledge": "Delivery"
 }

@@ -29,3 +29,12 @@ extension PumpApp on WidgetTester {
 
 /// Localised strings outside a widget tree, for assertions.
 Future<AppLocalizations> loadL10n() => AppLocalizations.delegate.load(const Locale('en'));
+
+extension DisposeApp on WidgetTester {
+  /// Unmounts the tree so Riverpod disposes timers and Drift closes its streams
+  /// before the test ends.
+  Future<void> disposeApp() async {
+    await pumpWidget(const SizedBox.shrink());
+    await pump(const Duration(milliseconds: 10));
+  }
+}
