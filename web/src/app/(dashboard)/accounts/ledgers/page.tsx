@@ -1,28 +1,35 @@
 'use client';
 
-import { Layers } from 'lucide-react';
+import { Landmark, Layers, Pencil, Plus } from 'lucide-react';
 import { useState } from 'react';
-import { formatDate, formatINR } from '@brics/shared';
+import { formatDate, formatINR, PERMISSIONS } from '@brics/shared';
 import { DataTable, type Column } from '@/components/shared/data-table';
 import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { messageOf } from '@/features/auth/use-auth';
+import { messageOf, useSession } from '@/features/auth/use-auth';
+import { CreateLedgerDialog, EditLedgerDialog } from '@/features/accounting/components/ledger-dialogs';
 import type { Ledger } from '@/features/accounting/api';
 import { useLedgerGroups, useLedgers, useLedgerStatement } from '@/features/accounting/hooks';
 
 /**
  * The chart of accounts (ACC-01) with a ledger statement beside it (ACC-05).
- * Picking a ledger shows its entries with a running balance.
+ * Picking a ledger shows its entries with a running balance. An owner adds
+ * their bank accounts here (ADM-08) and any other ledger the books need.
  */
 export default function LedgersPage() {
   const { data: ledgers, isLoading } = useLedgers();
   const { data: groups } = useLedgerGroups();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [range, setRange] = useState<{ from?: string; to?: string }>({});
+  const [adding, setAdding] = useState<'bank' | 'ledger' | null>(null);
+  const [editing, setEditing] = useState<Ledger | null>(null);
+  const { can } = useSession();
+  const canManage = can(PERMISSIONS.ACCOUNTS_MANAGE);
 
   const groupName = (groupId: string) => groups?.find((g) => g.id === groupId)?.name ?? '—';
 
@@ -57,12 +64,43 @@ export default function LedgersPage() {
     {
       key: 'status',
       header: '',
-      render: (ledger) => (ledger.isSystem ? <Badge variant="muted">Built-in</Badge> : null),
+      render: (ledger) => (
+        <div className="flex items-center justify-end gap-2">
+          {!ledger.isActive && <Badge variant="muted">Inactive</Badge>}
+          {ledger.isSystem && <Badge variant="muted">Built-in</Badge>}
+          {canManage && (
+            <Button variant="ghost" size="sm" aria-label={`Edit ${ledger.name}`} onClick={() => setEditing(ledger)}>
+              <Pencil className="h-4 w-4" aria-hidden />
+            </Button>
+          )}
+        </div>
+      ),
     },
   ];
 
   return (
     <div className="flex flex-col gap-5">
+      {canManage && (
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button size="sm" onClick={() => setAdding('bank')}>
+            <Landmark className="h-4 w-4" aria-hidden />
+            Add bank account
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setAdding('ledger')}>
+            <Plus className="h-4 w-4" aria-hidden />
+            New ledger
+          </Button>
+        </div>
+      )}
+
+      <CreateLedgerDialog
+        open={adding !== null}
+        bank={adding === 'bank'}
+        groups={groups ?? []}
+        onClose={() => setAdding(null)}
+      />
+      <EditLedgerDialog ledger={editing} groups={groups ?? []} onClose={() => setEditing(null)} />
+
       <DataTable
         caption="Chart of accounts"
         columns={columns}

@@ -9,7 +9,7 @@ Legend: ⬜ · 🟨 · 🧩 · ✅ · ⚠️ · ⏭️ (see FEATURES.md)
   1. ~~The mobile app — the entire M track (M0–M6).~~ **Built 2026-10-22** (MOB-01…04, PRD-06, LAB-02, PUR-02, DSP-04 ✅). What remains is release, not product: the production API address, the Android upload keystore, the package id and the Apple account (OQ #12, #22, #23) — MOB-05/06 ⚠️.
   2. **P13.2 — deploy + backups (ADM-09).** Needs the hosting accounts.
   3. **P13.3 — CSV onboarding (ONB-01), user guide, UAT.**
-  4. **Two web gaps that block go-live:** no screen to add a bank or any other ledger (**ADM-08** — the API has it, nothing calls it), and no screen for opening balances (**ACC-04**; ONB-01's CSV import would also cover it).
+  4. ~~Two web gaps that block go-live~~ — **ADM-08 closed 2026-10-22** (Accounts → Ledgers: Add bank account / New ledger / edit); opening balances go through Settings → Go-live import (ACC-04).
   5. **GST-02 is half-built.** The CGST/SGST-vs-IGST split works and the two are mutually exclusive, but nothing checks the choice against the place of supply — an out-of-state invoice can be charged CGST+SGST, and the PDF then prints "Inter-state" beside intra-state tax. A compliance error the kiln would answer for.
   6. **NTF-01 (SMS/WhatsApp alerts)** — blocked on the client, OPEN_QUESTIONS #14.
 - **Register hygiene (2026-10-13):** INV-05 and ACC-06 were still ⬜ in FEATURES.md although both shipped in P5/P7/P8; corrected. ADM-08 and ACC-04 were ⬜ for the right reason — the backend exists, the screen does not.

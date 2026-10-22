@@ -11,19 +11,19 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 101 | 94 | 4 | 2 | 1 | 0 |
+| CP1 MVP | 101 | 98 | 0 | 2 | 1 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 | S — SaaS platform | 11 | 10 | 1 | 0 | 0 | 0 |
 
-**CP1 done: 93 %** (94 of 101 features ✅)
+**CP1 done: 97 %** (98 of 101 features ✅)
 
 ### Per app
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
 | Backend | 97 | 94 | 0 | 0 | 0 | 3 |
-| Web | 91 | 88 | 0 | 0 | 0 | 3 |
-| Mobile | 11 | 9 | 0 | 0 | 1 | 1 |
+| Web | 91 | 89 | 0 | 0 | 0 | 2 |
+| Mobile | 11 | 10 | 0 | 0 | 1 | 0 |
 | Tests | 101 | 99 | 0 | 0 | 0 | 2 |
 
 ## Client Phase 1 — MVP
@@ -36,12 +36,12 @@
 | ADM-02 | Multiple companies under one login + company switcher | CP1 | P1 | ✅ | ✅ | — | ✅ | ✅ | `POST /auth/switch-company` + topbar switcher (hidden when the user has one company) |
 | ADM-03 | Multiple kilns/chimneys/sites per company (site type: kiln / branch / depot) + kiln switcher | CP1 | P1 | ✅ | ✅ | — | ✅ | ✅ | Kiln list/create at /settings/kilns + topbar kiln switcher writing `activeSiteId` |
 | ADM-04 | Financial years (April–March default): create, set active | CP1 | P1 | ✅ | ✅ | — | ✅ | ✅ | Create + set-active at /settings/financial-years; overlap rejected, one active FY enforced in the DB |
-| ADM-05 | Users: login (email or mobile + password), JWT access/refresh, logout, change password | CP1 | P1 | ✅ | ✅ | ⬜ | ✅ | 🟨 | Backend + web done (login, silent refresh, guard, logout, change-password). Mobile in M1 |
+| ADM-05 | Users: login (email or mobile + password), JWT access/refresh, logout, change password | CP1 | P1 | ✅ | ✅ | ✅ | ✅ | ✅ | Backend + web (login, silent refresh, guard, logout, change-password); mobile M1 (sign-in, single-flight refresh, logout) |
 | ADM-06 | 9 seeded roles with default permission sets; Owner assigns role + kiln access per user | CP1 | P1 | ✅ | ✅ | — | ✅ | ✅ | 9 roles seeded; user create + role/kiln reassignment at /settings/users |
 | ADM-07 | Audit log (who / what / when / before-after) on financial + stock data; simple viewer for Owner | CP1 | P1 | ✅ | ✅ | — | ✅ | ✅ | AuditService writes on every company/kiln/FY/user/auth change; filtered, paged viewer at /audit-logs |
 
 
-| ADM-08 | Company bank accounts (as Bank ledgers) | CP1 | P2 | ✅ | ⬜ | — | ✅ | 🟨 | `POST /ledgers` creates one under Bank Accounts; **no web screen calls it**, so an owner cannot add their bank in the app. Blocks go-live — expenses and receipts need a bank ledger to pay from |
+| ADM-08 | Company bank accounts (as Bank ledgers) | CP1 | P2 | ✅ | ✅ | — | ✅ | ✅ | Accounts → Ledgers: **Add bank account** (group fixed to Bank Accounts, one step) and **New ledger** (any group), plus edit — rename any ledger, move or retire only the owner's own (built-in ledgers stay put, as the server enforces). Opening balance via Settings → Go-live import |
 | ADM-09 | Backups via managed DB (Supabase daily backups) + documented restore procedure | CP1 | P13 | ⬜ | — | — | ⬜ | ⬜ |  |
 
 ### M02 Party Masters (SOW #2)
@@ -182,8 +182,8 @@
 
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| SYN-01 | `Idempotency-Key` header on every mobile-facing create endpoint + `idempotency_keys` table; a repeat with the same key returns the original result instead of creating a duplicate | CP1 | P5 | ✅ | — | — | ✅ | 🟨 | P5.1c — BE done on all 5 production POSTs; applies to P6/P7/P9 as those modules ship |
-| SYN-02 | Delta pull endpoints (`?since=`) for the masters the app caches: kilns, parties, items, brick types, wage rates | CP1 | P5 | ✅ | — | — | ✅ | 🟨 | P5.1c — BE on all 5 masters; tombstones carry `deleted: true` |
+| SYN-01 | `Idempotency-Key` header on every mobile-facing create endpoint + `idempotency_keys` table; a repeat with the same key returns the original result instead of creating a duplicate | CP1 | P5 | ✅ | — | — | ✅ | ✅ | Idempotency-Key on all 5 production POSTs (P5.1c), attendance, GRN and dispatch (P6/P7/P9); the mobile queue sends it on every entry (M1–M6, full-day offline test) |
+| SYN-02 | Delta pull endpoints (`?since=`) for the masters the app caches: kilns, parties, items, brick types, wage rates | CP1 | P5 | ✅ | — | — | ✅ | ✅ | `?since=` on kilns, parties, items, brick types, warehouses, units, wage rates; tombstones `deleted: true`; consumed by the mobile master pull (M1) |
 
 ### M12 Supervisor Mobile App (SOW #12)
 
