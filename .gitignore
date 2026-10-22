@@ -54,6 +54,10 @@ mobile/android/.gradle/
 mobile/android/local.properties
 mobile/ios/Pods/
 mobile/ios/Flutter/Generated.xcconfig
+mobile/*.iml
+mobile/android/key.properties
+mobile/android/app/*.jks
+mobile/android/app/*.keystore
 
 # Personal command cheat sheet, not shared
 RUN.md

@@ -1,0 +1,23 @@
+# very_good_analysis is the bar (CONVENTIONS → Mobile): zero warnings.
+# Two rules are relaxed for an application, not a published package (ADR-053):
+#   - public_member_api_docs: every widget and provider would need a doc comment
+#     restating its name; comments here explain *why*, not *what*.
+#   - lines_longer_than_80_chars: the formatter wraps at 100 instead.
+include: package:very_good_analysis/analysis_options.yaml
+
+analyzer:
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - lib/**/*.g.dart
+    - lib/**/*.freezed.dart
+    - lib/core/l10n/generated/**
+
+formatter:
+  page_width: 100
+
+linter:
+  rules:
+    public_member_api_docs: false
+    lines_longer_than_80_chars: false
