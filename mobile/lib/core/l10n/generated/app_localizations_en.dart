@@ -562,7 +562,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String grnEntryTitle(String supplier, int lines) {
-    return '$supplier · $lines items';
+    String _temp0 = intl.Intl.pluralLogic(
+      lines,
+      locale: localeName,
+      other: '$lines items',
+      one: '1 item',
+    );
+    return '$supplier · $_temp0';
   }
 
   @override
@@ -818,4 +824,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get syncAllEntries => 'Everything on this phone';
+
+  @override
+  String get productionStageSkipped => 'Skipped';
 }

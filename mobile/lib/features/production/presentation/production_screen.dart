@@ -130,8 +130,12 @@ class BatchCard extends StatelessWidget {
                     Text(Formatters.displayIsoDate(batch.batchDate), style: text.bodySmall),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                StageDots(done: stagesDone(batch.serverStatus)),
+                // The list knows a batch's status, not its stages: no dots until
+                // firing, rather than "0 of 4" for a batch already moulded.
+                if (stagesDone(batch.serverStatus) > 0) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  StageDots(done: stagesDone(batch.serverStatus)),
+                ],
               ],
             ),
           ),

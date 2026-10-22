@@ -69,9 +69,11 @@ class AppScaffold extends StatelessWidget {
                 children: [
                   AppBar(
                     leading: leading,
-                    titleSpacing: leading == null && !Navigator.of(context).canPop()
-                        ? AppSpacing.lg
-                        : 0,
+                    // No back button (the first screen of a flow): no gap for one either.
+                    automaticallyImplyLeading: leading == null,
+                    titleSpacing: leading == null && Navigator.of(context).canPop()
+                        ? 0
+                        : AppSpacing.lg,
                     title: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [

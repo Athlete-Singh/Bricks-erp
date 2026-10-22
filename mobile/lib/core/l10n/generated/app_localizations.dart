@@ -1091,7 +1091,7 @@ abstract class AppLocalizations {
   /// No description provided for @grnEntryTitle.
   ///
   /// In en, this message translates to:
-  /// **'{supplier} · {lines} items'**
+  /// **'{supplier} · {lines, plural, =1{1 item} other{{lines} items}}'**
   String grnEntryTitle(String supplier, int lines);
 
   /// No description provided for @dispatchTitle.
@@ -1555,6 +1555,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Everything on this phone'**
   String get syncAllEntries;
+
+  /// No description provided for @productionStageSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped'**
+  String get productionStageSkipped;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

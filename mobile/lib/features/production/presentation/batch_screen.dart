@@ -44,7 +44,7 @@ IconData stageIcon(ProductionStage stage) => switch (stage) {
 };
 
 /// Where one stage of a batch stands, from the server's record and this phone's queue.
-enum _StageState { recorded, queued, refused, next, later }
+enum _StageState { recorded, queued, refused, skipped, next, later }
 
 /// One batch and its four stages as a timeline: what the server has, what this
 /// phone has queued, and a button for the next one to record.
@@ -87,16 +87,27 @@ class _BatchScreenState extends ConsumerState<BatchScreen> {
     // Work out each stage's state, and which one is next in line.
     final states = <ProductionStage, _StageState>{};
     final locals = <ProductionStage, QueueRow?>{};
-    var nextFound = false;
     for (final stage in ProductionStage.values) {
       final local = localRows.where((r) => stageOfEntity(r.entity) == stage).firstOrNull;
       locals[stage] = local;
-      if (serverEntries.containsKey(stage.name)) {
+      if (serverEntries.containsKey(stage.name) || local?.status == QueueStatus.synced) {
         states[stage] = _StageState.recorded;
       } else if (local?.status == QueueStatus.failed) {
         states[stage] = _StageState.refused;
       } else if (local != null) {
         states[stage] = _StageState.queued;
+      }
+    }
+    // A stage passed over (drying, once firing is in) is skipped, not "next":
+    // the batch cannot go back to it.
+    final lastDone = ProductionStage.values.lastIndexWhere(
+      (s) => states[s] == _StageState.recorded || states[s] == _StageState.queued,
+    );
+    var nextFound = false;
+    for (final (i, stage) in ProductionStage.values.indexed) {
+      if (states[stage] != null) continue;
+      if (i < lastDone) {
+        states[stage] = _StageState.skipped;
       } else if (!nextFound) {
         states[stage] = _StageState.next;
         nextFound = true;
@@ -105,7 +116,9 @@ class _BatchScreenState extends ConsumerState<BatchScreen> {
       }
     }
     final done = states.values
-        .where((s) => s == _StageState.recorded || s == _StageState.queued)
+        .where(
+          (s) => s == _StageState.recorded || s == _StageState.queued || s == _StageState.skipped,
+        )
         .length;
 
     return AppScaffold(
@@ -204,17 +217,24 @@ class _TimelineStep extends StatelessWidget {
       _StageState.queued => (colors.warning, Colors.white, Icons.schedule_rounded),
       _StageState.refused => (colors.danger, Colors.white, Icons.priority_high_rounded),
       _StageState.next => (colors.primary, Colors.white, stageIcon(stage)),
+      _StageState.skipped => (colors.surfaceMuted, colors.mutedForeground, Icons.redo_rounded),
       _StageState.later => (colors.surfaceMuted, colors.mutedForeground, stageIcon(stage)),
     };
-    final lineDone = state == _StageState.recorded || state == _StageState.queued;
+    final lineDone =
+        state == _StageState.recorded ||
+        state == _StageState.queued ||
+        state == _StageState.skipped;
 
     String? figure;
-    final count =
-        server?['greenBricks'] ??
-        server?['firedBricks'] ??
-        local?.payloadMap['greenBricks'] ??
-        local?.payloadMap['firedBricks'];
-    if (count is String && count != '0') {
+    // The server sends every count column on each entry (zeros included), so read the one
+    // that belongs to this stage.
+    final field = switch (stage) {
+      ProductionStage.making => 'greenBricks',
+      ProductionStage.firing => 'firedBricks',
+      _ => null,
+    };
+    final count = field == null ? null : server?[field] ?? local?.payloadMap[field];
+    if (count is String && (num.tryParse(count) ?? 0) > 0) {
       figure = stage == ProductionStage.making
           ? l10n.productionGreenCount(Formatters.quantity(count))
           : l10n.productionFiredCount(Formatters.quantity(count));
@@ -229,6 +249,7 @@ class _TimelineStep extends StatelessWidget {
       _StageState.queued || _StageState.refused => RecordStatusChip(
         status: recordStatus(local!, parent: local!.dependsOn == null ? null : batchRow),
       ),
+      _StageState.skipped => StatusPill(label: l10n.productionStageSkipped, tone: Tone.neutral),
       _StageState.next || _StageState.later => StatusPill(
         label: stage == ProductionStage.drying
             ? l10n.productionDryingOptional
@@ -295,7 +316,7 @@ class _TimelineStep extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(figure ?? stageHint(l10n, stage), style: text.bodySmall),
-                    if (local != null && state != _StageState.recorded) ...[
+                    if (local != null && figure == null && state != _StageState.recorded) ...[
                       const SizedBox(height: AppSpacing.xs),
                       Text(local!.title, style: text.bodySmall),
                     ],

@@ -107,6 +107,24 @@ void main() {
     expect(await TokenStore(env.store).read(), isNull);
   });
 
+  test('a fresh install never wakes up signed in from a leftover keychain', () async {
+    // iOS: the keychain survived an uninstall, the app's database did not.
+    await TokenStore(env.store).write(const AuthTokens(accessToken: 'old', refreshToken: 'old'));
+    await env.store.write('auth.session', '{}');
+    await env.store.write('auth.lastLogin', '9800000001');
+    final c = env.container();
+    addTearDown(c.dispose);
+
+    expect(await c.read(sessionControllerProvider.future), isA<SignedOut>());
+    expect(await TokenStore(env.store).read(), isNull);
+    expect(env.store.values.containsKey('auth.session'), isFalse);
+    expect(
+      env.store.values.containsKey('auth.lastLogin'),
+      isFalse,
+      reason: "not the last person's number either",
+    );
+  });
+
   test('signing out wipes the phone', () async {
     env.api
       ..on('POST', '/auth/login', (_) => FakeResponse.ok(loginResponse()))

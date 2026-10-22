@@ -24,7 +24,6 @@ class KilnPickerScreen extends ConsumerWidget {
       title: l10n.kilnPickerTitle,
       subtitle: l10n.kilnPickerHint,
       scrollable: false,
-      leading: context.canPop() ? null : const SizedBox.shrink(),
       body: sites.isEmpty
           ? EmptyView(message: l10n.kilnPickerNone, icon: Icons.factory_outlined)
           : ListView.separated(

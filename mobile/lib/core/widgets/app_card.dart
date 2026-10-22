@@ -26,14 +26,14 @@ class AppCard extends StatelessWidget {
     final colors = context.colors;
     Widget content = Padding(padding: padding, child: child);
     if (accent != null) {
-      content = IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(width: 5, color: accent),
-            Expanded(child: content),
-          ],
-        ),
+      // The stripe is laid over the card's left edge rather than measured into
+      // a row: an intrinsic-height row miscounts content that is animating
+      // its size (a field collapsing) and overflows for a frame.
+      content = Stack(
+        children: [
+          Padding(padding: const EdgeInsets.only(left: 5), child: content),
+          Positioned(left: 0, top: 0, bottom: 0, width: 5, child: ColoredBox(color: accent!)),
+        ],
       );
     }
     final card = DecoratedBox(

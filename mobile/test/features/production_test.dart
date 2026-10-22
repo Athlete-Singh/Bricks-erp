@@ -230,7 +230,7 @@ void main() {
     await tester.tap(find.text('Save'));
     await settle(tester);
 
-    expect(find.text('Chamber 3 · 12,000 green'), findsOneWidget);
+    expect(find.text('12,000 green'), findsOneWidget);
     expect(find.text('Waiting on another entry'), findsOneWidget);
     await tester.disposeApp();
   });

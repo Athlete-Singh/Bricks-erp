@@ -303,7 +303,7 @@
   "grnIntoStore": "Into store",
   "grnAtLeastOneLine": "Add at least one item.",
   "grnDuplicateLine": "That item is already listed for the same store — change the quantity instead.",
-  "grnEntryTitle": "{supplier} · {lines} items",
+  "grnEntryTitle": "{supplier} · {lines, plural, =1{1 item} other{{lines} items}}",
   "@grnEntryTitle": {
     "placeholders": {
       "supplier": {
@@ -469,5 +469,6 @@
       }
     }
   },
-  "syncAllEntries": "Everything on this phone"
+  "syncAllEntries": "Everything on this phone",
+  "productionStageSkipped": "Skipped"
 }

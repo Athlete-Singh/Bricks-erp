@@ -118,15 +118,17 @@ class _ChallanScreenState extends ConsumerState<ChallanScreen> {
                           Formatters.displayIsoDate(challan.dispatchDate),
                           style: text.bodySmall,
                         ),
+                        if (vehicle != null) ...[
+                          const SizedBox(height: AppSpacing.sm),
+                          StatusPill(
+                            label: vehicle.registrationNo,
+                            tone: Tone.neutral,
+                            icon: Icons.local_shipping_rounded,
+                          ),
+                        ],
                       ],
                     ),
                   ),
-                  if (vehicle != null)
-                    StatusPill(
-                      label: vehicle.registrationNo,
-                      tone: Tone.neutral,
-                      icon: Icons.local_shipping_rounded,
-                    ),
                 ],
               ),
             ),

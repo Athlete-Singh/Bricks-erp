@@ -29,6 +29,9 @@ class AuthRepository {
   static const _ownerKey = 'session.userId';
   static const _siteKey = 'site.selected';
 
+  /// Lives in the app's database, so it exists only on an install that has run before.
+  static const installMarkerKey = 'app.installed';
+
   /// Signing in needs the network once; after that the app opens offline.
   Future<Session> login(String emailOrMobile, String password) async {
     final data = (await api.post(
@@ -54,11 +57,22 @@ class AuthRepository {
       await db.delete(db.appState).go();
       await db.writeState(_ownerKey, session.user.id);
     }
+    await db.writeState(installMarkerKey, '1');
     return session;
   }
 
   /// The last session on this phone, if its tokens are still here. No network needed.
   Future<Session?> restore() async {
+    // iOS keeps Keychain items when an app is deleted; the app's own database
+    // goes. A first launch after an install must not wake up signed in as
+    // whoever used the phone before, so a missing marker clears the keychain.
+    if (await db.readState(installMarkerKey) == null) {
+      await tokens.clear();
+      await store.delete(_sessionKey);
+      await store.delete(_lastLoginKey);
+      await db.writeState(installMarkerKey, '1');
+      return null;
+    }
     if (await tokens.read() == null) return null;
     final raw = await store.read(_sessionKey);
     if (raw == null) return null;

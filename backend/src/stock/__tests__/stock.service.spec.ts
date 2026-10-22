@@ -135,7 +135,7 @@ describe('StockService', () => {
       await service
         .record(manager as never, input({ direction: 'out', quantity: '100' }))
         .catch((error: BusinessRuleException) => {
-          expect(error.message).toContain('40.000');
+          expect(error.message).toContain('Only 40 of Coal');
           expect(error.message).toContain('Coal');
           expect(error.message).toContain('Main Yard');
         });

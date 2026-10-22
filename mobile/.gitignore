@@ -1,3 +1,6 @@
 env/*.json
 !env/*.example.json
 screenshots/out/
+
+# Device tour output (integration_test/app_tour_test.dart)
+screenshots/device/

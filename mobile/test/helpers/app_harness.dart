@@ -23,6 +23,7 @@ Future<void> seedSession(
   await env.store.write('auth.session', jsonEncode(session.toJson()));
   if (siteId != null) await env.db.writeState('site.selected', siteId);
   await env.db.writeState('session.userId', session.user.id);
+  await env.db.writeState('app.installed', '1');
   stubEmptyLists(env);
 }
 

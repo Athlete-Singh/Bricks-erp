@@ -105,7 +105,7 @@ void main() {
     await tester.tap(find.text('Save'));
     await settle(tester);
 
-    expect(find.text('Jharia Coal Co · 1 items'), findsOneWidget);
+    expect(find.text('Jharia Coal Co · 1 item'), findsOneWidget);
     expect(find.text('Waiting'), findsOneWidget);
 
     env.api.offline = false;

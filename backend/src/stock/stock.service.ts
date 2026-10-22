@@ -147,7 +147,7 @@ export class StockService {
         // what leakage looks like in the data.
         throw new BusinessRuleException(
           'STOCK_INSUFFICIENT',
-          `Only ${balance} of ${subject.label} is in ${warehouse.name}, and this takes out ${toQuantity(amount)}`,
+          `Only ${readable(balance)} of ${subject.label} is in ${warehouse.name}, and this takes out ${readable(amount)}`,
         );
       }
     }
@@ -306,4 +306,9 @@ export class StockService {
 
     return { itemId, brickTypeId: grade?.id ?? null, label: grade ? grade.grade : item.name };
   }
+}
+
+/** A quantity as a person reads it in a refusal: 2500.000 → "2,500", 42.500 → "42.5". */
+function readable(quantity: Decimal.Value): string {
+  return new Decimal(quantity).toNumber().toLocaleString('en-IN', { maximumFractionDigits: 3 });
 }
