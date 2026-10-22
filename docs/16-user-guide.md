@@ -19,13 +19,18 @@ Do these in order. Each one is needed by the one after it.
 
 1. **Settings → Company** — name, GSTIN and state. The state matters: it decides
    whether a sale is CGST + SGST or IGST, and the system refuses the wrong one.
-2. **Settings → Kilns** — one per chimney. Everything else hangs off a kiln.
-3. **Masters → Inventory** — units first, then items. A brick grade is created
+2. **Settings → Financial years** — create the current one (e.g. 2026-27, 1 April
+   to 31 March). Until it exists, nothing can be posted: every voucher, bill and
+   invoice is refused with "No financial year covers this date".
+3. **Settings → Kilns** — one per chimney. Everything else hangs off a kiln.
+4. **Accounts → Ledgers → Add bank account** — one for each bank account the
+   kiln pays from or is paid into. Cash is already there.
+5. **Masters → Inventory** — units first, then items. A brick grade is created
    with the item it is sold as: production sorts into the grade, and an invoice
    takes out of the same pile.
-4. **Masters → Parties** — customers, suppliers, Sardars. One party can be more
+6. **Masters → Parties** — customers, suppliers, Sardars. One party can be more
    than one of those; a Sardar who also sells you coal is one party, not two.
-5. **Settings → Go-live import** — if you have this in a spreadsheet already,
+7. **Settings → Go-live import** — if you have this in a spreadsheet already,
    import it instead of typing it. See below.
 
 ## The go-live import

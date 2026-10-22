@@ -43,6 +43,12 @@
 ## Postings
 None on the phone — the server posts stock and journals when it takes an entry.
 
+## Verified against a real API (2026-10-22)
+`mobile/integration/live_api_test.dart` (runs only with `LIVE_API_URL`): the app's own SyncService, repositories and payload
+builders against a local BRICS API on Postgres 16 — batch + making/drying/firing, a two-worker roll with overtime, a GRN, a
+challan with gate-out and delivery — all accepted, in order; every create resent with its key returned the original id; a
+resent gate-out settled as done; a duplicate stage came back as `PRODUCTION_STAGE_DUPLICATE`, refused.
+
 ## Known gaps / notes
 - Roles: the app shows what the role may do; no role widened. Supervisor = production + dispatch (works challans raised on the
   web; no `parties.view`, so no customer names and no "New challan"). Attendance needs `labour.manage`, GRN `purchases.manage`.

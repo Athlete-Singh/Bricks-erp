@@ -25,6 +25,13 @@ dart run build_runner build -d && flutter analyze && flutter test
 Generated files (`*.g.dart`, `*.freezed.dart`, `lib/core/l10n/generated/`) are committed (ADR-007). After editing
 `lib/core/l10n/app_en.arb` run `flutter gen-l10n`.
 
+## Against a real API
+```bash
+LIVE_API_URL=http://127.0.0.1:4000/api/v1 LIVE_LOGIN=<mobile> LIVE_PASSWORD=<password> \
+  flutter test integration/live_api_test.dart       # skipped without LIVE_API_URL; never point it at production
+```
+Runs the app's sync engine and payload builders against the API for all four field entries, with replays.
+
 ## Design review without a phone
 ```bash
 flutter test screenshots --update-goldens     # → screenshots/out/*.png, light and dark (git-ignored)

@@ -146,7 +146,8 @@ the web origin exactly.
 3. The API goes up on Render, the web app on Vercel, with `CORS_ORIGINS`
    pointing at the real web origin.
 4. **A restore is tested, not assumed** — a backup is restored into a scratch
-   project and the smoke tests run against it. "Backups are enabled" is not the
+   project with `scripts/db/restore-drill.sh` (docs/17), and the smoke tests run
+   against it. "Backups are enabled" is not the
    same claim as "we can get the data back", and the difference only ever shows
    up on the worst day. ADM-09 is not done until this has been done once.
 5. The Playwright core-flow suite runs against the deployed URL

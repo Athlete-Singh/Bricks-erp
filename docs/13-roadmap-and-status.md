@@ -11,7 +11,7 @@
 
 |                   | Total | ✅  | 🟨  | ⚠️  | ⬜  | ⏭️  |
 | ----------------- | ----- | --- | --- | --- | --- | --- |
-| CP1 MVP           | 101   | 98  | 0   | 2   | 1   | 0   |
+| CP1 MVP           | 101   | 98  | 0   | 3   | 0   | 0   |
 | CP2 Advanced      | 10    | 0   | 0   | 0   | 0   | 10  |
 | S — SaaS platform | 11    | 10  | 1   | 0   | 0   | 0   |
 
@@ -19,10 +19,10 @@
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 | ----------------------------------- | ---------- | ------- | ---------------- | -------------- | ---------- | -------------- |
-| Backend                             | 97         | 94      | 0                | 0              | 0          | 3              |
+| Backend                             | 97         | 95      | 0                | 0              | 0          | 2              |
 | Web                                 | 91         | 89      | 0                | 0              | 0          | 2              |
 | Mobile                              | 11         | 10      | 0                | 0              | 1          | 0              |
-| Tests                               | 101        | 99      | 0                | 0              | 0          | 2              |
+| Tests                               | 101        | 100     | 0                | 0              | 0          | 1              |
 
 ## Client phases
 
@@ -354,12 +354,13 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 
 ## In progress / partial (CP1)
 
+- ⚠️ **ADM-09** Backups via managed DB (Supabase daily backups) + documented restore procedure _(P13)_
 - ⚠️ **MOB-06** iOS build + TestFlight/App Store release _(M6)_
 - ⚠️ **NTF-01** SMS/WhatsApp alerts (dispatch sent, payment received, advance limit crossed) via MSG91/Twilio _(P13)_
 
 ## Remaining for CP1
 
-- ⬜ **ADM-09** Backups via managed DB (Supabase daily backups) + documented restore procedure _(P13)_
+- _none yet_
 
 ## Feature status by module
 
@@ -375,7 +376,7 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 | ADM-06 | 9 seeded roles with default permission sets; Owner assigns role + kiln access per user          | CP1 | P1    | ✅      | ✅  | —      | ✅    | ✅     |
 | ADM-07 | Audit log (who / what / when / before-after) on financial + stock data; simple viewer for Owner | CP1 | P1    | ✅      | ✅  | —      | ✅    | ✅     |
 | ADM-08 | Company bank accounts (as Bank ledgers)                                                         | CP1 | P2    | ✅      | ✅  | —      | ✅    | ✅     |
-| ADM-09 | Backups via managed DB (Supabase daily backups) + documented restore procedure                  | CP1 | P13   | ⬜      | —   | —      | ⬜    | ⬜     |
+| ADM-09 | Backups via managed DB (Supabase daily backups) + documented restore procedure                  | CP1 | P13   | ✅      | —   | —      | ✅    | ⚠️     |
 
 ### M02 Party Masters (SOW #2)
 

@@ -11,7 +11,7 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 101 | 98 | 0 | 2 | 1 | 0 |
+| CP1 MVP | 101 | 98 | 0 | 3 | 0 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 | S — SaaS platform | 11 | 10 | 1 | 0 | 0 | 0 |
 
@@ -21,10 +21,10 @@
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
-| Backend | 97 | 94 | 0 | 0 | 0 | 3 |
+| Backend | 97 | 95 | 0 | 0 | 0 | 2 |
 | Web | 91 | 89 | 0 | 0 | 0 | 2 |
 | Mobile | 11 | 10 | 0 | 0 | 1 | 0 |
-| Tests | 101 | 99 | 0 | 0 | 0 | 2 |
+| Tests | 101 | 100 | 0 | 0 | 0 | 1 |
 
 ## Client Phase 1 — MVP
 
@@ -42,7 +42,7 @@
 
 
 | ADM-08 | Company bank accounts (as Bank ledgers) | CP1 | P2 | ✅ | ✅ | — | ✅ | ✅ | Accounts → Ledgers: **Add bank account** (group fixed to Bank Accounts, one step) and **New ledger** (any group), plus edit — rename any ledger, move or retire only the owner's own (built-in ledgers stay put, as the server enforces). Opening balance via Settings → Go-live import |
-| ADM-09 | Backups via managed DB (Supabase daily backups) + documented restore procedure | CP1 | P13 | ⬜ | — | — | ⬜ | ⬜ |  |
+| ADM-09 | Backups via managed DB (Supabase daily backups) + documented restore procedure | CP1 | P13 | ✅ | — | — | ✅ | ⚠️ | Tooling done 2026-10-22: `scripts/db/backup.sh`, `restore-drill.sh`, `verify-restore.sql`, runbook docs/17 — verified on a local Postgres (drill passed; damaged dump, live/non-empty target and an unbalanced voucher all refused). **Waits on the owner:** turn on provider backups (Supabase Pro or Neon history) and log one drill from a production backup |
 
 ### M02 Party Masters (SOW #2)
 

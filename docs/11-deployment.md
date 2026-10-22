@@ -13,6 +13,6 @@
 
 ## Backup & restore (ADM-09, P13)
 
-Supabase scheduled backups + a documented restore drill (restore into staging, run smoke tests). Written in P13.
+Provider backups + an off-site dump + a monthly restore drill — the runbook, scripts and drill log are in [17-backup-and-restore.md](17-backup-and-restore.md) (`scripts/db/backup.sh`, `scripts/db/restore-drill.sh`).
 
 **What P13.2 needs from the account owner — accounts, plans and every variable — is in [15-go-live-checklist.md](15-go-live-checklist.md).** Nothing in CP1 uploads files, so no object storage is needed; PDFs are generated per request and never stored.
