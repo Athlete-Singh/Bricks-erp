@@ -154,5 +154,141 @@
   "entityGoodsReceipt": "Goods receipt",
   "entityDispatch": "Challan",
   "entityDispatchConfirm": "Gate out",
-  "entityDispatchAcknowledge": "Delivery"
+  "entityDispatchAcknowledge": "Delivery",
+  "savedOffline": "Saved on this phone. It goes to the server by itself.",
+  "savedCorrected": "Corrected. It will be sent again.",
+  "formFixErrors": "Check the fields marked in red.",
+  "productionTitle": "Production",
+  "productionTabBatches": "Open batches",
+  "productionTabEntries": "My entries",
+  "productionNewBatch": "New batch",
+  "productionNoBatches": "No open batches at this kiln. Start one with New batch.",
+  "productionNoEntries": "No production entries from this phone yet.",
+  "productionChamber": "Chamber",
+  "productionChamberHint": "e.g. Chamber 3",
+  "productionBatchDate": "Batch date",
+  "productionStatusOpen": "Open",
+  "productionStatusFiring": "Firing",
+  "productionStatusSorted": "Sorted",
+  "productionStatusClosed": "Closed",
+  "productionStages": "Stages",
+  "productionStageRecorded": "Recorded",
+  "productionStageNotYet": "Not yet",
+  "productionDryingOptional": "Optional",
+  "productionRecord": "Record",
+  "productionEntryDate": "Date",
+  "productionGreenBricks": "Green bricks",
+  "productionFiredBricks": "Fired bricks",
+  "productionSardar": "Sardar's gang",
+  "productionNoSardar": "Not named",
+  "productionConsumption": "Material used",
+  "productionConsumptionMaking": "Soil or other raw material taken from stock.",
+  "productionConsumptionFiring": "Coal or other fuel taken from stock.",
+  "productionAddMaterial": "Add material",
+  "productionItem": "Material",
+  "productionFromStore": "From store",
+  "productionQuantity": "Quantity",
+  "productionQuantityUnit": "Quantity ({unit})",
+  "@productionQuantityUnit": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "productionSortingWarehouse": "Good bricks go to",
+  "productionGrades": "Good bricks by grade",
+  "productionBroken": "Broken",
+  "productionRejects": "Rejects",
+  "productionAtLeastOneGrade": "Enter good bricks for at least one grade.",
+  "productionNoGrades": "No brick grades on this phone yet. Sync where there is signal, or ask the owner to add them.",
+  "productionNoStores": "No stores for this kiln on this phone yet. Sync where there is signal.",
+  "productionBatchEntryTitle": "{chamber} · batch of {date}",
+  "@productionBatchEntryTitle": {
+    "placeholders": {
+      "chamber": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "productionMakingTitle": "{chamber} · {bricks} green",
+  "@productionMakingTitle": {
+    "placeholders": {
+      "chamber": {
+        "type": "String"
+      },
+      "bricks": {
+        "type": "String"
+      }
+    }
+  },
+  "productionDryingTitle": "{chamber} · drying done",
+  "@productionDryingTitle": {
+    "placeholders": {
+      "chamber": {
+        "type": "String"
+      }
+    }
+  },
+  "productionFiringTitle": "{chamber} · {bricks} fired",
+  "@productionFiringTitle": {
+    "placeholders": {
+      "chamber": {
+        "type": "String"
+      },
+      "bricks": {
+        "type": "String"
+      }
+    }
+  },
+  "productionSortingTitle": "{chamber} · {bricks} good",
+  "@productionSortingTitle": {
+    "placeholders": {
+      "chamber": {
+        "type": "String"
+      },
+      "bricks": {
+        "type": "String"
+      }
+    }
+  },
+  "productionGoodTotal": "Good: {bricks}",
+  "@productionGoodTotal": {
+    "placeholders": {
+      "bricks": {
+        "type": "String"
+      }
+    }
+  },
+  "attendanceTitle": "Attendance",
+  "attendanceTake": "Take attendance",
+  "attendanceNoEntries": "No attendance taken on this phone yet.",
+  "attendanceGang": "Gang",
+  "attendanceNoGangs": "No gangs for this kiln on this phone yet. Sync where there is signal, or ask the owner to set them up.",
+  "attendanceAllPresent": "Mark all present",
+  "attendancePresent": "Present",
+  "attendanceHalfDay": "Half day",
+  "attendanceAbsent": "Absent",
+  "attendanceOvertime": "Overtime hours",
+  "attendanceOvertimeInvalid": "Up to 2 digits, like 2 or 1.5",
+  "attendanceWholeGang": "This gang has no workers listed. Mark the gang as a whole.",
+  "attendanceAlreadyTaken": "Attendance for this gang on this date is already on this phone. Save another?",
+  "attendanceSaveAnyway": "Save anyway",
+  "attendanceEntryTitle": "{gang} · {present} present of {total}",
+  "@attendanceEntryTitle": {
+    "placeholders": {
+      "gang": {
+        "type": "String"
+      },
+      "present": {
+        "type": "String"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  }
 }

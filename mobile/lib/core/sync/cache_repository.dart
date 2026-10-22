@@ -76,6 +76,11 @@ class CacheRepository {
     return row == null ? null : _decode(row);
   }
 
+  Stream<Map<String, dynamic>?> watchOne(String kind, String id) {
+    final q = _db.select(_db.cachedRecords)..where((t) => t.kind.equals(kind) & t.id.equals(id));
+    return q.watchSingleOrNull().map((row) => row == null ? null : _decode(row));
+  }
+
   Future<List<Map<String, dynamic>>> all(String kind, {String? siteId}) async {
     return (await _query(kind, siteId).get()).map(_decode).toList();
   }

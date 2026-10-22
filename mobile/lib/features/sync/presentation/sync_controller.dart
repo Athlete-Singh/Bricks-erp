@@ -7,6 +7,7 @@ import 'package:brics_mobile/core/sync/queue_repository.dart';
 import 'package:brics_mobile/core/sync/sync_service.dart';
 import 'package:brics_mobile/core/sync/sync_summary.dart';
 import 'package:brics_mobile/features/auth/presentation/session_controller.dart';
+import 'package:brics_mobile/features/production/presentation/production_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final queueRepositoryProvider = Provider<QueueRepository>(
@@ -26,12 +27,21 @@ final masterSyncServiceProvider = Provider<MasterSyncService>(
   ),
 );
 
+/// Who new entries belong to: the signed-in person, at their company.
+final queueOwnerProvider = Provider<QueueOwner?>((ref) {
+  final session = ref.watch(currentSessionProvider)?.session;
+  if (session == null) return null;
+  return QueueOwner(userId: session.user.id, companyId: session.company.id);
+});
+
 final connectivityWatcherProvider = Provider<ConnectivityWatcher>(
   (ref) => PlatformConnectivityWatcher(),
 );
 
 /// Every server list the phone keeps. Features append their own lists here.
-final pullSpecsProvider = Provider<List<PullSpec>>((ref) => masterPullSpecs);
+final pullSpecsProvider = Provider<List<PullSpec>>(
+  (ref) => [...masterPullSpecs, ...productionPullSpecs],
+);
 
 /// How often to look for due retries while the app is open.
 const syncTick = Duration(seconds: 30);
@@ -61,7 +71,8 @@ class SyncController extends Notifier<SyncSummary> {
     final watcher = ref.watch(connectivityWatcherProvider);
     final network = watcher.watch().listen((online) {
       state = state.copyWith(online: online);
-      if (online) unawaited(syncNow());
+      // Signal is back: whatever was backing off goes now, not when its timer says.
+      if (online) unawaited(syncNow(expedite: true));
     });
     final timer = Timer.periodic(syncTick, (_) => unawaited(_pushIfDue()));
     ref.onDispose(() {

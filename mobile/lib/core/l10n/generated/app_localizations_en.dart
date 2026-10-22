@@ -316,4 +316,210 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get entityDispatchAcknowledge => 'Delivery';
+
+  @override
+  String get savedOffline => 'Saved on this phone. It goes to the server by itself.';
+
+  @override
+  String get savedCorrected => 'Corrected. It will be sent again.';
+
+  @override
+  String get formFixErrors => 'Check the fields marked in red.';
+
+  @override
+  String get productionTitle => 'Production';
+
+  @override
+  String get productionTabBatches => 'Open batches';
+
+  @override
+  String get productionTabEntries => 'My entries';
+
+  @override
+  String get productionNewBatch => 'New batch';
+
+  @override
+  String get productionNoBatches => 'No open batches at this kiln. Start one with New batch.';
+
+  @override
+  String get productionNoEntries => 'No production entries from this phone yet.';
+
+  @override
+  String get productionChamber => 'Chamber';
+
+  @override
+  String get productionChamberHint => 'e.g. Chamber 3';
+
+  @override
+  String get productionBatchDate => 'Batch date';
+
+  @override
+  String get productionStatusOpen => 'Open';
+
+  @override
+  String get productionStatusFiring => 'Firing';
+
+  @override
+  String get productionStatusSorted => 'Sorted';
+
+  @override
+  String get productionStatusClosed => 'Closed';
+
+  @override
+  String get productionStages => 'Stages';
+
+  @override
+  String get productionStageRecorded => 'Recorded';
+
+  @override
+  String get productionStageNotYet => 'Not yet';
+
+  @override
+  String get productionDryingOptional => 'Optional';
+
+  @override
+  String get productionRecord => 'Record';
+
+  @override
+  String get productionEntryDate => 'Date';
+
+  @override
+  String get productionGreenBricks => 'Green bricks';
+
+  @override
+  String get productionFiredBricks => 'Fired bricks';
+
+  @override
+  String get productionSardar => 'Sardar\'s gang';
+
+  @override
+  String get productionNoSardar => 'Not named';
+
+  @override
+  String get productionConsumption => 'Material used';
+
+  @override
+  String get productionConsumptionMaking => 'Soil or other raw material taken from stock.';
+
+  @override
+  String get productionConsumptionFiring => 'Coal or other fuel taken from stock.';
+
+  @override
+  String get productionAddMaterial => 'Add material';
+
+  @override
+  String get productionItem => 'Material';
+
+  @override
+  String get productionFromStore => 'From store';
+
+  @override
+  String get productionQuantity => 'Quantity';
+
+  @override
+  String productionQuantityUnit(String unit) {
+    return 'Quantity ($unit)';
+  }
+
+  @override
+  String get productionSortingWarehouse => 'Good bricks go to';
+
+  @override
+  String get productionGrades => 'Good bricks by grade';
+
+  @override
+  String get productionBroken => 'Broken';
+
+  @override
+  String get productionRejects => 'Rejects';
+
+  @override
+  String get productionAtLeastOneGrade => 'Enter good bricks for at least one grade.';
+
+  @override
+  String get productionNoGrades =>
+      'No brick grades on this phone yet. Sync where there is signal, or ask the owner to add them.';
+
+  @override
+  String get productionNoStores =>
+      'No stores for this kiln on this phone yet. Sync where there is signal.';
+
+  @override
+  String productionBatchEntryTitle(String chamber, String date) {
+    return '$chamber · batch of $date';
+  }
+
+  @override
+  String productionMakingTitle(String chamber, String bricks) {
+    return '$chamber · $bricks green';
+  }
+
+  @override
+  String productionDryingTitle(String chamber) {
+    return '$chamber · drying done';
+  }
+
+  @override
+  String productionFiringTitle(String chamber, String bricks) {
+    return '$chamber · $bricks fired';
+  }
+
+  @override
+  String productionSortingTitle(String chamber, String bricks) {
+    return '$chamber · $bricks good';
+  }
+
+  @override
+  String productionGoodTotal(String bricks) {
+    return 'Good: $bricks';
+  }
+
+  @override
+  String get attendanceTitle => 'Attendance';
+
+  @override
+  String get attendanceTake => 'Take attendance';
+
+  @override
+  String get attendanceNoEntries => 'No attendance taken on this phone yet.';
+
+  @override
+  String get attendanceGang => 'Gang';
+
+  @override
+  String get attendanceNoGangs =>
+      'No gangs for this kiln on this phone yet. Sync where there is signal, or ask the owner to set them up.';
+
+  @override
+  String get attendanceAllPresent => 'Mark all present';
+
+  @override
+  String get attendancePresent => 'Present';
+
+  @override
+  String get attendanceHalfDay => 'Half day';
+
+  @override
+  String get attendanceAbsent => 'Absent';
+
+  @override
+  String get attendanceOvertime => 'Overtime hours';
+
+  @override
+  String get attendanceOvertimeInvalid => 'Up to 2 digits, like 2 or 1.5';
+
+  @override
+  String get attendanceWholeGang => 'This gang has no workers listed. Mark the gang as a whole.';
+
+  @override
+  String get attendanceAlreadyTaken =>
+      'Attendance for this gang on this date is already on this phone. Save another?';
+
+  @override
+  String get attendanceSaveAnyway => 'Save anyway';
+
+  @override
+  String attendanceEntryTitle(String gang, String present, int total) {
+    return '$gang · $present present of $total';
+  }
 }

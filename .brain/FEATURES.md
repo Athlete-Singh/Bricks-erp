@@ -11,20 +11,20 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 101 | 87 | 6 | 1 | 7 | 0 |
+| CP1 MVP | 101 | 89 | 6 | 1 | 5 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 | S — SaaS platform | 11 | 10 | 1 | 0 | 0 | 0 |
 
-**CP1 done: 86 %** (87 of 101 features ✅)
+**CP1 done: 88 %** (89 of 101 features ✅)
 
 ### Per app
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
-| Backend | 97 | 92 | 0 | 0 | 0 | 5 |
-| Web | 93 | 88 | 0 | 0 | 0 | 5 |
-| Mobile | 11 | 2 | 0 | 0 | 0 | 9 |
-| Tests | 101 | 93 | 0 | 0 | 0 | 8 |
+| Backend | 97 | 93 | 0 | 0 | 0 | 4 |
+| Web | 92 | 88 | 0 | 0 | 0 | 4 |
+| Mobile | 11 | 4 | 0 | 1 | 0 | 6 |
+| Tests | 101 | 94 | 0 | 1 | 0 | 6 |
 
 ## Client Phase 1 — MVP
 
@@ -62,7 +62,7 @@
 | PRD-03 | Stage entries: brick making (green bricks, labour group) → drying → firing (chamber, fuel) → sorting (fired, broken/rejected, good by grade) | CP1 | P5 | ✅ | ✅ | — | ✅ | ✅ | |
 | PRD-04 | Fuel/raw material consumption (coal, soil) reduces raw stock | CP1 | P5 | ✅ | ✅ | — | ✅ | ✅ | |
 | PRD-05 | Sorted good bricks enter finished stock by grade; wastage recorded | CP1 | P5 | ✅ | ✅ | — | ✅ | ✅ | |
-| PRD-06 | Production entry on mobile (offline) | CP1 | P5 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |  |
+| PRD-06 | Production entry on mobile (offline) | CP1 | P5 | ✅ | — | ✅ | ✅ | ✅ | M2 — open a batch, record making / drying / firing / sorting (with coal & soil consumption, grades into a yard) with no signal. A stage on a batch still on the phone waits for it and goes to its new server id (`{parent}`); the server's open/firing batches are pulled per kiln. A refused stage opens its own form to be corrected |
 | PRD-07 | Production report: day / month / year by kiln and grade | CP1 | P5 | ✅ | ✅ | — | ✅ | ✅ | |
 
 ### M04 Labour & Sardar Engine (SOW #4)
@@ -70,7 +70,7 @@
 | ID | Feature (build to this depth) | CP | Phase | BE | Web | Mob | Tests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
 | LAB-01 | Labour groups under a Sardar; worker master | CP1 | P6 | ✅ | ✅ | — | ✅ | ✅ | Labour groups & worker roster with group/activity/site assignment |
-| LAB-02 | Daily attendance by group/worker (web + mobile offline) | CP1 | P6 | ✅ | ✅ | ⬜ | ✅ | 🟨 | Web muster roll register + mobile pending M3 |
+| LAB-02 | Daily attendance by group/worker (web + mobile offline) | CP1 | P6 | ✅ | ✅ | ✅ | ✅ | ✅ | Web muster roll register (P6.2) + mobile M3: one gang, one day, Present / Half day / Absent per worker with optional overtime, offline; a second roll for the same gang and day is warned on the phone and refused by the server (`uq_labour_attendance_*`) |
 | LAB-03 | Wage-rate config: piece rate per 1,000 bricks by activity (making, loading, unloading) and daily wage | CP1 | P6 | ✅ | ✅ | — | ✅ | ✅ |  |
 | LAB-04 | Auto wage entries from production and loading counts | CP1 | P6 | ✅ | ✅ | — | ✅ | ✅ | Accrue wages modal + auto wage entry from production |
 | LAB-05 | Cash advances and loans to Sardar/workers (cash/bank/UPI) | CP1 | P6 | ✅ | ✅ | — | ✅ | ✅ | Advances register with live LEK-03 exposure check & payment voucher posting |
@@ -191,7 +191,7 @@
 |---|---|---|---|---|---|---|---|---|---|
 | MOB-01 | Login, kiln selection, role-based home | CP1 | M1 | ✅ | — | ✅ | ✅ | ✅ | M1 — sign-in (offline reopen from the stored session), kiln picker (auto when one), home tiles by permission (ADR-053). A **suspended tenant** (PLT-06) sees "Company access is on hold" with the server's contact line, not "login failed" |
 | MOB-02 | Offline storage + sync queue + sync status badge (skeleton) | CP1 | M1 | — | — | ✅ | ✅ | ✅ | M1 — Drift `sync_queue` (the row is the record, ADR-053) + `cached_records` + `app_state`; SyncService (Idempotency-Key = row UUID, `{parent}` dependencies, 5 s→30 s→2 min→10 min backoff, refusals kept with the reason); master pull by `?since=`; SyncStatusBadge on every screen; Sync screen with send again / discard |
-| MOB-03 | Feature screens: production, attendance, GRN, dispatch/delivery | CP1 | M2–M5 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |  |
+| MOB-03 | Feature screens: production, attendance, GRN, dispatch/delivery | CP1 | M2–M5 | ⬜ | ⬜ | 🟨 | 🟨 | 🟨 | Production (M2) and attendance (M3) done; GRN (M4) and dispatch/delivery (M5) to come |
 | MOB-04 | A full working day offline; syncs with no duplicates; conflict handling | CP1 | M6 | — | — | ⬜ | ⬜ | ⬜ |  |
 | MOB-05 | Android release APK | CP1 | M6 | — | — | ⬜ | ⬜ | ⬜ |  |
 | MOB-06 | iOS build + TestFlight/App Store release | CP1 | M6 | — | — | ⬜ | ⬜ | ⬜ | **Contracted:** SOW §1 says "Cross-platform iOS & Android"; §3 excludes only the Apple $99/yr fee. Was wrongly filed under "CP2 candidates" |

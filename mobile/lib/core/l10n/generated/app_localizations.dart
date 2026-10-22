@@ -643,6 +643,378 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delivery'**
   String get entityDispatchAcknowledge;
+
+  /// No description provided for @savedOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on this phone. It goes to the server by itself.'**
+  String get savedOffline;
+
+  /// No description provided for @savedCorrected.
+  ///
+  /// In en, this message translates to:
+  /// **'Corrected. It will be sent again.'**
+  String get savedCorrected;
+
+  /// No description provided for @formFixErrors.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the fields marked in red.'**
+  String get formFixErrors;
+
+  /// No description provided for @productionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Production'**
+  String get productionTitle;
+
+  /// No description provided for @productionTabBatches.
+  ///
+  /// In en, this message translates to:
+  /// **'Open batches'**
+  String get productionTabBatches;
+
+  /// No description provided for @productionTabEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'My entries'**
+  String get productionTabEntries;
+
+  /// No description provided for @productionNewBatch.
+  ///
+  /// In en, this message translates to:
+  /// **'New batch'**
+  String get productionNewBatch;
+
+  /// No description provided for @productionNoBatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No open batches at this kiln. Start one with New batch.'**
+  String get productionNoBatches;
+
+  /// No description provided for @productionNoEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'No production entries from this phone yet.'**
+  String get productionNoEntries;
+
+  /// No description provided for @productionChamber.
+  ///
+  /// In en, this message translates to:
+  /// **'Chamber'**
+  String get productionChamber;
+
+  /// No description provided for @productionChamberHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Chamber 3'**
+  String get productionChamberHint;
+
+  /// No description provided for @productionBatchDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch date'**
+  String get productionBatchDate;
+
+  /// No description provided for @productionStatusOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get productionStatusOpen;
+
+  /// No description provided for @productionStatusFiring.
+  ///
+  /// In en, this message translates to:
+  /// **'Firing'**
+  String get productionStatusFiring;
+
+  /// No description provided for @productionStatusSorted.
+  ///
+  /// In en, this message translates to:
+  /// **'Sorted'**
+  String get productionStatusSorted;
+
+  /// No description provided for @productionStatusClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get productionStatusClosed;
+
+  /// No description provided for @productionStages.
+  ///
+  /// In en, this message translates to:
+  /// **'Stages'**
+  String get productionStages;
+
+  /// No description provided for @productionStageRecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'Recorded'**
+  String get productionStageRecorded;
+
+  /// No description provided for @productionStageNotYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not yet'**
+  String get productionStageNotYet;
+
+  /// No description provided for @productionDryingOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get productionDryingOptional;
+
+  /// No description provided for @productionRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Record'**
+  String get productionRecord;
+
+  /// No description provided for @productionEntryDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get productionEntryDate;
+
+  /// No description provided for @productionGreenBricks.
+  ///
+  /// In en, this message translates to:
+  /// **'Green bricks'**
+  String get productionGreenBricks;
+
+  /// No description provided for @productionFiredBricks.
+  ///
+  /// In en, this message translates to:
+  /// **'Fired bricks'**
+  String get productionFiredBricks;
+
+  /// No description provided for @productionSardar.
+  ///
+  /// In en, this message translates to:
+  /// **'Sardar\'s gang'**
+  String get productionSardar;
+
+  /// No description provided for @productionNoSardar.
+  ///
+  /// In en, this message translates to:
+  /// **'Not named'**
+  String get productionNoSardar;
+
+  /// No description provided for @productionConsumption.
+  ///
+  /// In en, this message translates to:
+  /// **'Material used'**
+  String get productionConsumption;
+
+  /// No description provided for @productionConsumptionMaking.
+  ///
+  /// In en, this message translates to:
+  /// **'Soil or other raw material taken from stock.'**
+  String get productionConsumptionMaking;
+
+  /// No description provided for @productionConsumptionFiring.
+  ///
+  /// In en, this message translates to:
+  /// **'Coal or other fuel taken from stock.'**
+  String get productionConsumptionFiring;
+
+  /// No description provided for @productionAddMaterial.
+  ///
+  /// In en, this message translates to:
+  /// **'Add material'**
+  String get productionAddMaterial;
+
+  /// No description provided for @productionItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Material'**
+  String get productionItem;
+
+  /// No description provided for @productionFromStore.
+  ///
+  /// In en, this message translates to:
+  /// **'From store'**
+  String get productionFromStore;
+
+  /// No description provided for @productionQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity'**
+  String get productionQuantity;
+
+  /// No description provided for @productionQuantityUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity ({unit})'**
+  String productionQuantityUnit(String unit);
+
+  /// No description provided for @productionSortingWarehouse.
+  ///
+  /// In en, this message translates to:
+  /// **'Good bricks go to'**
+  String get productionSortingWarehouse;
+
+  /// No description provided for @productionGrades.
+  ///
+  /// In en, this message translates to:
+  /// **'Good bricks by grade'**
+  String get productionGrades;
+
+  /// No description provided for @productionBroken.
+  ///
+  /// In en, this message translates to:
+  /// **'Broken'**
+  String get productionBroken;
+
+  /// No description provided for @productionRejects.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejects'**
+  String get productionRejects;
+
+  /// No description provided for @productionAtLeastOneGrade.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter good bricks for at least one grade.'**
+  String get productionAtLeastOneGrade;
+
+  /// No description provided for @productionNoGrades.
+  ///
+  /// In en, this message translates to:
+  /// **'No brick grades on this phone yet. Sync where there is signal, or ask the owner to add them.'**
+  String get productionNoGrades;
+
+  /// No description provided for @productionNoStores.
+  ///
+  /// In en, this message translates to:
+  /// **'No stores for this kiln on this phone yet. Sync where there is signal.'**
+  String get productionNoStores;
+
+  /// No description provided for @productionBatchEntryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{chamber} · batch of {date}'**
+  String productionBatchEntryTitle(String chamber, String date);
+
+  /// No description provided for @productionMakingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{chamber} · {bricks} green'**
+  String productionMakingTitle(String chamber, String bricks);
+
+  /// No description provided for @productionDryingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{chamber} · drying done'**
+  String productionDryingTitle(String chamber);
+
+  /// No description provided for @productionFiringTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{chamber} · {bricks} fired'**
+  String productionFiringTitle(String chamber, String bricks);
+
+  /// No description provided for @productionSortingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{chamber} · {bricks} good'**
+  String productionSortingTitle(String chamber, String bricks);
+
+  /// No description provided for @productionGoodTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Good: {bricks}'**
+  String productionGoodTotal(String bricks);
+
+  /// No description provided for @attendanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Attendance'**
+  String get attendanceTitle;
+
+  /// No description provided for @attendanceTake.
+  ///
+  /// In en, this message translates to:
+  /// **'Take attendance'**
+  String get attendanceTake;
+
+  /// No description provided for @attendanceNoEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'No attendance taken on this phone yet.'**
+  String get attendanceNoEntries;
+
+  /// No description provided for @attendanceGang.
+  ///
+  /// In en, this message translates to:
+  /// **'Gang'**
+  String get attendanceGang;
+
+  /// No description provided for @attendanceNoGangs.
+  ///
+  /// In en, this message translates to:
+  /// **'No gangs for this kiln on this phone yet. Sync where there is signal, or ask the owner to set them up.'**
+  String get attendanceNoGangs;
+
+  /// No description provided for @attendanceAllPresent.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all present'**
+  String get attendanceAllPresent;
+
+  /// No description provided for @attendancePresent.
+  ///
+  /// In en, this message translates to:
+  /// **'Present'**
+  String get attendancePresent;
+
+  /// No description provided for @attendanceHalfDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Half day'**
+  String get attendanceHalfDay;
+
+  /// No description provided for @attendanceAbsent.
+  ///
+  /// In en, this message translates to:
+  /// **'Absent'**
+  String get attendanceAbsent;
+
+  /// No description provided for @attendanceOvertime.
+  ///
+  /// In en, this message translates to:
+  /// **'Overtime hours'**
+  String get attendanceOvertime;
+
+  /// No description provided for @attendanceOvertimeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to 2 digits, like 2 or 1.5'**
+  String get attendanceOvertimeInvalid;
+
+  /// No description provided for @attendanceWholeGang.
+  ///
+  /// In en, this message translates to:
+  /// **'This gang has no workers listed. Mark the gang as a whole.'**
+  String get attendanceWholeGang;
+
+  /// No description provided for @attendanceAlreadyTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'Attendance for this gang on this date is already on this phone. Save another?'**
+  String get attendanceAlreadyTaken;
+
+  /// No description provided for @attendanceSaveAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Save anyway'**
+  String get attendanceSaveAnyway;
+
+  /// No description provided for @attendanceEntryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{gang} · {present} present of {total}'**
+  String attendanceEntryTitle(String gang, String present, int total);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

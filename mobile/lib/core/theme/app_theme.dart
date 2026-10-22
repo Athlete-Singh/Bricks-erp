@@ -65,14 +65,14 @@ abstract final class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          minimumSize: const Size.fromHeight(AppSpacing.touchTarget),
+          minimumSize: const Size(AppSpacing.touchTarget, AppSpacing.touchTarget),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.card)),
           textStyle: text.labelLarge,
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          minimumSize: const Size.fromHeight(AppSpacing.touchTarget),
+          minimumSize: const Size(AppSpacing.touchTarget, AppSpacing.touchTarget),
           foregroundColor: c.primary,
           side: BorderSide(color: c.primary),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.card)),

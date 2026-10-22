@@ -344,8 +344,8 @@ backend and web first. Whoever builds this track edits only the **Mob** columns 
 |---|---|---|---|
 | M0 | `flutter create`, packages, theme tokens, core widgets, go_router, dio client, Drift stub, l10n, analyze + test green — **this is the unfinished half of the old P0.4** | — | ✅ |
 | M1 | Login, kiln selection, role-based home, offline storage + sync queue skeleton (MOB-01/02) | P1.1b ✅ | ✅ |
-| M2 | Production entry offline (PRD-06) | P5.1 **incl. SYN-01** | ⬜ |
-| M3 | Attendance offline (LAB-02) | P6.1 | ⬜ |
+| M2 | Production entry offline (PRD-06) | P5.1 **incl. SYN-01** | ✅ |
+| M3 | Attendance offline (LAB-02) | P6.1 | ✅ |
 | M4 | GRN offline (PUR-02) | P7.1 | ⬜ |
 | M5 | Dispatch + delivery acknowledgement (DSP-04) | P9.1 | ⬜ |
 | M6 | Offline hardening (MOB-04), Android APK (MOB-05), **iOS build (MOB-06)** | all of the above | ⬜ |
