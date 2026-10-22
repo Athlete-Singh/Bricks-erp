@@ -1,6 +1,7 @@
 import 'package:brics_mobile/core/database/app_database.dart';
 import 'package:brics_mobile/core/router/app_router.dart';
 import 'package:brics_mobile/core/sync/queue_repository.dart';
+import 'package:brics_mobile/features/dispatch/presentation/challan_action_screen.dart';
 import 'package:brics_mobile/features/production/data/production_repository.dart';
 import 'package:brics_mobile/features/production/domain/production.dart';
 import 'package:flutter/widgets.dart';
@@ -16,6 +17,19 @@ VoidCallback? editorFor(BuildContext context, QueueRow row) {
 
 String? editRoute(QueueRow row) {
   final edit = '?edit=${row.id}';
+  if (row.entity == QueueEntity.dispatch) return '${AppRoutes.dispatchNew}$edit';
+  final action = switch (row.entity) {
+    QueueEntity.dispatchConfirm => ChallanAction.gateOut,
+    QueueEntity.dispatchAcknowledge => ChallanAction.deliver,
+    _ => null,
+  };
+  if (action != null) {
+    final serverId = RegExp('/dispatches/([^/{}]+)/').firstMatch(row.path)?.group(1);
+    final challan = row.dependsOn != null
+        ? RecordRef(localId: row.dependsOn)
+        : RecordRef(serverId: serverId);
+    return '${AppRoutes.dispatchAction(challan.encode(), action.slug)}$edit';
+  }
   if (row.entity == QueueEntity.goodsReceipt) return '${AppRoutes.grnNew}$edit';
   if (row.entity == QueueEntity.attendance) return '${AppRoutes.attendanceNew}$edit';
   if (row.entity == QueueEntity.productionBatch) return '${AppRoutes.productionNewBatch}$edit';

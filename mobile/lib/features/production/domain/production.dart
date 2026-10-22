@@ -1,5 +1,7 @@
 import 'package:brics_mobile/core/database/app_database.dart';
-import 'package:flutter/foundation.dart';
+import 'package:brics_mobile/core/sync/record_ref.dart';
+
+export 'package:brics_mobile/core/sync/record_ref.dart' show RecordRef;
 
 /// The four stages a batch moves through (PRD-03). Drying is optional.
 enum ProductionStage {
@@ -12,31 +14,8 @@ enum ProductionStage {
       ProductionStage.values.where((s) => s.name == value).firstOrNull;
 }
 
-/// A batch the supervisor can act on: one the server already has, one saved
-/// on this phone and not yet sent, or one that is both (sent, not re-pulled).
-@immutable
-class BatchRef {
-  const BatchRef({this.serverId, this.localId})
-    : assert(serverId != null || localId != null, 'A batch needs an id');
-
-  /// `s-<id>` or `l-<id>` — a route parameter.
-  factory BatchRef.decode(String value) {
-    final id = value.substring(2);
-    return value.startsWith('s-') ? BatchRef(serverId: id) : BatchRef(localId: id);
-  }
-
-  final String? serverId;
-  final String? localId;
-
-  String encode() => serverId != null ? 's-$serverId' : 'l-$localId';
-
-  @override
-  bool operator ==(Object other) =>
-      other is BatchRef && other.serverId == serverId && other.localId == localId;
-
-  @override
-  int get hashCode => Object.hash(serverId, localId);
-}
+/// A production batch, on the server or still on the phone.
+typedef BatchRef = RecordRef;
 
 class BatchView {
   const BatchView({

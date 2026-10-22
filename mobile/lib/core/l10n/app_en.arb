@@ -112,7 +112,6 @@
       }
     }
   },
-  "comingSoon": "This screen arrives in the next update.",
   "syncTitle": "Sync",
   "syncNow": "Sync now",
   "syncLastSynced": "Last synced {time}",
@@ -312,6 +311,78 @@
       },
       "lines": {
         "type": "int"
+      }
+    }
+  },
+  "dispatchTitle": "Dispatch",
+  "dispatchTabChallans": "Open challans",
+  "dispatchTabEntries": "My entries",
+  "dispatchNew": "New challan",
+  "dispatchNoChallans": "No open challans at this kiln.",
+  "dispatchNoEntries": "No dispatch entries from this phone yet.",
+  "dispatchCustomer": "Customer",
+  "dispatchNoCustomers": "No customers on this phone yet. Sync where there is signal.",
+  "dispatchDate": "Dispatch date",
+  "dispatchVehicle": "Vehicle",
+  "dispatchNoVehicle": "Not named",
+  "dispatchDriver": "Driver",
+  "dispatchNoDriver": "Not named",
+  "dispatchDeliveryLocation": "Deliver to",
+  "dispatchLines": "Bricks loaded",
+  "dispatchLinesHint": "Each grade from the yard it leaves.",
+  "dispatchAddLine": "Add grade",
+  "dispatchFromYard": "From yard",
+  "dispatchAtLeastOneLine": "Add at least one line.",
+  "dispatchDuplicateLine": "That item already appears from the same yard — merge the lines.",
+  "dispatchStatusDraft": "Raised",
+  "dispatchStatusConfirmed": "Left the gate",
+  "dispatchStatusDelivered": "Delivered",
+  "dispatchStatusCancelled": "Cancelled",
+  "dispatchChallanUnsent": "Challan not sent yet",
+  "dispatchGateOut": "Gate out",
+  "dispatchGateOutHint": "The truck is leaving the yard. Stock comes off when the server records this.",
+  "dispatchGateOutOn": "Left on",
+  "dispatchDeliver": "Record delivery",
+  "dispatchReceivedBy": "Received by",
+  "dispatchDeliveredOn": "Delivered on",
+  "dispatchRemarks": "Remarks",
+  "dispatchLinesLoaded": "Loaded",
+  "dispatchCustomerUnknown": "Customer",
+  "dispatchEntryTitle": "{customer} · {quantity}",
+  "@dispatchEntryTitle": {
+    "placeholders": {
+      "customer": {
+        "type": "String"
+      },
+      "quantity": {
+        "type": "String"
+      }
+    }
+  },
+  "dispatchConfirmTitle": "{challan} · gate out",
+  "@dispatchConfirmTitle": {
+    "placeholders": {
+      "challan": {
+        "type": "String"
+      }
+    }
+  },
+  "dispatchDeliverTitle": "{challan} · received by {person}",
+  "@dispatchDeliverTitle": {
+    "placeholders": {
+      "challan": {
+        "type": "String"
+      },
+      "person": {
+        "type": "String"
+      }
+    }
+  },
+  "dispatchPendingAction": "{action} waiting to be sent",
+  "@dispatchPendingAction": {
+    "placeholders": {
+      "action": {
+        "type": "String"
       }
     }
   }

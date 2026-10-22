@@ -9,6 +9,7 @@ import 'package:brics_mobile/features/auth/presentation/session_controller.dart'
 import 'package:brics_mobile/features/grn/data/grn_repository.dart';
 import 'package:brics_mobile/features/grn/domain/grn.dart';
 import 'package:brics_mobile/features/masters/data/master_providers.dart';
+import 'package:brics_mobile/features/masters/domain/item_lines.dart';
 import 'package:brics_mobile/features/masters/domain/masters.dart';
 import 'package:brics_mobile/features/masters/presentation/item_lines_editor.dart';
 import 'package:brics_mobile/features/sync/presentation/sync_controller.dart';

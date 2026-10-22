@@ -347,7 +347,7 @@ backend and web first. Whoever builds this track edits only the **Mob** columns 
 | M2 | Production entry offline (PRD-06) | P5.1 **incl. SYN-01** | ✅ |
 | M3 | Attendance offline (LAB-02) | P6.1 | ✅ |
 | M4 | GRN offline (PUR-02) | P7.1 | ✅ |
-| M5 | Dispatch + delivery acknowledgement (DSP-04) | P9.1 | ⬜ |
+| M5 | Dispatch + delivery acknowledgement (DSP-04) | P9.1 | ✅ |
 | M6 | Offline hardening (MOB-04), Android APK (MOB-05), **iOS build (MOB-06)** | all of the above | ⬜ |
 
 > **Why M2–M5 must wait for `SYN-01`:** the app queues entries offline and resends them when the network returns. Without

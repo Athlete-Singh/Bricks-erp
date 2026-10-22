@@ -244,9 +244,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get comingSoon => 'This screen arrives in the next update.';
-
-  @override
   String get syncTitle => 'Sync';
 
   @override
@@ -566,5 +563,129 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String grnEntryTitle(String supplier, int lines) {
     return '$supplier · $lines items';
+  }
+
+  @override
+  String get dispatchTitle => 'Dispatch';
+
+  @override
+  String get dispatchTabChallans => 'Open challans';
+
+  @override
+  String get dispatchTabEntries => 'My entries';
+
+  @override
+  String get dispatchNew => 'New challan';
+
+  @override
+  String get dispatchNoChallans => 'No open challans at this kiln.';
+
+  @override
+  String get dispatchNoEntries => 'No dispatch entries from this phone yet.';
+
+  @override
+  String get dispatchCustomer => 'Customer';
+
+  @override
+  String get dispatchNoCustomers => 'No customers on this phone yet. Sync where there is signal.';
+
+  @override
+  String get dispatchDate => 'Dispatch date';
+
+  @override
+  String get dispatchVehicle => 'Vehicle';
+
+  @override
+  String get dispatchNoVehicle => 'Not named';
+
+  @override
+  String get dispatchDriver => 'Driver';
+
+  @override
+  String get dispatchNoDriver => 'Not named';
+
+  @override
+  String get dispatchDeliveryLocation => 'Deliver to';
+
+  @override
+  String get dispatchLines => 'Bricks loaded';
+
+  @override
+  String get dispatchLinesHint => 'Each grade from the yard it leaves.';
+
+  @override
+  String get dispatchAddLine => 'Add grade';
+
+  @override
+  String get dispatchFromYard => 'From yard';
+
+  @override
+  String get dispatchAtLeastOneLine => 'Add at least one line.';
+
+  @override
+  String get dispatchDuplicateLine =>
+      'That item already appears from the same yard — merge the lines.';
+
+  @override
+  String get dispatchStatusDraft => 'Raised';
+
+  @override
+  String get dispatchStatusConfirmed => 'Left the gate';
+
+  @override
+  String get dispatchStatusDelivered => 'Delivered';
+
+  @override
+  String get dispatchStatusCancelled => 'Cancelled';
+
+  @override
+  String get dispatchChallanUnsent => 'Challan not sent yet';
+
+  @override
+  String get dispatchGateOut => 'Gate out';
+
+  @override
+  String get dispatchGateOutHint =>
+      'The truck is leaving the yard. Stock comes off when the server records this.';
+
+  @override
+  String get dispatchGateOutOn => 'Left on';
+
+  @override
+  String get dispatchDeliver => 'Record delivery';
+
+  @override
+  String get dispatchReceivedBy => 'Received by';
+
+  @override
+  String get dispatchDeliveredOn => 'Delivered on';
+
+  @override
+  String get dispatchRemarks => 'Remarks';
+
+  @override
+  String get dispatchLinesLoaded => 'Loaded';
+
+  @override
+  String get dispatchCustomerUnknown => 'Customer';
+
+  @override
+  String dispatchEntryTitle(String customer, String quantity) {
+    return '$customer · $quantity';
+  }
+
+  @override
+  String dispatchConfirmTitle(String challan) {
+    return '$challan · gate out';
+  }
+
+  @override
+  String dispatchDeliverTitle(String challan, String person) {
+    return '$challan · received by $person';
+  }
+
+  @override
+  String dispatchPendingAction(String action) {
+    return '$action waiting to be sent';
   }
 }

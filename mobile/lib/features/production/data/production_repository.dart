@@ -3,7 +3,7 @@ import 'package:brics_mobile/core/network/api_endpoints.dart';
 import 'package:brics_mobile/core/network/api_exception.dart';
 import 'package:brics_mobile/core/sync/cache_repository.dart';
 import 'package:brics_mobile/core/sync/queue_repository.dart';
-import 'package:brics_mobile/core/sync/sync_service.dart';
+import 'package:brics_mobile/core/sync/record_ref.dart';
 import 'package:brics_mobile/features/production/domain/production.dart';
 
 /// PRD-06 — production entries are written to the phone first and sent by the
@@ -44,11 +44,11 @@ class ProductionRepository {
     required Map<String, dynamic> payload,
     required String title,
   }) async {
-    var serverId = batch.serverId;
-    if (serverId == null) {
-      final parent = await queue.byId(batch.localId!);
-      if (parent?.status == QueueStatus.synced) serverId = parent?.serverId;
-    }
+    final target = await actionTarget(
+      queue,
+      batch,
+      (id) => ApiEndpoints.productionStage(id, stage.name),
+    );
     return await queue.enqueue(
       QueueDraft(
         entity: switch (stage) {
@@ -58,11 +58,11 @@ class ProductionRepository {
           ProductionStage.sorting => QueueEntity.productionSorting,
         },
         method: 'POST',
-        path: ApiEndpoints.productionStage(serverId ?? SyncService.parentPlaceholder, stage.name),
+        path: target.path,
         payload: payload,
         title: title,
         siteId: siteId,
-        dependsOn: serverId == null ? batch.localId : null,
+        dependsOn: target.dependsOn,
       ),
       owner,
     );

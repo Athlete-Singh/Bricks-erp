@@ -7,6 +7,7 @@ import 'package:brics_mobile/core/sync/queue_repository.dart';
 import 'package:brics_mobile/core/sync/sync_service.dart';
 import 'package:brics_mobile/core/sync/sync_summary.dart';
 import 'package:brics_mobile/features/auth/presentation/session_controller.dart';
+import 'package:brics_mobile/features/dispatch/presentation/dispatch_providers.dart';
 import 'package:brics_mobile/features/production/presentation/production_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -40,7 +41,7 @@ final connectivityWatcherProvider = Provider<ConnectivityWatcher>(
 
 /// Every server list the phone keeps. Features append their own lists here.
 final pullSpecsProvider = Provider<List<PullSpec>>(
-  (ref) => [...masterPullSpecs, ...productionPullSpecs],
+  (ref) => [...masterPullSpecs, ...productionPullSpecs, ...dispatchPullSpecs],
 );
 
 /// How often to look for due retries while the app is open.

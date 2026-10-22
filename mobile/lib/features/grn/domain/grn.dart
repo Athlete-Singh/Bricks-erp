@@ -17,13 +17,3 @@ abstract final class GrnPayloads {
     'notes': ?notes,
   };
 }
-
-/// The same item into the same store twice on one document is a double count
-/// waiting to happen; the dispatch schema refuses it, and a receipt should too.
-bool hasDuplicateLine(List<Map<String, dynamic>> lines) {
-  final seen = <String>{};
-  for (final l in lines) {
-    if (!seen.add('${l['itemId']}:${l['warehouseId']}')) return true;
-  }
-  return false;
-}

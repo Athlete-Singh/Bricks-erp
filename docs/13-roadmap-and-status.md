@@ -7,11 +7,11 @@
 
 **Client Phase:** CP1 (MVP) · **Current step:** P13.3 — go-live import and user guide ✅ done; UAT remains. P13.1 ✅. P13.2: both apps deployed on Vercel against the development database; **backups (ADM-09) still open** · P11 ✅ done and **audited** — dashboard + CST + three register reports with CSV exports, with the audit's three defects and three gaps fixed → **next: P13** (e2e + security, deploy + backups, onboarding + guide + UAT → CP1 sign-off)
 
-**Client Phase 1 (MVP) progress: 89 %** (90 of 101 features done)
+**Client Phase 1 (MVP) progress: 91 %** (92 of 101 features done)
 
 |                   | Total | ✅  | 🟨  | ⚠️  | ⬜  | ⏭️  |
 | ----------------- | ----- | --- | --- | --- | --- | --- |
-| CP1 MVP           | 101   | 90  | 5   | 1   | 5   | 0   |
+| CP1 MVP           | 101   | 92  | 4   | 1   | 4   | 0   |
 | CP2 Advanced      | 10    | 0   | 0   | 0   | 0   | 10  |
 | S — SaaS platform | 11    | 10  | 1   | 0   | 0   | 0   |
 
@@ -19,10 +19,10 @@
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 | ----------------------------------- | ---------- | ------- | ---------------- | -------------- | ---------- | -------------- |
-| Backend                             | 97         | 93      | 0                | 0              | 0          | 4              |
-| Web                                 | 92         | 88      | 0                | 0              | 0          | 4              |
-| Mobile                              | 11         | 5       | 0                | 1              | 0          | 5              |
-| Tests                               | 101        | 94      | 0                | 1              | 0          | 6              |
+| Backend                             | 97         | 94      | 0                | 0              | 0          | 3              |
+| Web                                 | 91         | 88      | 0                | 0              | 0          | 3              |
+| Mobile                              | 11         | 7       | 0                | 0              | 0          | 4              |
+| Tests                               | 101        | 96      | 0                | 0              | 0          | 5              |
 
 ## Client phases
 
@@ -186,13 +186,13 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 | POST   | `/sales/debit-notes`                              | SAL-06               | ✅      | ✅  | —      |
 | GET    | `/sales/debit-notes`                              | SAL-06               | ✅      | ✅  | —      |
 | GET    | `/sales/receivables-ageing`                       | SAL-07               | ✅      | ✅  | —      |
-| POST   | `/dispatches`                                     | DSP-01               | ✅      | ✅  | —      |
-| GET    | `/dispatches`                                     | DSP-01               | ✅      | ✅  | —      |
+| POST   | `/dispatches`                                     | DSP-01               | ✅      | ✅  | ✅     |
+| GET    | `/dispatches`                                     | DSP-01               | ✅      | ✅  | ✅     |
 | GET    | `/dispatches/gate-reconciliation`                 | LEK-04               | ✅      | ✅  | —      |
-| GET    | `/dispatches/:id`                                 | DSP-01               | ✅      | ✅  | —      |
+| GET    | `/dispatches/:id`                                 | DSP-01               | ✅      | ✅  | ✅     |
 | GET    | `/dispatches/:id/pdf`                             | DSP-05               | ✅      | ✅  | —      |
-| PATCH  | `/dispatches/:id/confirm`                         | DSP-02               | ✅      | ✅  | —      |
-| PATCH  | `/dispatches/:id/acknowledge`                     | DSP-03               | ✅      | ✅  | —      |
+| PATCH  | `/dispatches/:id/confirm`                         | DSP-02               | ✅      | ✅  | ✅     |
+| PATCH  | `/dispatches/:id/acknowledge`                     | DSP-03               | ✅      | ✅  | ✅     |
 | PATCH  | `/dispatches/:id/cancel`                          | DSP-01               | ✅      | ✅  | —      |
 | POST   | `/transport/trips`                                | VEH-02               | ✅      | ✅  | —      |
 | GET    | `/transport/trips`                                | VEH-02               | ✅      | ✅  | —      |
@@ -310,6 +310,7 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 - ✅ **DSP-01** Dispatch / delivery challan: customer, invoice or SO, vehicle, driver, brick type/qty, loading group, loading & delivery location, date/time _(P9)_
 - ✅ **DSP-02** Confirm dispatch → finished stock deducted automatically _(P9)_
 - ✅ **DSP-03** Delivery status + acknowledgement (receiver name, time, remarks) _(P9)_
+- ✅ **DSP-04** Dispatch challan + delivery update on mobile (offline) _(P9)_
 - ✅ **DSP-05** Challan PDF _(P9)_
 - ✅ **ACC-01** Chart of accounts + ledger groups (seeded Indian default, editable) _(P2)_
 - ✅ **ACC-02** Posting engine: balanced, atomic, immutable, reversal _(P2)_
@@ -334,6 +335,7 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 - ✅ **LEK-04** Gate reconciliation: dispatched qty vs invoiced qty vs stock movement, with unmatched dispatches listed _(P9)_
 - ✅ **MOB-01** Login, kiln selection, role-based home _(M1)_
 - ✅ **MOB-02** Offline storage + sync queue + sync status badge (skeleton) _(M1)_
+- ✅ **MOB-03** Feature screens: production, attendance, GRN, dispatch/delivery _(M2–M5)_
 - ✅ **EXP-01** Expense categories (labour, coal, diesel, electricity, vehicle, machinery, repairs, salary, food, rent, office, govt charges, bank charges, misc) _(P10)_
 - ✅ **EXP-02** Expense entry by kiln with payment mode Cash / Bank / UPI / Credit _(P10)_
 - ✅ **CSH-01** Opening/closing cash; cash receipts/payments; bank deposit, withdrawal and transfer (contra); bank charges; cheque no. / UPI ref on vouchers _(P10)_
@@ -352,13 +354,11 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 - 🟨 **ADM-08** Company bank accounts (as Bank ledgers) _(P2)_
 - 🟨 **SYN-01** `Idempotency-Key` header on every mobile-facing create endpoint + `idempotency_keys` table; a repeat with the same key returns the original result instead of creating a duplicate _(P5)_
 - 🟨 **SYN-02** Delta pull endpoints (`?since=`) for the masters the app caches: kilns, parties, items, brick types, wage rates _(P5)_
-- 🟨 **MOB-03** Feature screens: production, attendance, GRN, dispatch/delivery _(M2–M5)_
 - ⚠️ **NTF-01** SMS/WhatsApp alerts (dispatch sent, payment received, advance limit crossed) via MSG91/Twilio _(P13)_
 
 ## Remaining for CP1
 
 - ⬜ **ADM-09** Backups via managed DB (Supabase daily backups) + documented restore procedure _(P13)_
-- ⬜ **DSP-04** Dispatch challan + delivery update on mobile (offline) _(P9)_
 - ⬜ **MOB-04** A full working day offline; syncs with no duplicates; conflict handling _(M6)_
 - ⬜ **MOB-05** Android release APK _(M6)_
 - ⬜ **MOB-06** iOS build + TestFlight/App Store release _(M6)_
@@ -467,7 +467,7 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 | DSP-01 | Dispatch / delivery challan: customer, invoice or SO, vehicle, driver, brick type/qty, loading group, loading & delivery location, date/time | CP1 | P9    | ✅      | ✅  | —      | ✅    | ✅     |
 | DSP-02 | Confirm dispatch → finished stock deducted automatically                                                                                     | CP1 | P9    | ✅      | ✅  | —      | ✅    | ✅     |
 | DSP-03 | Delivery status + acknowledgement (receiver name, time, remarks)                                                                             | CP1 | P9    | ✅      | ✅  | —      | ✅    | ✅     |
-| DSP-04 | Dispatch challan + delivery update on mobile (offline)                                                                                       | CP1 | P9    | ⬜      | ⬜  | ⬜     | ⬜    | ⬜     |
+| DSP-04 | Dispatch challan + delivery update on mobile (offline)                                                                                       | CP1 | P9    | ✅      | —   | ✅     | ✅    | ✅     |
 | DSP-05 | Challan PDF                                                                                                                                  | CP1 | P9    | ✅      | ✅  | —      | ✅    | ✅     |
 
 ### M10 Accounting (SOW #10)
@@ -519,7 +519,7 @@ Step-by-step build plan: [`.brain/PROGRESS.md`](../.brain/PROGRESS.md).
 | ------ | ----------------------------------------------------------------------- | --- | ----- | ------- | --- | ------ | ----- | ------ |
 | MOB-01 | Login, kiln selection, role-based home                                  | CP1 | M1    | ✅      | —   | ✅     | ✅    | ✅     |
 | MOB-02 | Offline storage + sync queue + sync status badge (skeleton)             | CP1 | M1    | —       | —   | ✅     | ✅    | ✅     |
-| MOB-03 | Feature screens: production, attendance, GRN, dispatch/delivery         | CP1 | M2–M5 | ⬜      | ⬜  | 🟨     | 🟨    | 🟨     |
+| MOB-03 | Feature screens: production, attendance, GRN, dispatch/delivery         | CP1 | M2–M5 | ⬜      | ⬜  | ✅     | ✅    | ✅     |
 | MOB-04 | A full working day offline; syncs with no duplicates; conflict handling | CP1 | M6    | —       | —   | ⬜     | ⬜    | ⬜     |
 | MOB-05 | Android release APK                                                     | CP1 | M6    | —       | —   | ⬜     | ⬜    | ⬜     |
 | MOB-06 | iOS build + TestFlight/App Store release                                | CP1 | M6    | —       | —   | ⬜     | ⬜    | ⬜     |

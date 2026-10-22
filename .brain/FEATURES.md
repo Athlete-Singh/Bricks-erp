@@ -11,20 +11,20 @@
 
 | | Total | ✅ | 🟨 | ⚠️ | ⬜ | ⏭️ |
 |---|---|---|---|---|---|---|
-| CP1 MVP | 101 | 90 | 5 | 1 | 5 | 0 |
+| CP1 MVP | 101 | 92 | 4 | 1 | 4 | 0 |
 | CP2 Advanced | 10 | 0 | 0 | 0 | 0 | 10 |
 | S — SaaS platform | 11 | 10 | 1 | 0 | 0 | 0 |
 
-**CP1 done: 89 %** (90 of 101 features ✅)
+**CP1 done: 91 %** (92 of 101 features ✅)
 
 ### Per app
 
 | App (CP1 features where it applies) | Applies to | ✅ done | 🧩 not connected | 🟨 in progress | ⚠️ blocked | ⬜ not started |
 |---|---|---|---|---|---|---|
-| Backend | 97 | 93 | 0 | 0 | 0 | 4 |
-| Web | 92 | 88 | 0 | 0 | 0 | 4 |
-| Mobile | 11 | 5 | 0 | 1 | 0 | 5 |
-| Tests | 101 | 94 | 0 | 1 | 0 | 6 |
+| Backend | 97 | 94 | 0 | 0 | 0 | 3 |
+| Web | 91 | 88 | 0 | 0 | 0 | 3 |
+| Mobile | 11 | 7 | 0 | 0 | 0 | 4 |
+| Tests | 101 | 96 | 0 | 0 | 0 | 5 |
 
 ## Client Phase 1 — MVP
 
@@ -132,7 +132,7 @@
 | DSP-01 | Dispatch / delivery challan: customer, invoice or SO, vehicle, driver, brick type/qty, loading group, loading & delivery location, date/time | CP1 | P9 | ✅ | ✅ | — | ✅ | ✅ |  |
 | DSP-02 | Confirm dispatch → finished stock deducted automatically | CP1 | P9 | ✅ | ✅ | — | ✅ | ✅ |  |
 | DSP-03 | Delivery status + acknowledgement (receiver name, time, remarks) | CP1 | P9 | ✅ | ✅ | — | ✅ | ✅ |  |
-| DSP-04 | Dispatch challan + delivery update on mobile (offline) | CP1 | P9 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | Backend creates accept `Idempotency-Key`; app is M5 |
+| DSP-04 | Dispatch challan + delivery update on mobile (offline) | CP1 | P9 | ✅ | — | ✅ | ✅ | ✅ | M5 — open challans per kiln (draft + confirmed pulled), raise a challan (customer, vehicle/driver, grade × yard × quantity), gate out (DSP-02) and record delivery (DSP-03), all offline. A step on a challan still on the phone waits for it; a delivery waits on a queued gate-out. The two PATCHes are not idempotent on the server, so a resend refused with "already confirmed / delivered" is settled by reading the challan back (ADR-053). The Supervisor (no `parties.view`) works challans raised on the web and sees the challan number, not the customer |
 | DSP-05 | Challan PDF | CP1 | P9 | ✅ | ✅ | — | ✅ | ✅ |  |
 
 ### M10 Accounting (SOW #10)
@@ -191,7 +191,7 @@
 |---|---|---|---|---|---|---|---|---|---|
 | MOB-01 | Login, kiln selection, role-based home | CP1 | M1 | ✅ | — | ✅ | ✅ | ✅ | M1 — sign-in (offline reopen from the stored session), kiln picker (auto when one), home tiles by permission (ADR-053). A **suspended tenant** (PLT-06) sees "Company access is on hold" with the server's contact line, not "login failed" |
 | MOB-02 | Offline storage + sync queue + sync status badge (skeleton) | CP1 | M1 | — | — | ✅ | ✅ | ✅ | M1 — Drift `sync_queue` (the row is the record, ADR-053) + `cached_records` + `app_state`; SyncService (Idempotency-Key = row UUID, `{parent}` dependencies, 5 s→30 s→2 min→10 min backoff, refusals kept with the reason); master pull by `?since=`; SyncStatusBadge on every screen; Sync screen with send again / discard |
-| MOB-03 | Feature screens: production, attendance, GRN, dispatch/delivery | CP1 | M2–M5 | ⬜ | ⬜ | 🟨 | 🟨 | 🟨 | Production (M2), attendance (M3) and GRN (M4) done; dispatch/delivery (M5) to come |
+| MOB-03 | Feature screens: production, attendance, GRN, dispatch/delivery | CP1 | M2–M5 | ⬜ | ⬜ | ✅ | ✅ | ✅ | Production (M2), attendance (M3), GRN (M4), dispatch + delivery (M5) |
 | MOB-04 | A full working day offline; syncs with no duplicates; conflict handling | CP1 | M6 | — | — | ⬜ | ⬜ | ⬜ |  |
 | MOB-05 | Android release APK | CP1 | M6 | — | — | ⬜ | ⬜ | ⬜ |  |
 | MOB-06 | iOS build + TestFlight/App Store release | CP1 | M6 | — | — | ⬜ | ⬜ | ⬜ | **Contracted:** SOW §1 says "Cross-platform iOS & Android"; §3 excludes only the Apple $99/yr fee. Was wrongly filed under "CP2 candidates" |

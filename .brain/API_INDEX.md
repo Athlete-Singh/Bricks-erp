@@ -156,13 +156,13 @@ Add the row when you **plan** an endpoint (BE ⬜), and update it the moment any
 | POST | /sales/debit-notes | SAL-06 issue a debit note | sales.manage | SAL-06 | P8 | ✅ | ✅ | — |
 | GET | /sales/debit-notes | Debit notes, paged | sales.view | SAL-06 | P8 | ✅ | ✅ | — |
 | GET | /sales/receivables-ageing | SAL-07 what is owed to us, by age | sales.view | SAL-07 | P8 | ✅ | ✅ | — |
-| POST | /dispatches | DSP-01 raise a delivery challan (draft) | dispatch.manage | DSP-01 | P9 | ✅ | ✅ | — |
-| GET | /dispatches | Challans, paged and filterable | dispatch.view | DSP-01 | P9 | ✅ | ✅ | — |
+| POST | /dispatches | DSP-01 raise a delivery challan (draft). **Idempotency-Key** honoured (SYN-01) | dispatch.manage | DSP-01 | P9 | ✅ | ✅ | ✅ |
+| GET | /dispatches | Challans, paged and filterable | dispatch.view | DSP-01 | P9 | ✅ | ✅ | ✅ |
 | GET | /dispatches/gate-reconciliation | LEK-04 dispatched vs invoiced vs stock, unbilled listed | dispatch.view | LEK-04 | P9 | ✅ | ✅ | — |
-| GET | /dispatches/:id | Challan with its lines | dispatch.view | DSP-01 | P9 | ✅ | ✅ | — |
+| GET | /dispatches/:id | Challan with its lines | dispatch.view | DSP-01 | P9 | ✅ | ✅ | ✅ |
 | GET | /dispatches/:id/pdf | DSP-05 delivery challan PDF | dispatch.view | DSP-05 | P9 | ✅ | ✅ | — |
-| PATCH | /dispatches/:id/confirm | DSP-02 truck out of the gate; deducts stock when unbilled (ADR-041) | dispatch.manage | DSP-02 | P9 | ✅ | ✅ | — |
-| PATCH | /dispatches/:id/acknowledge | DSP-03 who received the load and when | dispatch.acknowledge | DSP-03 | P9 | ✅ | ✅ | — |
+| PATCH | /dispatches/:id/confirm | DSP-02 truck out of the gate; deducts stock when unbilled (ADR-041) | dispatch.manage | DSP-02 | P9 | ✅ | ✅ | ✅ |
+| PATCH | /dispatches/:id/acknowledge | DSP-03 who received the load and when | dispatch.acknowledge | DSP-03 | P9 | ✅ | ✅ | ✅ |
 | PATCH | /dispatches/:id/cancel | Cancel a draft challan with a reason | dispatch.manage | DSP-01 | P9 | ✅ | ✅ | — |
 | POST | /transport/trips | VEH-02 log a trip, optionally charging freight (ADR-042) | transport.manage | VEH-02 | P9 | ✅ | ✅ | — |
 | GET | /transport/trips | Trips, paged and filterable | transport.view | VEH-02 | P9 | ✅ | ✅ | — |

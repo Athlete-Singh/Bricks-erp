@@ -1,6 +1,7 @@
 import 'package:brics_mobile/core/auth/permissions.dart';
 import 'package:brics_mobile/core/sync/cache_repository.dart';
 import 'package:brics_mobile/features/grn/domain/grn.dart';
+import 'package:brics_mobile/features/masters/domain/item_lines.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

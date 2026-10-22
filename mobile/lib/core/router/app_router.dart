@@ -1,10 +1,13 @@
-import 'package:brics_mobile/core/l10n/l10n.dart';
 import 'package:brics_mobile/core/widgets/widgets.dart';
 import 'package:brics_mobile/features/attendance/presentation/attendance_form_screen.dart';
 import 'package:brics_mobile/features/attendance/presentation/attendance_screen.dart';
 import 'package:brics_mobile/features/auth/presentation/kiln_picker_screen.dart';
 import 'package:brics_mobile/features/auth/presentation/login_screen.dart';
 import 'package:brics_mobile/features/auth/presentation/session_controller.dart';
+import 'package:brics_mobile/features/dispatch/presentation/challan_action_screen.dart';
+import 'package:brics_mobile/features/dispatch/presentation/challan_form_screen.dart';
+import 'package:brics_mobile/features/dispatch/presentation/challan_screen.dart';
+import 'package:brics_mobile/features/dispatch/presentation/dispatch_screen.dart';
 import 'package:brics_mobile/features/grn/presentation/grn_form_screen.dart';
 import 'package:brics_mobile/features/grn/presentation/grn_screen.dart';
 import 'package:brics_mobile/features/home/presentation/home_screen.dart';
@@ -33,6 +36,9 @@ abstract final class AppRoutes {
   static const grn = '/grn';
   static const grnNew = '/grn/new';
   static const dispatch = '/dispatch';
+  static const dispatchNew = '/dispatch/new';
+  static String dispatchChallan(String ref) => '/dispatch/challan/$ref';
+  static String dispatchAction(String ref, String action) => '/dispatch/challan/$ref/$action';
 }
 
 /// Where the session says this person may be. Null means "stay".
@@ -112,22 +118,33 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
-      for (final path in [AppRoutes.dispatch])
-        GoRoute(path: path, builder: (_, _) => const _ComingSoon()),
+      GoRoute(
+        path: AppRoutes.dispatch,
+        builder: (_, _) => const DispatchScreen(),
+        routes: [
+          GoRoute(
+            path: 'new',
+            builder: (_, state) => ChallanFormScreen(editId: state.uri.queryParameters['edit']),
+          ),
+          GoRoute(
+            path: 'challan/:ref',
+            builder: (_, state) =>
+                ChallanScreen(challanRef: RecordRef.decode(state.pathParameters['ref']!)),
+            routes: [
+              GoRoute(
+                path: ':action',
+                builder: (_, state) => ChallanActionScreen(
+                  challanRef: RecordRef.decode(state.pathParameters['ref']!),
+                  action: ChallanAction.parse(state.pathParameters['action']!)!,
+                  editId: state.uri.queryParameters['edit'],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     ],
   );
   ref.onDispose(router.dispose);
   return router;
 });
-
-class _ComingSoon extends StatelessWidget {
-  const _ComingSoon();
-
-  @override
-  Widget build(BuildContext context) {
-    return AppScaffold(
-      title: context.l10n.appTitle,
-      body: EmptyView(message: context.l10n.comingSoon),
-    );
-  }
-}

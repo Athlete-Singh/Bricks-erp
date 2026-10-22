@@ -512,12 +512,6 @@ abstract class AppLocalizations {
   /// **'{count} waiting'**
   String tileWaiting(int count);
 
-  /// No description provided for @comingSoon.
-  ///
-  /// In en, this message translates to:
-  /// **'This screen arrives in the next update.'**
-  String get comingSoon;
-
   /// No description provided for @syncTitle.
   ///
   /// In en, this message translates to:
@@ -1099,6 +1093,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{supplier} · {lines} items'**
   String grnEntryTitle(String supplier, int lines);
+
+  /// No description provided for @dispatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Dispatch'**
+  String get dispatchTitle;
+
+  /// No description provided for @dispatchTabChallans.
+  ///
+  /// In en, this message translates to:
+  /// **'Open challans'**
+  String get dispatchTabChallans;
+
+  /// No description provided for @dispatchTabEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'My entries'**
+  String get dispatchTabEntries;
+
+  /// No description provided for @dispatchNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New challan'**
+  String get dispatchNew;
+
+  /// No description provided for @dispatchNoChallans.
+  ///
+  /// In en, this message translates to:
+  /// **'No open challans at this kiln.'**
+  String get dispatchNoChallans;
+
+  /// No description provided for @dispatchNoEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'No dispatch entries from this phone yet.'**
+  String get dispatchNoEntries;
+
+  /// No description provided for @dispatchCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer'**
+  String get dispatchCustomer;
+
+  /// No description provided for @dispatchNoCustomers.
+  ///
+  /// In en, this message translates to:
+  /// **'No customers on this phone yet. Sync where there is signal.'**
+  String get dispatchNoCustomers;
+
+  /// No description provided for @dispatchDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Dispatch date'**
+  String get dispatchDate;
+
+  /// No description provided for @dispatchVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle'**
+  String get dispatchVehicle;
+
+  /// No description provided for @dispatchNoVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Not named'**
+  String get dispatchNoVehicle;
+
+  /// No description provided for @dispatchDriver.
+  ///
+  /// In en, this message translates to:
+  /// **'Driver'**
+  String get dispatchDriver;
+
+  /// No description provided for @dispatchNoDriver.
+  ///
+  /// In en, this message translates to:
+  /// **'Not named'**
+  String get dispatchNoDriver;
+
+  /// No description provided for @dispatchDeliveryLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Deliver to'**
+  String get dispatchDeliveryLocation;
+
+  /// No description provided for @dispatchLines.
+  ///
+  /// In en, this message translates to:
+  /// **'Bricks loaded'**
+  String get dispatchLines;
+
+  /// No description provided for @dispatchLinesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Each grade from the yard it leaves.'**
+  String get dispatchLinesHint;
+
+  /// No description provided for @dispatchAddLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Add grade'**
+  String get dispatchAddLine;
+
+  /// No description provided for @dispatchFromYard.
+  ///
+  /// In en, this message translates to:
+  /// **'From yard'**
+  String get dispatchFromYard;
+
+  /// No description provided for @dispatchAtLeastOneLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one line.'**
+  String get dispatchAtLeastOneLine;
+
+  /// No description provided for @dispatchDuplicateLine.
+  ///
+  /// In en, this message translates to:
+  /// **'That item already appears from the same yard — merge the lines.'**
+  String get dispatchDuplicateLine;
+
+  /// No description provided for @dispatchStatusDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Raised'**
+  String get dispatchStatusDraft;
+
+  /// No description provided for @dispatchStatusConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Left the gate'**
+  String get dispatchStatusConfirmed;
+
+  /// No description provided for @dispatchStatusDelivered.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered'**
+  String get dispatchStatusDelivered;
+
+  /// No description provided for @dispatchStatusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get dispatchStatusCancelled;
+
+  /// No description provided for @dispatchChallanUnsent.
+  ///
+  /// In en, this message translates to:
+  /// **'Challan not sent yet'**
+  String get dispatchChallanUnsent;
+
+  /// No description provided for @dispatchGateOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Gate out'**
+  String get dispatchGateOut;
+
+  /// No description provided for @dispatchGateOutHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The truck is leaving the yard. Stock comes off when the server records this.'**
+  String get dispatchGateOutHint;
+
+  /// No description provided for @dispatchGateOutOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Left on'**
+  String get dispatchGateOutOn;
+
+  /// No description provided for @dispatchDeliver.
+  ///
+  /// In en, this message translates to:
+  /// **'Record delivery'**
+  String get dispatchDeliver;
+
+  /// No description provided for @dispatchReceivedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Received by'**
+  String get dispatchReceivedBy;
+
+  /// No description provided for @dispatchDeliveredOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered on'**
+  String get dispatchDeliveredOn;
+
+  /// No description provided for @dispatchRemarks.
+  ///
+  /// In en, this message translates to:
+  /// **'Remarks'**
+  String get dispatchRemarks;
+
+  /// No description provided for @dispatchLinesLoaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Loaded'**
+  String get dispatchLinesLoaded;
+
+  /// No description provided for @dispatchCustomerUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer'**
+  String get dispatchCustomerUnknown;
+
+  /// No description provided for @dispatchEntryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{customer} · {quantity}'**
+  String dispatchEntryTitle(String customer, String quantity);
+
+  /// No description provided for @dispatchConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{challan} · gate out'**
+  String dispatchConfirmTitle(String challan);
+
+  /// No description provided for @dispatchDeliverTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{challan} · received by {person}'**
+  String dispatchDeliverTitle(String challan, String person);
+
+  /// No description provided for @dispatchPendingAction.
+  ///
+  /// In en, this message translates to:
+  /// **'{action} waiting to be sent'**
+  String dispatchPendingAction(String action);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
