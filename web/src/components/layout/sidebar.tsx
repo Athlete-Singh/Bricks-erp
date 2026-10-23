@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { PERMISSIONS } from '@brics/shared';
 import { useSession } from '@/features/auth/use-auth';
+import { Logo } from '@/components/brand/logo';
 import { cn } from '@/lib/cn';
 import { useUiStore } from '@/stores/ui-store';
 
@@ -80,11 +81,10 @@ export function Sidebar() {
           sidebarOpen ? 'md:w-56' : 'md:w-14',
         )}
       >
-        <div className="flex h-14 items-center gap-2 px-3 font-semibold text-foreground">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-sm text-primary-foreground">
-            B
-          </span>
-          <span className={cn('truncate text-sm', !sidebarOpen && 'md:hidden')}>BRICS</span>
+        <div className="flex h-14 items-center px-3">
+          {/* Collapsed (tablet and up): icon only. Open, and always in the phone drawer: icon + name. */}
+          <Logo variant="horizontal" size="xs" name="product" className={cn(!sidebarOpen && 'md:hidden')} />
+          <Logo variant="icon" size="xs" className={cn('hidden', !sidebarOpen && 'md:inline-flex')} />
         </div>
 
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 py-2">

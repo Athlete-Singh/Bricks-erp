@@ -150,6 +150,10 @@ class _StageFormScreenState extends ConsumerState<StageFormScreen> {
     final l10n = context.l10n;
     final valid = _form.currentState!.validate();
     if (widget.stage == ProductionStage.sorting) {
+      if (_warehouseId == null) {
+        showAppSnack(context, l10n.productionNoStores);
+        return;
+      }
       final anyGrade = _gradeCounts.values.any((c) => (int.tryParse(c.text.trim()) ?? 0) > 0);
       setState(() => _gradeError = anyGrade ? null : l10n.productionAtLeastOneGrade);
       if (!anyGrade) return;
@@ -163,28 +167,34 @@ class _StageFormScreenState extends ConsumerState<StageFormScreen> {
     if (owner == null || siteId == null) return;
     setState(() => _busy = true);
 
-    final payload = _payload();
-    final title = _title(l10n, batch.chamber, payload);
-    if (widget.editId != null) {
-      await ref
-          .read(queueRepositoryProvider)
-          .updateFailed(widget.editId!, payload: payload, title: title);
-    } else {
-      await ref
-          .read(productionRepositoryProvider)
-          .recordStage(
-            owner: owner,
-            siteId: siteId,
-            batch: batch.ref,
-            stage: widget.stage,
-            payload: payload,
-            title: title,
-          );
+    try {
+      final payload = _payload();
+      final title = _title(l10n, batch.chamber, payload);
+      if (widget.editId != null) {
+        await ref
+            .read(queueRepositoryProvider)
+            .updateFailed(widget.editId!, payload: payload, title: title);
+      } else {
+        await ref
+            .read(productionRepositoryProvider)
+            .recordStage(
+              owner: owner,
+              siteId: siteId,
+              batch: batch.ref,
+              stage: widget.stage,
+              payload: payload,
+              title: title,
+            );
+      }
+      ref.read(syncControllerProvider.notifier).kick();
+      if (!mounted) return;
+      showAppSnack(context, widget.editId != null ? l10n.savedCorrected : l10n.savedOffline);
+      context.pop();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _busy = false);
+      showAppSnack(context, e.toString());
     }
-    ref.read(syncControllerProvider.notifier).kick();
-    if (!mounted) return;
-    showAppSnack(context, widget.editId != null ? l10n.savedCorrected : l10n.savedOffline);
-    context.pop();
   }
 
   @override

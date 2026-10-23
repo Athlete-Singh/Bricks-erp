@@ -43,6 +43,9 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
+  # The shared brand: logo icon + brand.json, copied from the repo's assets/brand/ by `pnpm brand:sync`.
+  assets:
+    - assets/brand/
   # Inter, bundled so the app looks right offline (docs/05). OFL licence in assets/fonts/OFL.txt.
   fonts:
     - family: Inter
@@ -56,20 +59,28 @@ flutter:
           weight: 700
         - asset: assets/fonts/Inter-800.ttf
           weight: 800
+    # The logo wordmark (heavy geometric sans). Latin subsets; OFL licence in assets/fonts/OFL-Montserrat.txt.
+    - family: Montserrat
+      fonts:
+        - asset: assets/fonts/Montserrat-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Montserrat-ExtraBold.ttf
+          weight: 800
 
-# Launcher icon and native splash, generated from assets/icon/ (rendered from the in-code logo by
-# screenshots/icon_test.dart). Regenerate: dart run flutter_launcher_icons && dart run flutter_native_splash:create
+# Launcher icon and native splash: icon only (no text), generated from the shared brand by
+# scripts/brand/generate-icons.py and copied here by `pnpm brand:sync`. Text changes never need these
+# regenerated. Regenerate after a new icon: dart run flutter_launcher_icons && dart run flutter_native_splash:create
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: assets/icon/icon.png
-  adaptive_icon_background: "#E3A21A"
-  adaptive_icon_foreground: assets/icon/icon_foreground.png
+  image_path: assets/brand/ios-icon.png
+  adaptive_icon_background: "#2D6A43"
+  adaptive_icon_foreground: assets/brand/android-foreground.png
   remove_alpha_ios: true
 
 flutter_native_splash:
-  color: "#05321B"
-  image: assets/icon/splash.png
+  color: "#F8FAF9"
+  image: assets/brand/splash-icon.png
   android_12:
-    color: "#05321B"
-    image: assets/icon/splash.png
+    color: "#F8FAF9"
+    image: assets/brand/splash-icon.png

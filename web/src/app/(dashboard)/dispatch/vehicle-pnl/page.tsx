@@ -48,7 +48,13 @@ export default function VehiclePnlPage() {
       ),
     },
     { key: 'income', header: 'Freight earned', className: 'text-right', render: (r) => formatINR(r.freightIncome) },
-    { key: 'diesel', header: 'Diesel', className: 'text-right', hideOnMobile: true, render: (r) => formatINR(r.diesel) },
+    {
+      key: 'diesel',
+      header: 'Diesel',
+      className: 'text-right',
+      hideOnMobile: true,
+      render: (r) => formatINR(r.diesel),
+    },
     {
       key: 'repairs',
       header: 'Repairs',

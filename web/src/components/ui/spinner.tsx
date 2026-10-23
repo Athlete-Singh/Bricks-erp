@@ -1,4 +1,5 @@
 import { Loader2 } from 'lucide-react';
+import { Logo } from '@/components/brand/logo';
 import { cn } from '@/lib/cn';
 
 export function Spinner({ className, label }: { className?: string; label?: string }) {
@@ -10,11 +11,12 @@ export function Spinner({ className, label }: { className?: string; label?: stri
   );
 }
 
-/** Full-height centred spinner, for a route that cannot render until data lands. */
+/** Full-height loader for a route that cannot render until data lands: the brand icon with its chimney smoking. */
 export function PageSpinner({ label }: { label?: string }) {
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <Spinner label={label} />
+    <div role="status" aria-live="polite" className="flex min-h-screen flex-col items-center justify-center gap-3">
+      <Logo variant="icon" size="md" animated className="animate-pulse motion-reduce:animate-none" />
+      <span className="text-sm text-muted-foreground">{label ?? 'Loading'}</span>
     </div>
   );
 }

@@ -196,12 +196,7 @@ class _Header extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  const BricsLogo(size: 26),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(
-                    l10n.appTitle,
-                    style: text.titleMedium?.copyWith(color: Colors.white, letterSpacing: 1),
-                  ),
+                  const AppLogo(size: 30, productName: true, onDark: true, animated: false),
                   const Spacer(),
                   const SyncBadgeAction(),
                   PopupMenuButton<String>(

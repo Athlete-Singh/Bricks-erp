@@ -1,3 +1,4 @@
+import 'package:brics_mobile/core/brand/app_logo.dart';
 import 'package:brics_mobile/core/l10n/l10n.dart';
 import 'package:brics_mobile/core/theme/app_colors.dart';
 import 'package:brics_mobile/core/theme/app_motion.dart';
@@ -7,7 +8,7 @@ import 'package:brics_mobile/core/widgets/decor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-/// Three bricks hopping in turn — the app is working.
+/// The brand icon with its chimney smoking — the app is working.
 class AppLoader extends StatelessWidget {
   const AppLoader({super.key, this.message});
 
@@ -15,35 +16,11 @@ class AppLoader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    final motion = MotionScope.of(context);
-    Widget brick(int i) {
-      final b = Container(
-        width: 22,
-        height: 11,
-        margin: const EdgeInsets.symmetric(horizontal: 3),
-        decoration: BoxDecoration(
-          color: [AppPalette.brick, AppPalette.accent500, colors.primary][i],
-          borderRadius: BorderRadius.circular(3),
-        ),
-      );
-      if (!motion) return b;
-      return b
-          .animate(onPlay: (c) => c.repeat(reverse: true), delay: (i * 140).ms)
-          .moveY(begin: 0, end: -10, duration: 420.ms, curve: Curves.easeInOut);
-    }
-
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
-            height: 24,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [for (var i = 0; i < 3; i++) brick(i)],
-            ),
-          ),
+          const AppLogo(variant: AppLogoVariant.icon, size: 44),
           const SizedBox(height: AppSpacing.md),
           Text(message ?? context.l10n.commonLoading, style: Theme.of(context).textTheme.bodySmall),
         ],

@@ -1,0 +1,8 @@
+{
+  "productName": "BRICS",
+  "wordmarkLine1": "BRICK KILN",
+  "wordmarkLine2": { "show": true, "text": "ESTD", "year": "1999", "showBrickIcon": true },
+  "leafLetter": "auto",
+  "colors": { "primary": "#2D6A43", "dark": "#0B4A2A", "light": "#9BE59B" },
+  "tagline": ""
+}

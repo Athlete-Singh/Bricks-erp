@@ -189,7 +189,9 @@ export default function StatementsPage() {
                     {parties.data.items.map((p) => (
                       <tr key={p.partyId} className="border-b border-border/60 last:border-0">
                         <td className="px-3 py-2">{p.name}</td>
-                        <td className="px-3 py-2 text-right">{p.receivable === '0.00' ? '' : formatINR(p.receivable)}</td>
+                        <td className="px-3 py-2 text-right">
+                          {p.receivable === '0.00' ? '' : formatINR(p.receivable)}
+                        </td>
                         <td className="px-3 py-2 text-right">{p.payable === '0.00' ? '' : formatINR(p.payable)}</td>
                       </tr>
                     ))}
@@ -321,9 +323,7 @@ function SummaryCard({
   return (
     <div className="rounded-lg border border-border bg-surface p-3">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p
-        className={`text-lg ${strong ? 'font-semibold' : ''} ${danger ? 'text-danger' : 'text-foreground'}`}
-      >
+      <p className={`text-lg ${strong ? 'font-semibold' : ''} ${danger ? 'text-danger' : 'text-foreground'}`}>
         {value}
       </p>
     </div>

@@ -61,6 +61,7 @@ mobile/android/app/*.keystore
 
 # Personal command cheat sheet, not shared
 RUN.md
+cred.txt
 
 # Playwright (P13.1) — traces and reports are run artefacts, never committed
 web/test-results/

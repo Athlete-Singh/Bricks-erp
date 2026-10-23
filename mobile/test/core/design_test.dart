@@ -5,11 +5,18 @@ import 'package:flutter_test/flutter_test.dart';
 import '../helpers/pump_app.dart';
 
 void main() {
-  testWidgets('the logo builds from nothing to the full mark', (tester) async {
-    for (final p in [0.0, 0.5, 1.0]) {
-      await tester.pumpApp(BricsLogo(progress: p, size: 96));
+  testWidgets('every logo variant builds, wordmark from brand config', (tester) async {
+    for (final variant in AppLogoVariant.values) {
+      await tester.pumpApp(AppLogo(variant: variant, size: 72));
       expect(tester.takeException(), isNull);
     }
+    await tester.pumpApp(const AppLogo(variant: AppLogoVariant.stacked));
+    // "BRICK KILN" with the I in KILN drawn as a dotless ı for the leaf.
+    expect(find.text('BRICK K'), findsOneWidget);
+    expect(find.text('ı'), findsOneWidget);
+    expect(find.text('LN'), findsOneWidget);
+    expect(find.text('1999'), findsOneWidget);
+    expect(find.bySemanticsLabel('BRICS'), findsOneWidget);
   });
 
   testWidgets('quick-add chips add to the count', (tester) async {

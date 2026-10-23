@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageSpinner } from '@/components/ui/spinner';
 import { LoginForm } from '@/features/auth/components/login-form';
 import { useRestoreSession, useSession } from '@/features/auth/use-auth';
+import { Logo } from '@/components/brand/logo';
+import { brandConfig } from '@/lib/brand';
 
 export default function LoginPage() {
   // A visitor here may still hold a valid refresh token from a previous visit.
@@ -25,10 +27,8 @@ export default function LoginPage() {
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
-        <span className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-sm font-semibold text-primary-foreground">
-          B
-        </span>
-        <CardTitle className="mt-2">Sign in to BRICS</CardTitle>
+        <Logo variant="stacked" size="lg" animated priority className="mx-auto mb-2" />
+        <CardTitle className="mt-2 text-center">Sign in to {brandConfig.productName}</CardTitle>
       </CardHeader>
       <CardContent>
         <LoginForm />

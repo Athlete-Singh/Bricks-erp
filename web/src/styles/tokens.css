@@ -38,6 +38,23 @@
   --info: 37 99 235;
   --ring: 15 127 71;
   --radius: 8px;
+
+  /* Public home page (light only). Not redefined under .dark on purpose. */
+  --mk-bg: 248 250 249;
+  --mk-surface: 255 255 255;
+  --mk-border: 229 234 231;
+  --mk-primary: 45 106 67;
+  --mk-primary-hover: 36 86 54;
+  --mk-primary-soft: 230 242 234;
+  --mk-primary-deep: 31 77 49;
+  --mk-text: 15 23 42;
+  --mk-muted: 91 107 99;
+  --mk-brick: 200 85 61;
+  --mk-brick-soft: 250 236 232;
+  --mk-amber: 245 181 68;
+  --mk-amber-soft: 254 244 222;
+  --mk-red: 196 48 43;
+  --mk-red-soft: 252 233 232;
 }
 
 .dark {

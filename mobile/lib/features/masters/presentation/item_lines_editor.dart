@@ -79,6 +79,12 @@ class ItemLinesEditor extends ConsumerWidget {
       hint: hint,
       icon: icon,
       children: [
+        // A greyed-out store picker with no reason given reads as a broken form.
+        if (stores.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.md),
+            child: Text(l10n.productionNoStores),
+          ),
         for (final (i, line) in lines.indexed)
           Container(
             margin: const EdgeInsets.only(bottom: AppSpacing.md),

@@ -8,9 +8,22 @@
       "error",
       {
         "selector": "CallExpression[callee.name='fetch']",
-        "message": "Use lib/api-client via features/<x>/api — no fetch in components."
+        "message": "Use lib/api-client via features/<x>/api \u2014 no fetch in components."
       }
     ]
   },
-  "overrides": [{ "files": ["src/lib/api-client.ts"], "rules": { "no-restricted-syntax": "off" } }]
+  "overrides": [
+    {
+      "files": ["src/lib/api-client.ts"],
+      "rules": {
+        "no-restricted-syntax": "off"
+      }
+    },
+    {
+      "files": ["src/features/marketing/api/*.ts"],
+      "rules": {
+        "no-restricted-syntax": "off"
+      }
+    }
+  ]
 }

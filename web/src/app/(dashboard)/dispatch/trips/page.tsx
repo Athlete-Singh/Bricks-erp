@@ -16,12 +16,7 @@ import { messageOf, useSession } from '@/features/auth/use-auth';
 import { useLedgers } from '@/features/accounting/hooks';
 import { useItems, useParties, useVehicles, useDrivers, useWarehouses } from '@/features/masters/hooks';
 import type { VehicleExpense, VehicleTrip } from '@/features/dispatch/api';
-import {
-  useCreateTrip,
-  useCreateVehicleExpense,
-  useTrips,
-  useVehicleExpenses,
-} from '@/features/dispatch/hooks';
+import { useCreateTrip, useCreateVehicleExpense, useTrips, useVehicleExpenses } from '@/features/dispatch/hooks';
 
 const KIND_LABEL: Record<VehicleExpenseKind, string> = {
   diesel: 'Diesel',
@@ -82,8 +77,7 @@ export default function TripsPage() {
     return <Alert variant="info">You do not have access to transport.</Alert>;
   }
 
-  const vehicleName = (id: string | null) =>
-    vehicles?.items.find((v) => v.id === id)?.registrationNo ?? '—';
+  const vehicleName = (id: string | null) => vehicles?.items.find((v) => v.id === id)?.registrationNo ?? '—';
 
   const tripColumns: Column<VehicleTrip>[] = [
     { key: 'no', header: 'Trip', render: (t) => <span className="font-medium">{t.tripNo}</span> },
@@ -345,7 +339,8 @@ export default function TripsPage() {
                   ...c,
                   kind: e.target.value as VehicleExpenseKind,
                   // Only diesel can come out of a yard.
-                  settlement: e.target.value === 'diesel' ? c.settlement : c.settlement === 'tank' ? 'paid' : c.settlement,
+                  settlement:
+                    e.target.value === 'diesel' ? c.settlement : c.settlement === 'tank' ? 'paid' : c.settlement,
                 }))
               }
             >

@@ -9,6 +9,7 @@ import { PageSpinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import { homeRouteFor, useLogout, useRestoreSession, useSession } from '@/features/auth/use-auth';
 import { cn } from '@/lib/cn';
+import { Logo } from '@/components/brand/logo';
 
 /**
  * The platform admin's own shell. Deliberately not the kiln dashboard — the
@@ -49,11 +50,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex h-screen overflow-hidden">
       <aside className="flex w-56 shrink-0 flex-col border-r border-border bg-surface">
-        <div className="flex h-14 items-center gap-2 px-3 font-semibold text-foreground">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-sm text-primary-foreground">
-            B
-          </span>
-          <span className="truncate text-sm">BRICS — Admin</span>
+        <div className="flex h-14 items-center gap-2 px-3">
+          <Logo variant="horizontal" size="xs" name="product" />
+          <span className="text-sm font-semibold text-muted-foreground">Admin</span>
         </div>
         <nav className="flex-1 space-y-0.5 px-2 py-2">
           {nav.map(({ label, href, icon: Icon, comingIn }) => {

@@ -386,11 +386,7 @@ export default function ChallansPage() {
         title={`Cancel ${cancelling?.challanNo ?? ''}`}
       >
         <div className="flex flex-col gap-3">
-          <Input
-            label="Why"
-            value={cancelReason}
-            onChange={(e) => setCancelReason(e.target.value)}
-          />
+          <Input label="Why" value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} />
           <p className="text-xs text-muted-foreground">At least 10 characters — this stays on the record.</p>
           <div className="flex justify-end gap-2">
             <Button variant="ghost" onClick={() => setCancelling(null)}>

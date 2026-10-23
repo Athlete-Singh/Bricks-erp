@@ -87,7 +87,9 @@ export default function CashBankPage() {
         />
       )}
 
-      {data?.items.map((account) => <AccountBook key={account.ledgerId} account={account} kind={kind} />)}
+      {data?.items.map((account) => (
+        <AccountBook key={account.ledgerId} account={account} kind={kind} />
+      ))}
     </div>
   );
 }
@@ -127,9 +129,7 @@ function AccountBook({ account, kind }: { account: BookAccount; kind: 'cash' | '
                   {/* The other side of the entry, so a row reads on its own. */}
                   <td className="py-1.5 pr-2">{entry.counterparty ?? '—'}</td>
                   {kind === 'bank' && <td className="py-1.5 pr-2">{entry.instrumentRef ?? '—'}</td>}
-                  <td className="py-1.5 pr-2 text-right">
-                    {entry.moneyIn === '0.00' ? '' : formatINR(entry.moneyIn)}
-                  </td>
+                  <td className="py-1.5 pr-2 text-right">{entry.moneyIn === '0.00' ? '' : formatINR(entry.moneyIn)}</td>
                   <td className="py-1.5 pr-2 text-right">
                     {entry.moneyOut === '0.00' ? '' : formatINR(entry.moneyOut)}
                   </td>

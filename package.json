@@ -19,7 +19,8 @@
     "db:up": "docker compose -f infra/docker-compose.yml up -d",
     "db:down": "docker compose -f infra/docker-compose.yml down",
     "prepare": "husky",
-    "db:setup:prod": "pnpm --filter @brics/backend db:setup:prod"
+    "db:setup:prod": "pnpm --filter @brics/backend db:setup:prod",
+    "brand:sync": "node scripts/sync-brand.mjs"
   },
   "devDependencies": {
     "@brics/config": "workspace:*",
