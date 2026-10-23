@@ -208,7 +208,7 @@ reasoning in `.brain/modules/saas-platform.md`, decision in ADR-052.
 | PLT-03 | `/admin` — its own surface and navigation, no business menu | S | S1.2 | — | ✅ | — | ✅ | ✅ | The fastest way to make an admin behave like an owner is to show them an owner's screen |
 | PLT-04 | Tenant list: metadata only — counts and dates, never money and never the client's own parties | S | S1.2 | ✅ | ✅ | — | ✅ | ✅ |  |
 | PLT-05 | Onboarding: company + **first financial year** + owner user, in one transaction | S | S1.2 | ✅ | ✅ | — | ✅ | ✅ |  |
-| PLT-06 | Suspend / reactivate a tenant; sign-in refused with a message naming who to contact | S | S1.2 | ✅ | ✅ | ⬜ | ✅ | 🟨 | Mobile still to come (M1) |
+| PLT-06 | Suspend / reactivate a tenant; sign-in refused with a message naming who to contact | S | S1.2 | ✅ | ✅ | ✅ | ✅ | ✅ | Mobile done in M1: the sign-in screen shows "Company access is on hold" with the server's contact line (test/features/login_home_test.dart) |
 | PLT-07 | Support sessions: reason required, two hours, closes itself, business permissions scoped to one tenant | S | S2.2 | ✅ | ✅ | — | ✅ | ✅ | Backend shipped in S2.1. Web switch, banner countdown, history, open dialog shipped in S2.2 |
 | PLT-08 | Audit rows marked `platform_support`; the owner sees that support looked, and why | S | S2.2 | ✅ | ✅ | — | ✅ | ✅ | Backend shipped in S2.1. Audit screen Support badge, reason tooltip, and support filter shipped in S2.2 |
 | PLT-09 | Tenant detail: users and roles, counts, last activity, support session history | S | S3.1 | ✅ | ✅ | — | ✅ | ✅ | User roster, kilns/sites, document counts, last active, support history tab |
