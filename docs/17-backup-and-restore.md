@@ -45,7 +45,9 @@ BACKUP_KEEP=8 BACKUP_DATABASE_URL='…' scripts/db/backup.sh /Volumes/BRICS-BACK
 ```
 
 - Needs the PostgreSQL client tools at the **same or newer** major version than
-  the server (`brew install postgresql@16`, or `@17` if the host runs 17).
+  the server. Neon runs **Postgres 18**: `brew install postgresql@18` and put
+  `/opt/homebrew/opt/postgresql@18/bin` first on `PATH`. Restore a drill into a
+  Postgres 18 too — an older server cannot read an 18 dump.
 - The script checks the archive is readable, writes a SHA-256 next to it, and
   keeps the newest 14 (`BACKUP_KEEP`).
 - **The dump is the company's books.** Keep it on an encrypted drive or in
@@ -93,9 +95,10 @@ and the Day Book for the last day in the dump.
 
 ## Drill log
 
-| Date       | Backup                                 | Target                    | Result                                                             | Restore time | By                     |
-| ---------- | -------------------------------------- | ------------------------- | ------------------------------------------------------------------ | ------------ | ---------------------- |
-| 2026-10-22 | Local test database (backend e2e data) | Local scratch Postgres 16 | Passed — scripts verified, guards verified; **not yet production** | < 1 min      | Claude (build session) |
+| Date       | Backup                                                                                                      | Target                    | Result                                                                                                                 | Restore time | By                     |
+| ---------- | ----------------------------------------------------------------------------------------------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------ | ---------------------- |
+| 2026-10-22 | Local test database (backend e2e data)                                                                      | Local scratch Postgres 16 | Passed — scripts verified, guards verified; **not yet production**                                                     | < 1 min      | Claude (build session) |
+| 2026-10-23 | **Neon `development` — the database the live Vercel API uses** (`backup.sh`, 73 tables, 341 KB, pg_dump 18) | Local scratch Postgres 18 | **Passed** — checksum OK, latest migration `Notifications1798000000000`, Dr 739,000.00 = Cr 739,000.00, 4 active users | 1 s          | Claude (build session) |
 
 **ADM-09 is done when** the provider backups are on and one drill from a
 **production** backup is in this log.

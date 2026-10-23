@@ -19,5 +19,6 @@
 | 15  | [Go-live checklist](15-go-live-checklist.md) | What the account owner provides                         |
 | 16  | [User guide](16-user-guide.md)               | Owners, accountants, supervisors                        |
 | 17  | [Backup & restore](17-backup-and-restore.md) | Backups, restore drill, a real restore (ADM-09)         |
+| 18  | [Acceptance test (UAT)](18-uat-script.md)    | What the client checks before signing off CP1           |
 | —   | [Modules](modules/)                          | One doc per module                                      |
 | —   | [Client requirements](client-requirements/)  | The 3 client PDFs (source of truth)                     |

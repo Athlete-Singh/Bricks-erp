@@ -42,7 +42,7 @@
 
 
 | ADM-08 | Company bank accounts (as Bank ledgers) | CP1 | P2 | ✅ | ✅ | — | ✅ | ✅ | Accounts → Ledgers: **Add bank account** (group fixed to Bank Accounts, one step) and **New ledger** (any group), plus edit — rename any ledger, move or retire only the owner's own (built-in ledgers stay put, as the server enforces). Opening balance via Settings → Go-live import |
-| ADM-09 | Backups via managed DB (Supabase daily backups) + documented restore procedure | CP1 | P13 | ✅ | — | — | ✅ | ⚠️ | Tooling done 2026-10-22: `scripts/db/backup.sh`, `restore-drill.sh`, `verify-restore.sql`, runbook docs/17 — verified on a local Postgres (drill passed; damaged dump, live/non-empty target and an unbalanced voucher all refused). **Waits on the owner:** turn on provider backups (Supabase Pro or Neon history) and log one drill from a production backup |
+| ADM-09 | Backups via managed DB (Supabase daily backups) + documented restore procedure | CP1 | P13 | ✅ | — | — | ✅ | ⚠️ | **Drill from the live database passed 2026-10-23** (Neon `development`, which the Vercel API uses: 73 tables, Dr = Cr 739,000.00, restored in 1 s into a scratch Postgres 18 — docs/17 log). Tooling: `scripts/db/backup.sh`, `restore-drill.sh`, `verify-restore.sql`. **Left:** the owner sets Neon's restore window to ≥ 7 days (Project settings → Storage) — a dashboard setting, no API key here. |
 
 ### M02 Party Masters (SOW #2)
 
