@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:brics_mobile/core/l10n/l10n.dart';
 import 'package:brics_mobile/core/sync/sync_summary.dart';
 import 'package:brics_mobile/core/theme/app_colors.dart';
@@ -58,20 +56,17 @@ class SyncStatusBadge extends StatelessWidget {
 
     final pill = AnimatedContainer(
       duration: AppMotion.medium,
-      padding: const EdgeInsets.fromLTRB(AppSpacing.sm, 6, AppSpacing.md, 6),
+      padding: const EdgeInsets.fromLTRB(6, 4, AppSpacing.sm + 2, 4),
       decoration: BoxDecoration(
         color: onSurface ? tint.withValues(alpha: 0.12) : Colors.white.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(
-          color: onSurface ? tint.withValues(alpha: 0.4) : Colors.white.withValues(alpha: 0.28),
-        ),
+        borderRadius: BorderRadius.circular(AppRadius.button),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 24,
-            height: 24,
+            width: 20,
+            height: 20,
             decoration: BoxDecoration(
               color: onSurface ? Colors.transparent : tint,
               shape: BoxShape.circle,
@@ -107,17 +102,7 @@ class SyncStatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.pill),
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: AppSpacing.touchTarget),
-          child: Center(
-            child: onSurface
-                ? pill
-                : ClipRRect(
-                    borderRadius: BorderRadius.circular(AppRadius.pill),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                      child: pill,
-                    ),
-                  ),
-          ),
+          child: Center(child: pill),
         ),
       ),
     );

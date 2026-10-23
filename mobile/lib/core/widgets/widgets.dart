@@ -5,7 +5,6 @@ export 'app_dropdown.dart';
 export 'app_scaffold.dart';
 export 'app_text_field.dart';
 export 'brand.dart';
-export 'celebration.dart';
 export 'decor.dart';
 export 'entrance.dart';
 export 'feedback.dart';

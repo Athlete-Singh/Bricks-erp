@@ -503,6 +503,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get attendanceOvertime => 'Overtime hours';
 
   @override
+  String get attendanceOvertimeShort => 'OT';
+
+  @override
   String get attendanceOvertimeInvalid => 'Up to 2 digits, like 2 or 1.5';
 
   @override

@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 
 enum AppButtonVariant { primary, secondary, ghost, danger }
 
-/// The only button screens use. Full width by default, ≥ 48 dp tall; the
-/// primary one is a green gradient with a soft glow.
+/// The only button screens use. Full width by default, 48 dp tall; the
+/// primary one is solid brand green.
 class AppButton extends StatelessWidget {
   const AppButton({
     required this.label,
@@ -34,10 +34,7 @@ class AppButton extends StatelessWidget {
 
     if (variant == AppButtonVariant.primary || variant == AppButtonVariant.danger) {
       final enabled = action != null;
-      final gradient = variant == AppButtonVariant.danger
-          ? LinearGradient(colors: [colors.danger, Color.lerp(colors.danger, Colors.black, 0.15)!])
-          : colors.primaryGradient;
-      final glow = variant == AppButtonVariant.danger ? colors.danger : colors.primary;
+      final fill = variant == AppButtonVariant.danger ? colors.danger : colors.primary;
       final button = Semantics(
         button: true,
         enabled: enabled,
@@ -52,17 +49,10 @@ class AppButton extends StatelessWidget {
                 minHeight: AppSpacing.primaryAction,
                 minWidth: AppSpacing.touchTarget,
               ),
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               decoration: BoxDecoration(
-                gradient: gradient,
+                color: fill,
                 borderRadius: BorderRadius.circular(AppRadius.button),
-                boxShadow: [
-                  BoxShadow(
-                    color: glow.withValues(alpha: 0.35),
-                    blurRadius: 18,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
               ),
               child: Center(
                 widthFactor: 1,
@@ -76,9 +66,9 @@ class AppButton extends StatelessWidget {
                       data: IconThemeData(color: colors.onPrimary),
                       child: busy
                           ? SizedBox.square(
-                              dimension: 22,
+                              dimension: 20,
                               child: CircularProgressIndicator(
-                                strokeWidth: 2.5,
+                                strokeWidth: 2,
                                 color: colors.onPrimary,
                               ),
                             )
@@ -116,7 +106,7 @@ class _Label extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 20),
+        Icon(icon, size: 18),
         const SizedBox(width: AppSpacing.sm),
         Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
       ],

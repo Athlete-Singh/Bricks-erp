@@ -11,15 +11,15 @@ abstract final class AppSpacing {
   /// Minimum touch target for the field app — gloves, sunlight, cheap phones.
   static const double touchTarget = 48;
 
-  /// The main action of a screen is taller still.
-  static const double primaryAction = 56;
+  /// The main action of a screen: the same comfortable height, no taller.
+  static const double primaryAction = 48;
 }
 
-/// Mobile radii (docs/05 → Mobile): softer than the web's, for thumbs.
+/// Mobile radii: small and even, so a screen reads as a tool, not a poster.
 abstract final class AppRadius {
-  static const double input = 14;
-  static const double button = 14;
-  static const double card = 18;
-  static const double modal = 24;
+  static const double input = 8;
+  static const double button = 8;
+  static const double card = 10;
+  static const double modal = 14;
   static const double pill = 999;
 }

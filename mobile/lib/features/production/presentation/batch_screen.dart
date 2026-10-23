@@ -263,32 +263,20 @@ class _TimelineStep extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           SizedBox(
-            width: 44,
+            width: 32,
             child: Column(
               children: [
                 AnimatedContainer(
                   duration: MotionScope.of(context) ? AppMotion.medium : Duration.zero,
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: fill,
-                    shape: BoxShape.circle,
-                    boxShadow: state == _StageState.later
-                        ? null
-                        : [
-                            BoxShadow(
-                              color: fill.withValues(alpha: 0.4),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                  ),
-                  child: Icon(icon, color: fg, size: 22),
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(color: fill, shape: BoxShape.circle),
+                  child: Icon(icon, color: fg, size: 17),
                 ),
                 if (!isLast)
                   Expanded(
                     child: Container(
-                      width: 4,
+                      width: 2,
                       margin: const EdgeInsets.symmetric(vertical: 4),
                       decoration: BoxDecoration(
                         color: lineDone ? colors.success : colors.border,

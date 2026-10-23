@@ -980,6 +980,12 @@ abstract class AppLocalizations {
   /// **'Overtime hours'**
   String get attendanceOvertime;
 
+  /// No description provided for @attendanceOvertimeShort.
+  ///
+  /// In en, this message translates to:
+  /// **'OT'**
+  String get attendanceOvertimeShort;
+
   /// No description provided for @attendanceOvertimeInvalid.
   ///
   /// In en, this message translates to:

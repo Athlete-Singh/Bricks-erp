@@ -84,11 +84,7 @@ class _NewBatchScreenState extends ConsumerState<NewBatchScreen> {
     }
     ref.read(syncControllerProvider.notifier).kick();
     if (!mounted) return;
-    showAppSnack(
-      context,
-      widget.editId != null ? l10n.savedCorrected : l10n.savedOffline,
-      celebrate: widget.editId == null,
-    );
+    showAppSnack(context, widget.editId != null ? l10n.savedCorrected : l10n.savedOffline);
     if (widget.editId != null) {
       context.pop();
     } else {

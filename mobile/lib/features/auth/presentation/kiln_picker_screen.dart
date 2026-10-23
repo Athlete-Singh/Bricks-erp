@@ -27,9 +27,9 @@ class KilnPickerScreen extends ConsumerWidget {
       body: sites.isEmpty
           ? EmptyView(message: l10n.kilnPickerNone, icon: Icons.factory_outlined)
           : ListView.separated(
-              padding: const EdgeInsets.all(AppSpacing.lg),
+              padding: const EdgeInsets.all(AppSpacing.md),
               itemCount: sites.length,
-              separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
+              separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
               itemBuilder: (context, i) {
                 final site = sites[i];
                 final chosen = site.id == selected;
@@ -44,28 +44,27 @@ class KilnPickerScreen extends ConsumerWidget {
                     child: Row(
                       children: [
                         Container(
-                          width: 52,
-                          height: 52,
+                          width: 40,
+                          height: 40,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            gradient: chosen ? colors.primaryGradient : colors.goldGradient,
-                            borderRadius: BorderRadius.circular(16),
+                            color: chosen ? colors.primary : colors.successSoft,
+                            borderRadius: BorderRadius.circular(AppRadius.button),
                           ),
                           child: Text(
                             site.code.length > 3 ? site.code.substring(0, 3) : site.code,
-                            style: text.titleMedium?.copyWith(
-                              color: chosen ? Colors.white : AppPalette.primary900,
-                              fontWeight: FontWeight.w800,
+                            style: text.labelMedium?.copyWith(
+                              color: chosen ? Colors.white : colors.primary,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
-                        const SizedBox(width: AppSpacing.lg),
+                        const SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(site.name, style: text.titleMedium),
-                              const SizedBox(height: 2),
                               Text(site.code, style: text.bodySmall),
                             ],
                           ),

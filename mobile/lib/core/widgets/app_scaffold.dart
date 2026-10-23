@@ -1,11 +1,9 @@
 import 'package:brics_mobile/core/theme/app_colors.dart';
 import 'package:brics_mobile/core/theme/app_spacing.dart';
-import 'package:brics_mobile/core/widgets/brand.dart';
 import 'package:flutter/material.dart';
 
-/// Page frame: a deep-green header with brick texture and a slow glow, curving
-/// into the page; a padded body that stays above the keyboard; and an optional
-/// pinned main action.
+/// Page frame: a flat brand-green header, a padded body that stays above the
+/// keyboard, and an optional pinned main action.
 class AppScaffold extends StatelessWidget {
   const AppScaffold({
     required this.title,
@@ -45,10 +43,10 @@ class AppScaffold extends StatelessWidget {
     final content = scrollable
         ? SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.xxl,
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.xl,
             ),
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             child: body,
@@ -59,15 +57,15 @@ class AppScaffold extends StatelessWidget {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          HeroBackdrop(
-            borderRadius: const BorderRadius.vertical(bottom: Radius.circular(AppRadius.modal)),
-            glow: 0.7,
+          ColoredBox(
+            color: colors.primary,
             child: SafeArea(
               bottom: false,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   AppBar(
+                    toolbarHeight: subtitle == null ? 52 : 56,
                     leading: leading,
                     // No back button (the first screen of a flow): no gap for one either.
                     automaticallyImplyLeading: leading == null,
@@ -95,15 +93,13 @@ class AppScaffold extends StatelessWidget {
                   if (header != null)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.lg,
+                        AppSpacing.md,
                         0,
-                        AppSpacing.lg,
-                        AppSpacing.lg,
+                        AppSpacing.md,
+                        AppSpacing.sm,
                       ),
                       child: header,
-                    )
-                  else
-                    const SizedBox(height: AppSpacing.sm),
+                    ),
                 ],
               ),
             ),
@@ -119,18 +115,15 @@ class AppScaffold extends StatelessWidget {
           : Container(
               decoration: BoxDecoration(
                 color: colors.surface,
-                boxShadow: [
-                  BoxShadow(color: colors.shadow, blurRadius: 20, offset: const Offset(0, -4)),
-                ],
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.modal)),
+                border: Border(top: BorderSide(color: colors.border)),
               ),
               child: SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.lg,
                     AppSpacing.md,
-                    AppSpacing.lg,
+                    AppSpacing.sm,
                     AppSpacing.md,
+                    AppSpacing.sm,
                   ),
                   child: bottomAction,
                 ),

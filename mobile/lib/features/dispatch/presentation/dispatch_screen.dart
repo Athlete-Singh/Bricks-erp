@@ -124,21 +124,26 @@ class _ChallanCard extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const IconBadge(icon: Icons.local_shipping_rounded, size: 44),
+              const IconBadge(icon: Icons.local_shipping_rounded, size: 32),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(challan.challanNo ?? l10n.dispatchChallanUnsent, style: text.titleMedium),
-                    Text(customerName(ref, l10n, challan.customerPartyId), style: text.bodyMedium),
+                    Text(
+                      customerName(ref, l10n, challan.customerPartyId),
+                      style: text.bodySmall?.copyWith(color: colors.foreground),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ],
                 ),
               ),
               Text(Formatters.displayIsoDate(challan.dispatchDate), style: text.bodySmall),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
               Expanded(child: JourneyTracker(status: status, compact: true)),

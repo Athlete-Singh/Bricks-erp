@@ -19,7 +19,7 @@ extension ToneColors on Tone {
   };
 }
 
-/// A rounded label with an icon — status that reads without relying on colour.
+/// A small tinted label with an icon — status that reads without relying on colour.
 class StatusPill extends StatelessWidget {
   const StatusPill({required this.label, required this.tone, super.key, this.icon});
 
@@ -33,13 +33,13 @@ class StatusPill extends StatelessWidget {
     return AnimatedContainer(
       duration: AppMotion.medium,
       // A pill never pushes its row off the screen; long words truncate.
-      constraints: const BoxConstraints(maxWidth: 190),
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 5),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(AppRadius.pill)),
+      constraints: const BoxConstraints(maxWidth: 170),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(5)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (icon != null) ...[Icon(icon, size: 14, color: fg), const SizedBox(width: 5)],
+          if (icon != null) ...[Icon(icon, size: 12, color: fg), const SizedBox(width: 4)],
           Flexible(
             child: Text(
               label,
@@ -55,7 +55,7 @@ class StatusPill extends StatelessWidget {
 
 /// An icon on a tinted rounded square.
 class IconBadge extends StatelessWidget {
-  const IconBadge({required this.icon, super.key, this.tone = Tone.primary, this.size = 48});
+  const IconBadge({required this.icon, super.key, this.tone = Tone.primary, this.size = 36});
 
   final IconData icon;
   final Tone tone;
@@ -67,8 +67,8 @@ class IconBadge extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(size * 0.32)),
-      child: Icon(icon, color: fg, size: size * 0.5),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(size * 0.22)),
+      child: Icon(icon, color: fg, size: size * 0.52),
     );
   }
 }
@@ -86,9 +86,9 @@ class SectionLabel extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.xs,
-        AppSpacing.lg,
+        AppSpacing.md,
         AppSpacing.xs,
-        AppSpacing.sm,
+        AppSpacing.xs + 2,
       ),
       child: Row(
         children: [
@@ -114,18 +114,12 @@ class FormSection extends StatelessWidget {
     final colors = context.colors;
     final text = Theme.of(context).textTheme;
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.lg),
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        AppSpacing.lg,
-        AppSpacing.lg,
-        AppSpacing.xs,
-      ),
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: colors.border.withValues(alpha: 0.7)),
-        boxShadow: colors.softShadow,
+        border: Border.all(color: colors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -133,8 +127,8 @@ class FormSection extends StatelessWidget {
           Row(
             children: [
               if (icon != null) ...[
-                IconBadge(icon: icon!, size: 36),
-                const SizedBox(width: AppSpacing.md),
+                Icon(icon, size: 18, color: colors.primary),
+                const SizedBox(width: AppSpacing.sm),
               ],
               Expanded(child: Text(title, style: text.titleMedium)),
             ],
@@ -143,7 +137,7 @@ class FormSection extends StatelessWidget {
             const SizedBox(height: AppSpacing.xs),
             Text(hint!, style: text.bodySmall),
           ],
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.md),
           ...children,
         ],
       ),

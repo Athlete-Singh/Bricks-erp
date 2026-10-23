@@ -49,7 +49,7 @@ class QueueEntryTile extends ConsumerWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              IconBadge(icon: icon, tone: tone, size: 42),
+              IconBadge(icon: icon, tone: tone, size: 32),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
@@ -59,9 +59,8 @@ class QueueEntryTile extends ConsumerWidget {
                       entityLabel(l10n, row.entity).toUpperCase(),
                       style: AppTextStyles.overline(text.labelSmall!),
                     ),
-                    const SizedBox(height: 2),
                     Text(row.title, style: text.titleSmall),
-                    const SizedBox(height: AppSpacing.xs),
+                    const SizedBox(height: 2),
                     Wrap(
                       spacing: AppSpacing.md,
                       runSpacing: 2,
@@ -84,10 +83,10 @@ class QueueEntryTile extends ConsumerWidget {
             ],
           ),
           if (row.status == QueueStatus.failed) ...[
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.sm),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(AppSpacing.md),
+              padding: const EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(
                 color: colors.dangerSoft,
                 borderRadius: BorderRadius.circular(AppRadius.input),
@@ -98,40 +97,34 @@ class QueueEntryTile extends ConsumerWidget {
                   Icon(Icons.report_rounded, size: 18, color: colors.danger),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
-                    child: Text(row.lastError ?? l10n.commonSomethingWrong, style: text.bodyMedium),
+                    child: Text(
+                      row.lastError ?? l10n.commonSomethingWrong,
+                      style: text.bodySmall?.copyWith(color: colors.foreground),
+                    ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: AppSpacing.sm),
-            Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.sm,
+            const SizedBox(height: AppSpacing.xs),
+            // One quiet row of actions under the reason, not three big buttons.
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                AppButton(
+                _Action(
+                  label: l10n.commonDiscard,
+                  icon: Icons.delete_outline_rounded,
+                  color: colors.danger,
+                  onPressed: () => _confirmDiscard(context, ref),
+                ),
+                if (onEdit != null)
+                  _Action(label: l10n.commonEdit, icon: Icons.edit_outlined, onPressed: onEdit!),
+                _Action(
                   label: l10n.syncRetry,
                   icon: Icons.refresh_rounded,
-                  expand: false,
-                  variant: AppButtonVariant.secondary,
                   onPressed: () async {
                     await ref.read(queueRepositoryProvider).retry(row.id);
                     ref.read(syncControllerProvider.notifier).kick();
                   },
-                ),
-                if (onEdit != null)
-                  AppButton(
-                    label: l10n.commonEdit,
-                    icon: Icons.edit_rounded,
-                    expand: false,
-                    variant: AppButtonVariant.secondary,
-                    onPressed: onEdit,
-                  ),
-                AppButton(
-                  label: l10n.commonDiscard,
-                  icon: Icons.delete_outline_rounded,
-                  expand: false,
-                  variant: AppButtonVariant.ghost,
-                  onPressed: () => _confirmDiscard(context, ref),
                 ),
               ],
             ),
@@ -187,6 +180,30 @@ class _Meta extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _Action extends StatelessWidget {
+  const _Action({required this.label, required this.icon, required this.onPressed, this.color});
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onPressed;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 18),
+      label: Text(label),
+      style: TextButton.styleFrom(
+        foregroundColor: color,
+        minimumSize: const Size(0, 40),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+        textStyle: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
+      ),
     );
   }
 }

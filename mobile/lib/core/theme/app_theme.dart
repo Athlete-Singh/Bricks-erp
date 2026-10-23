@@ -45,7 +45,7 @@ abstract final class AppTheme {
       textTheme: text,
       extensions: [c],
       materialTapTargetSize: MaterialTapTargetSize.padded,
-      splashFactory: InkSparkle.splashFactory,
+      splashFactory: InkRipple.splashFactory,
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
           TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
@@ -71,17 +71,18 @@ abstract final class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: c.surfaceMuted,
-        border: border(Colors.transparent),
-        enabledBorder: border(Colors.transparent),
-        focusedBorder: border(c.primary, 2),
+        fillColor: c.surface,
+        border: border(c.border),
+        enabledBorder: border(c.border),
+        focusedBorder: border(c.primary, 1.5),
         errorBorder: border(c.danger),
         focusedErrorBorder: border(c.danger, 2),
         labelStyle: text.bodyMedium?.copyWith(color: c.mutedForeground),
         floatingLabelStyle: text.labelMedium?.copyWith(color: c.primary),
+        isDense: true,
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.lg,
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.md,
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
@@ -95,7 +96,7 @@ abstract final class AppTheme {
         style: OutlinedButton.styleFrom(
           minimumSize: minButton,
           foregroundColor: c.primary,
-          side: BorderSide(color: c.primary.withValues(alpha: 0.5), width: 1.5),
+          side: BorderSide(color: c.border),
           shape: buttonShape,
           textStyle: text.labelLarge,
         ),
@@ -120,8 +121,9 @@ abstract final class AppTheme {
         backgroundColor: c.accent,
         foregroundColor: const Color(0xFF2A1B02),
         extendedTextStyle: text.labelLarge,
-        elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.card)),
+        elevation: 2,
+        highlightElevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.button)),
       ),
       tabBarTheme: TabBarThemeData(
         labelColor: c.primary,
@@ -132,8 +134,7 @@ abstract final class AppTheme {
         dividerColor: Colors.transparent,
         indicator: BoxDecoration(
           color: c.surface,
-          borderRadius: BorderRadius.circular(AppRadius.button),
-          boxShadow: c.softShadow,
+          borderRadius: BorderRadius.circular(AppRadius.button - 2),
         ),
       ),
       dividerTheme: DividerThemeData(color: c.border, space: 1),

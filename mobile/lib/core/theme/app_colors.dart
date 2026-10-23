@@ -145,8 +145,10 @@ class AppColors extends ThemeExtension<AppColors> {
     colors: [AppPalette.accent300, AppPalette.accent600],
   );
 
+  /// Surfaces are separated by a hairline border, not by shadow; this is only a
+  /// faint lift for what floats (menus, the pinned action bar).
   List<BoxShadow> get softShadow => [
-    BoxShadow(color: shadow, blurRadius: 24, offset: const Offset(0, 8)),
+    BoxShadow(color: shadow.withValues(alpha: 0.05), blurRadius: 2, offset: const Offset(0, 1)),
   ];
 
   @override

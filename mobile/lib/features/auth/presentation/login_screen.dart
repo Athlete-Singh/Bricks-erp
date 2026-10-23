@@ -81,10 +81,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final expired = state is SignedOut && state.expired;
 
     return Scaffold(
-      backgroundColor: colors.heroEnd,
+      backgroundColor: colors.background,
       body: Stack(
         children: [
-          const Positioned.fill(child: HeroBackdrop()),
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
@@ -99,7 +98,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Center(child: AnimatedBricsLogo(size: 84)),
+                      const Center(child: AnimatedBricsLogo(size: 56)),
                       const SizedBox(height: AppSpacing.md),
                       Entrance(
                         index: 2,
@@ -108,38 +107,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             Text(
                               l10n.appTitle,
                               textAlign: TextAlign.center,
-                              style: text.displaySmall?.copyWith(
-                                color: Colors.white,
-                                letterSpacing: 4,
-                              ),
+                              style: text.headlineSmall?.copyWith(letterSpacing: 2),
                             ),
                             const SizedBox(height: AppSpacing.xs),
                             Text(
                               l10n.loginTagline,
                               textAlign: TextAlign.center,
-                              style: text.bodyMedium?.copyWith(
-                                color: Colors.white.withValues(alpha: 0.75),
-                              ),
+                              style: text.bodySmall,
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.xxl),
+                      const SizedBox(height: AppSpacing.xl),
                       Entrance(
                         index: 4,
-                        from: 60,
                         child: Container(
-                          padding: const EdgeInsets.all(AppSpacing.xl),
+                          padding: const EdgeInsets.all(AppSpacing.lg),
                           decoration: BoxDecoration(
                             color: colors.surface,
-                            borderRadius: BorderRadius.circular(28),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x55000000),
-                                blurRadius: 40,
-                                offset: Offset(0, 20),
-                              ),
-                            ],
+                            borderRadius: BorderRadius.circular(AppRadius.card),
+                            border: Border.all(color: colors.border),
                           ),
                           child: Form(
                             key: _form,
@@ -147,17 +134,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  Text(l10n.loginWelcome, style: text.headlineSmall),
-                                  const SizedBox(height: AppSpacing.xs),
+                                  Text(l10n.loginWelcome, style: text.titleLarge),
+                                  const SizedBox(height: 2),
                                   Text(l10n.loginWelcomeHint, style: text.bodySmall),
-                                  const SizedBox(height: AppSpacing.xl),
+                                  const SizedBox(height: AppSpacing.lg),
                                   if (expired) ...[
                                     _Notice(
                                       tone: Tone.warning,
                                       icon: Icons.lock_clock,
                                       message: l10n.loginSessionExpired,
                                     ),
-                                    const SizedBox(height: AppSpacing.lg),
+                                    const SizedBox(height: AppSpacing.md),
                                   ],
                                   AppTextField(
                                     label: l10n.loginIdLabel,
@@ -201,7 +188,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     onPressed: _submit,
                                     busy: _busy,
                                   ),
-                                  const SizedBox(height: AppSpacing.lg),
+                                  const SizedBox(height: AppSpacing.md),
                                   Row(
                                     children: [
                                       Icon(

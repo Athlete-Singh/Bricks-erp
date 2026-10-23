@@ -123,11 +123,7 @@ class _ChallanFormScreenState extends ConsumerState<ChallanFormScreen> {
     }
     ref.read(syncControllerProvider.notifier).kick();
     if (!mounted) return;
-    showAppSnack(
-      context,
-      widget.editId != null ? l10n.savedCorrected : l10n.savedOffline,
-      celebrate: widget.editId == null,
-    );
+    showAppSnack(context, widget.editId != null ? l10n.savedCorrected : l10n.savedOffline);
     context.pop();
   }
 

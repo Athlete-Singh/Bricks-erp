@@ -272,6 +272,7 @@
   "attendanceHalfDay": "Half day",
   "attendanceAbsent": "Absent",
   "attendanceOvertime": "Overtime hours",
+  "attendanceOvertimeShort": "OT",
   "attendanceOvertimeInvalid": "Up to 2 digits, like 2 or 1.5",
   "attendanceWholeGang": "This gang has no workers listed. Mark the gang as a whole.",
   "attendanceAlreadyTaken": "Attendance for this gang on this date is already on this phone. Save another?",

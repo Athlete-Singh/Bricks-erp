@@ -43,7 +43,7 @@ class JourneyTracker extends StatelessWidget {
       Icons.local_shipping_rounded,
       Icons.handshake_rounded,
     ];
-    final dot = compact ? 10.0 : 34.0;
+    final dot = compact ? 8.0 : 28.0;
 
     return Column(
       children: [
@@ -54,18 +54,12 @@ class JourneyTracker extends StatelessWidget {
                 duration: AppMotion.medium,
                 width: dot,
                 height: dot,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: i <= reached ? on : off,
-                  boxShadow: i == reached && !compact
-                      ? [BoxShadow(color: on.withValues(alpha: 0.5), blurRadius: 12)]
-                      : null,
-                ),
+                decoration: BoxDecoration(shape: BoxShape.circle, color: i <= reached ? on : off),
                 child: compact
                     ? null
                     : Icon(
                         icons[i],
-                        size: 18,
+                        size: 15,
                         color: i <= reached
                             ? (onHeader ? AppPalette.primary900 : Colors.white)
                             : Colors.white70,

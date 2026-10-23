@@ -138,11 +138,7 @@ class _AttendanceFormScreenState extends ConsumerState<AttendanceFormScreen> {
     }
     ref.read(syncControllerProvider.notifier).kick();
     if (!mounted) return;
-    showAppSnack(
-      context,
-      widget.editId != null ? l10n.savedCorrected : l10n.savedOffline,
-      celebrate: widget.editId == null,
-    );
+    showAppSnack(context, widget.editId != null ? l10n.savedCorrected : l10n.savedOffline);
     context.pop();
   }
 
@@ -277,7 +273,7 @@ class _AttendanceFormScreenState extends ConsumerState<AttendanceFormScreen> {
                     onChanged: (m) => setState(() => _marks[w.id] = m),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.sm),
               ],
             ],
           ],
@@ -339,16 +335,17 @@ class _WorkerRow extends StatelessWidget {
   final TextEditingController overtime;
   final ValueChanged<AttendanceMark> onChanged;
 
-  static const List<List<Color>> _avatarColors = [
-    [AppPalette.brickLight, AppPalette.brick],
-    [AppPalette.info400, AppPalette.info600],
-    [AppPalette.accent300, AppPalette.accent600],
-    [AppPalette.primary300, AppPalette.primary600],
+  static const List<Color> _avatarColors = [
+    AppPalette.brick,
+    AppPalette.info600,
+    AppPalette.accent600,
+    AppPalette.primary600,
   ];
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final colors = context.colors;
     final text = Theme.of(context).textTheme;
     final initials = worker.name
         .trim()
@@ -356,65 +353,74 @@ class _WorkerRow extends StatelessWidget {
         .take(2)
         .map((p) => p[0].toUpperCase())
         .join();
-    final palette = _avatarColors[worker.name.hashCode.abs() % _avatarColors.length];
+    final tint = _avatarColors[worker.name.hashCode.abs() % _avatarColors.length];
 
     return AppCard(
       accent: switch (mark) {
-        AttendanceMark.present => context.colors.success,
-        AttendanceMark.halfDay => context.colors.warning,
-        AttendanceMark.absent => context.colors.danger,
+        AttendanceMark.present => colors.success,
+        AttendanceMark.halfDay => colors.warning,
+        AttendanceMark.absent => colors.danger,
       },
-      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.sm,
+        AppSpacing.sm,
+        AppSpacing.sm,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 30,
+                height: 30,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: palette,
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  color: tint.withValues(alpha: 0.14),
                 ),
                 child: Text(
                   initials,
-                  style: text.labelLarge?.copyWith(color: Colors.white, fontSize: 14),
+                  style: text.labelSmall?.copyWith(color: tint, fontWeight: FontWeight.w700),
                 ),
               ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(child: Text(worker.name, style: text.titleMedium)),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          _MarkPicker(value: mark, onChanged: onChanged),
-          const SizedBox(height: AppSpacing.md),
-          AnimatedSize(
-            duration: AppMotion.medium,
-            curve: AppMotion.enter,
-            child: mark == AttendanceMark.absent
-                ? const SizedBox(width: double.infinity)
-                : AppTextField(
-                    label: '${l10n.attendanceOvertime} (${l10n.commonOptional})',
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(worker.name, style: text.titleSmall, overflow: TextOverflow.ellipsis),
+              ),
+              // Overtime sits beside the name, out of the way; an absent worker has none.
+              if (mark != AttendanceMark.absent)
+                SizedBox(
+                  width: 92,
+                  child: TextFormField(
                     controller: overtime,
-                    kind: AppFieldKind.decimal,
-                    prefixIcon: Icons.more_time_rounded,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    textAlign: TextAlign.end,
+                    style: text.bodyMedium,
+                    decoration: InputDecoration(
+                      hintText: l10n.attendanceOvertimeShort,
+                      suffixText: 'h',
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                        vertical: AppSpacing.sm,
+                      ),
+                    ),
                     validator: (v) =>
                         isValidOvertime(v?.trim() ?? '') ? null : l10n.attendanceOvertimeInvalid,
                   ),
+                ),
+            ],
           ),
+          const SizedBox(height: AppSpacing.sm),
+          _MarkPicker(value: mark, onChanged: onChanged),
         ],
       ),
     );
   }
 }
 
-/// Three big pills — gloves, sunlight, a gang of forty. The chosen one fills
+/// Three equal buttons — gloves, sunlight, a gang of forty. The chosen one fills
 /// with its colour; the others stay quiet.
 class _MarkPicker extends StatelessWidget {
   const _MarkPicker({required this.value, required this.onChanged});
@@ -445,19 +451,10 @@ class _MarkPicker extends StatelessWidget {
                 child: AnimatedContainer(
                   duration: AppMotion.medium,
                   curve: AppMotion.enter,
-                  height: AppSpacing.touchTarget,
+                  height: 40,
                   decoration: BoxDecoration(
                     color: value == mark ? color : colors.surfaceMuted,
                     borderRadius: BorderRadius.circular(AppRadius.button),
-                    boxShadow: value == mark
-                        ? [
-                            BoxShadow(
-                              color: color.withValues(alpha: 0.35),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ]
-                        : null,
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,

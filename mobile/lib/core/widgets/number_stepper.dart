@@ -86,21 +86,12 @@ class _NumberStepperState extends State<NumberStepper> {
               duration: const Duration(milliseconds: 150),
               opacity: onTap == null ? 0.4 : 1,
               child: Container(
-                width: 56,
-                height: 56,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: filled ? colors.primaryGradient : null,
-                  color: filled ? null : colors.surfaceMuted,
-                  boxShadow: filled
-                      ? [
-                          BoxShadow(
-                            color: colors.primary.withValues(alpha: 0.35),
-                            blurRadius: 12,
-                            offset: const Offset(0, 5),
-                          ),
-                        ]
-                      : null,
+                  borderRadius: BorderRadius.circular(AppRadius.button),
+                  color: filled ? colors.primary : colors.surface,
+                  border: filled ? null : Border.all(color: colors.border),
                 ),
                 child: Icon(icon, color: filled ? colors.onPrimary : colors.foreground),
               ),
@@ -124,12 +115,12 @@ class _NumberStepperState extends State<NumberStepper> {
                 filled: false,
                 onTap: widget.value > widget.min ? () => _set(widget.value - widget.step) : null,
               ),
-              const SizedBox(width: AppSpacing.md),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: TextFormField(
                   controller: _controller,
                   textAlign: TextAlign.center,
-                  style: AppTextStyles.number(text.headlineMedium!),
+                  style: AppTextStyles.number(text.headlineSmall!),
                   decoration: InputDecoration(
                     labelText: widget.label,
                     floatingLabelAlignment: FloatingLabelAlignment.center,
@@ -140,7 +131,7 @@ class _NumberStepperState extends State<NumberStepper> {
                   onChanged: (text) => widget.onChanged(int.tryParse(text) ?? 0),
                 ),
               ),
-              const SizedBox(width: AppSpacing.md),
+              const SizedBox(width: AppSpacing.sm),
               round(
                 icon: Icons.add_rounded,
                 tooltip: l10n.commonIncrease,
@@ -150,7 +141,7 @@ class _NumberStepperState extends State<NumberStepper> {
             ],
           ),
           if (widget.quickAdds.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.sm),
             Wrap(
               alignment: WrapAlignment.center,
               spacing: AppSpacing.sm,
@@ -163,7 +154,10 @@ class _NumberStepperState extends State<NumberStepper> {
                     labelStyle: text.labelMedium?.copyWith(color: colors.primary),
                     backgroundColor: colors.successSoft,
                     side: BorderSide.none,
-                    shape: const StadiumBorder(),
+                    visualDensity: VisualDensity.compact,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.button),
+                    ),
                     onPressed: () {
                       unawaited(HapticFeedback.selectionClick());
                       _set(widget.value + amount);
