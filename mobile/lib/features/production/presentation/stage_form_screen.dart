@@ -190,7 +190,7 @@ class _StageFormScreenState extends ConsumerState<StageFormScreen> {
       if (!mounted) return;
       showAppSnack(context, widget.editId != null ? l10n.savedCorrected : l10n.savedOffline);
       context.pop();
-    } catch (e) {
+    } on Object catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
       showAppSnack(context, e.toString());

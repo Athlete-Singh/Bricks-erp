@@ -10,7 +10,10 @@ _Party _$PartyFromJson(Map<String, dynamic> json) => _Party(
   id: json['id'] as String,
   name: json['name'] as String,
   partyTypes:
-      (json['partyTypes'] as List<dynamic>?)?.map((e) => e as String).toList() ?? const <String>[],
+      (json['partyTypes'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const <String>[],
   isActive: json['isActive'] as bool? ?? true,
 );
 
@@ -56,12 +59,13 @@ _BrickType _$BrickTypeFromJson(Map<String, dynamic> json) => _BrickType(
   isActive: json['isActive'] as bool? ?? true,
 );
 
-Map<String, dynamic> _$BrickTypeToJson(_BrickType instance) => <String, dynamic>{
-  'id': instance.id,
-  'grade': instance.grade,
-  'itemId': instance.itemId,
-  'isActive': instance.isActive,
-};
+Map<String, dynamic> _$BrickTypeToJson(_BrickType instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'grade': instance.grade,
+      'itemId': instance.itemId,
+      'isActive': instance.isActive,
+    };
 
 _Warehouse _$WarehouseFromJson(Map<String, dynamic> json) => _Warehouse(
   id: json['id'] as String,
@@ -70,12 +74,13 @@ _Warehouse _$WarehouseFromJson(Map<String, dynamic> json) => _Warehouse(
   isActive: json['isActive'] as bool? ?? true,
 );
 
-Map<String, dynamic> _$WarehouseToJson(_Warehouse instance) => <String, dynamic>{
-  'id': instance.id,
-  'siteId': instance.siteId,
-  'name': instance.name,
-  'isActive': instance.isActive,
-};
+Map<String, dynamic> _$WarehouseToJson(_Warehouse instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'siteId': instance.siteId,
+      'name': instance.name,
+      'isActive': instance.isActive,
+    };
 
 _LabourGroup _$LabourGroupFromJson(Map<String, dynamic> json) => _LabourGroup(
   id: json['id'] as String,
@@ -86,14 +91,15 @@ _LabourGroup _$LabourGroupFromJson(Map<String, dynamic> json) => _LabourGroup(
   isActive: json['isActive'] as bool? ?? true,
 );
 
-Map<String, dynamic> _$LabourGroupToJson(_LabourGroup instance) => <String, dynamic>{
-  'id': instance.id,
-  'sardarPartyId': instance.sardarPartyId,
-  'name': instance.name,
-  'activity': instance.activity,
-  'siteId': ?instance.siteId,
-  'isActive': instance.isActive,
-};
+Map<String, dynamic> _$LabourGroupToJson(_LabourGroup instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'sardarPartyId': instance.sardarPartyId,
+      'name': instance.name,
+      'activity': instance.activity,
+      'siteId': ?instance.siteId,
+      'isActive': instance.isActive,
+    };
 
 _Worker _$WorkerFromJson(Map<String, dynamic> json) => _Worker(
   id: json['id'] as String,

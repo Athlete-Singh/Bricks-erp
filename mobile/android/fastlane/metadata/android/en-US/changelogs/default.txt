@@ -1,0 +1,4 @@
+• Initial production release of BRICS supervisor mobile app
+• Full offline-first support for production, attendance, GRN, and dispatch
+• Real-time kiln sync with double-entry accounting and stock ledger
+• Multi-kiln switching and localized UI

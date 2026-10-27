@@ -108,9 +108,20 @@ export function Footer() {
           </ul>
         </div>
       </div>
-      <p className="mx-auto mt-10 max-w-7xl border-t border-white/15 px-4 py-5 text-xs text-white/80 sm:px-6 lg:px-8">
-        © {new Date().getFullYear()} {brand.company}. All rights reserved.
-      </p>
+      <div className="mx-auto mt-10 flex max-w-7xl flex-col items-center justify-between gap-3 border-t border-white/15 px-4 py-5 text-xs text-white/80 sm:flex-row sm:px-6 lg:px-8">
+        <p>
+          © {new Date().getFullYear()} {brand.company}. All rights reserved.
+        </p>
+        <div className="flex items-center gap-4">
+          <Link href="/privacy" className="underline underline-offset-4 hover:text-white transition">
+            Privacy Policy
+          </Link>
+          <span className="text-white/40">·</span>
+          <Link href="/delete-account" className="underline underline-offset-4 hover:text-white transition">
+            Delete Account
+          </Link>
+        </div>
+      </div>
       <Skyline />
     </footer>
   );

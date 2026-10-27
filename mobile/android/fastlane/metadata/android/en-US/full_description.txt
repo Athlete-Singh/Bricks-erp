@@ -1,0 +1,38 @@
+BRICS is a purpose-built, offline-first enterprise operations and field management app for brick kilns (bhatta) and chimney businesses.
+
+Designed specifically for field conditions with intermittent or zero internet connectivity, BRICS enables supervisors and managers to capture real-time kiln operations on-site, syncing automatically with the central ERP as soon as connectivity is restored.
+
+KEY FEATURES:
+
+• PRODUCTION LIFECYCLE MANAGEMENT:
+Track every stage of brick production:
+- Green brick moulding & pathai records
+- Drying yard tracking
+- Firing batch initialization, chamber temperature & fuel monitoring
+- Unloading (nikasi) and sorting by brick quality grades (Class 1, Class 2, Class 3, Broken)
+
+• LABOUR ATTENDANCE & ADVANCES:
+- Real-time muster roll and daily attendance for kiln workers
+- Sardar & labour group tracking
+- Piece-rate accounting and advance management
+
+• DISPATCH & VEHICLE GATE-PASS:
+- Fast loading slip and delivery challan issuance directly at the loading ramp
+- Vehicle gate-out tracking with truck number and driver details
+- Zero unbilled truck leaks with instant stock deductions
+
+• GOODS RECEIPT NOTE (GRN):
+- Inward raw material recording for coal, firewood, soil, and fuel trucks
+- Weighbridge integration and supplier challan verification
+
+• OFFLINE-FIRST ARCHITECTURE:
+- High-performance local database powered by Drift
+- Full functionality without active internet
+- Automatic background replay and conflict-free syncing with the central ERP backend
+
+• ROLE-BASED ACCESS & AUDIT:
+- Multi-kiln switching for business owners
+- Secure JWT authentication with role-based permissions
+- Tamper-proof activity logs for complete financial and stock integrity
+
+Transform your kiln operations, eliminate leakage, and streamline production with BRICS.

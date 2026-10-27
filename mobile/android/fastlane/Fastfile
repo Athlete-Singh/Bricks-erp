@@ -1,0 +1,53 @@
+default_platform(:android)
+
+platform :android do
+  desc "Build Flutter AAB and upload to Play Store Production track with full metadata, poster, changelog, and screenshots"
+  lane :upload_production do |options|
+    api_url = options[:api_url] || "https://bhatta-erp-backend.vercel.app/api/v1"
+
+    unless options[:skip_build]
+      # Build release AAB using Flutter
+      sh("cd ../.. && flutter build appbundle --release --dart-define=API_BASE_URL=#{api_url}")
+    end
+
+    upload_to_play_store(
+      track: 'production',
+      aab: '../build/app/outputs/bundle/release/app-release.aab',
+      skip_upload_metadata: false,
+      skip_upload_images: false,
+      skip_upload_screenshots: false,
+      skip_upload_changelogs: false,
+      release_status: 'draft'
+    )
+  end
+
+  desc "Upload only metadata, store listing, poster, and screenshots (without rebuilding AAB)"
+  lane :upload_metadata do
+    upload_to_play_store(
+      skip_upload_aab: true,
+      skip_upload_apk: true,
+      skip_upload_metadata: false,
+      skip_upload_images: false,
+      skip_upload_screenshots: false,
+      skip_upload_changelogs: true
+    )
+  end
+
+  desc "Build Flutter AAB and upload to Play Store Internal Testing track"
+  lane :upload_internal do |options|
+    api_url = options[:api_url] || "https://bhatta-erp-backend.vercel.app/api/v1"
+
+    unless options[:skip_build]
+      sh("cd ../.. && flutter build appbundle --release --dart-define=API_BASE_URL=#{api_url}")
+    end
+
+    upload_to_play_store(
+      track: 'internal',
+      aab: '../build/app/outputs/bundle/release/app-release.aab',
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      skip_upload_changelogs: true
+    )
+  end
+end

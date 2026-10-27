@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "634103608644",
+    "project_id": "bricks-2026",
+    "storage_bucket": "bricks-2026.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:634103608644:android:3f46fb5850e2fe1d5f5311",
+        "android_client_info": {
+          "package_name": "com.bricks.user"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCkj2IcTAKoDwoDvjDECxlYsDby41Tk8nM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

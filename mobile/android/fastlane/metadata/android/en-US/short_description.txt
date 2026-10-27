@@ -1,0 +1,1 @@
+Offline-first ERP & operations app for brick kiln supervisors and owners.
