@@ -70,3 +70,4 @@ web/blob-report/
 
 # ADM-09 local backups hold the books — never committed
 backups/
+.vercel
